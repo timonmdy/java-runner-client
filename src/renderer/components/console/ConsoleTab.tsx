@@ -1,86 +1,51 @@
 /**
- * ConsoleTab — live stdout/stderr, stdin, history (↑↓), line numbers, PID display.
+ * ConsoleTab — live output, stdin, history, Ctrl+L clear, Ctrl+F search.
+ * Search bar: next/prev navigation, match count, highlighted matches.
  */
-import React, { useRef, useEffect, useState, useCallback, KeyboardEvent } from 'react'
+import React, {
+  useRef, useEffect, useState, useCallback, useMemo, KeyboardEvent,
+} from 'react'
 import { useApp } from '../../store/AppStore'
 import { Button } from '../common/Button'
 import type { ConsoleLine } from '../../types'
-import { clearAllConsoleLogs } from '../../utils/consoleStorage'
 
 export function ConsoleTab() {
   const { state, activeProfile, startProcess, stopProcess, sendInput, clearConsole, isRunning } = useApp()
 
-  const profileId = activeProfile?.id ?? ''
-  const running   = isRunning(profileId)
-  const lines     = state.consoleLogs[profileId] ?? []
-  const settings  = state.settings
-  const color     = activeProfile?.color ?? '#4ade80'
-
-  // Running process state info
+  const profileId    = activeProfile?.id ?? ''
+  const running      = isRunning(profileId)
+  const lines        = state.consoleLogs[profileId] ?? []
+  const settings     = state.settings
+  const color        = activeProfile?.color ?? '#4ade80'
   const processState = state.processStates.find(s => s.profileId === profileId)
   const pid          = processState?.pid
 
-  const [inputValue, setInputValue] = useState('')
-  const [historyIdx, setHistoryIdx] = useState(-1)
-  const [cmdHistory, setCmdHistory] = useState<string[]>([])
-  const [autoScroll, setAutoScroll] = useState(true)
-  const [starting,   setStarting]   = useState(false)
-  const [errorMsg,   setErrorMsg]   = useState<string | null>(null)
+  // ── State ────────────────────────────────────────────────────────────────
+  const [inputValue,  setInputValue]  = useState('')
+  const [historyIdx,  setHistoryIdx]  = useState(-1)
+  const [cmdHistory,  setCmdHistory]  = useState<string[]>([])
+  const [autoScroll,  setAutoScroll]  = useState(true)
+  const [starting,    setStarting]    = useState(false)
+  const [errorMsg,    setErrorMsg]    = useState<string | null>(null)
+  const [searchOpen,  setSearchOpen]  = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [showSearch, setShowSearch] = useState(false)
-  const [searchIndex, setSearchIndex] = useState(0)
-  const [showMenu, setShowMenu] = useState(false)
+  const [searchIdx,   setSearchIdx]   = useState(0)   // current match index
 
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const inputRef  = useRef<HTMLInputElement>(null)
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const searchRef = useRef<HTMLInputElement>(null)
-  const menuRef   = useRef<HTMLDivElement>(null)
+  const scrollRef  = useRef<HTMLDivElement>(null)
+  const inputRef   = useRef<HTMLInputElement>(null)
+  const searchRef  = useRef<HTMLInputElement>(null)
+  const bottomRef  = useRef<HTMLDivElement>(null)
+  const matchRefs  = useRef<(HTMLDivElement | null)[]>([])
+
+  // Reset per-profile state on profile switch
+  useEffect(() => {
+    setInputValue(''); setHistoryIdx(-1); setErrorMsg(null)
+    setSearchOpen(false); setSearchQuery(''); setSearchIdx(0)
+  }, [profileId])
 
   useEffect(() => {
-    if (autoScroll) bottomRef.current?.scrollIntoView({ behavior: 'instant' })
-  }, [lines.length, autoScroll])
-  // Close menu when clicking outside
-  useEffect(() => {
-    if (!showMenu) return
-    const handler = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setShowMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [showMenu])
-
-  // Global CTRL+F listener for console search
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (!document.hidden && e.key === 'f' && e.ctrlKey) {
-        e.preventDefault()
-        setShowSearch(true)
-        setTimeout(() => searchRef.current?.focus(), 0)
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown as any)
-    return () => window.removeEventListener('keydown', handleKeyDown as any)
-  }, [])
-
-  // Auto-scroll to current match when search index or lines change
-  useEffect(() => {
-    if (!searchQuery.trim()) return
-    const matchingIndices = lines
-      .map((line, idx) => line.text.toLowerCase().includes(searchQuery.toLowerCase()) ? idx : -1)
-      .filter(idx => idx >= 0)
-    const currentIdx = matchingIndices[searchIndex % Math.max(1, matchingIndices.length)] ?? -1
-    if (currentIdx >= 0) {
-      setTimeout(() => {
-        const matchedElement = document.querySelector(`[data-console-line="${currentIdx}"]`)
-        if (matchedElement) {
-          matchedElement.scrollIntoView({ behavior: 'auto', block: 'center' })
-        }
-      }, 0)
-    }
-  }, [searchIndex, searchQuery, lines])
+    if (autoScroll && !searchOpen) bottomRef.current?.scrollIntoView({ behavior: 'instant' })
+  }, [lines.length, autoScroll, searchOpen])
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current
@@ -88,7 +53,48 @@ export function ConsoleTab() {
     setAutoScroll(el.scrollHeight - el.scrollTop - el.clientHeight < 40)
   }, [])
 
-  const handleToggle = async () => {
+  // ── Search logic ─────────────────────────────────────────────────────────
+  const searchTerm = searchQuery.trim().toLowerCase()
+
+  const matchIndices = useMemo<number[]>(() => {
+    if (!searchTerm) return []
+    return lines.reduce<number[]>((acc, line, i) => {
+      if (line.text.toLowerCase().includes(searchTerm)) acc.push(i)
+      return acc
+    }, [])
+  }, [lines, searchTerm])
+
+  const clampedIdx = matchIndices.length > 0
+    ? ((searchIdx % matchIndices.length) + matchIndices.length) % matchIndices.length
+    : 0
+
+  const scrollToMatch = useCallback((idx: number) => {
+    const el = matchRefs.current[idx]
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }, [])
+
+  useEffect(() => {
+    if (matchIndices.length > 0) scrollToMatch(clampedIdx)
+  }, [clampedIdx, matchIndices, scrollToMatch])
+
+  const openSearch = useCallback(() => {
+    setSearchOpen(true)
+    setAutoScroll(false)
+    setTimeout(() => searchRef.current?.focus(), 50)
+  }, [])
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false)
+    setSearchQuery('')
+    setSearchIdx(0)
+    setAutoScroll(true)
+  }, [])
+
+  const goNext = useCallback(() => setSearchIdx(i => i + 1), [])
+  const goPrev = useCallback(() => setSearchIdx(i => i - 1), [])
+
+  // ── Process control ───────────────────────────────────────────────────────
+  const handleToggle = useCallback(async () => {
     if (!activeProfile) return
     setErrorMsg(null)
     if (running) {
@@ -100,246 +106,188 @@ export function ConsoleTab() {
       setStarting(false)
       if (!res.ok) setErrorMsg(res.error ?? 'Failed to start')
     }
-  }
+  }, [activeProfile, running, profileId, stopProcess, startProcess])
 
   const handleSend = useCallback(async () => {
     const cmd = inputValue.trim()
     if (!cmd || !running) return
     await sendInput(profileId, cmd)
-    setCmdHistory(prev => {
-      const next = [cmd, ...prev.filter(c => c !== cmd)]
-      return next.slice(0, settings?.consoleHistorySize ?? 200)
-    })
+    setCmdHistory(prev => [cmd, ...prev.filter(c => c !== cmd)].slice(0, settings?.consoleHistorySize ?? 200))
     setInputValue('')
     setHistoryIdx(-1)
   }, [inputValue, running, profileId, sendInput, settings])
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter')     { e.preventDefault(); handleSend(); return }
     if (e.key === 'ArrowUp')   { e.preventDefault(); const n = Math.min(historyIdx+1, cmdHistory.length-1); setHistoryIdx(n); setInputValue(cmdHistory[n]??''); return }
     if (e.key === 'ArrowDown') { e.preventDefault(); const n = Math.max(historyIdx-1, -1); setHistoryIdx(n); setInputValue(n===-1?'':cmdHistory[n]??''); return }
-    if (e.key==='l' && e.ctrlKey) { e.preventDefault(); clearConsole(profileId) }
+    if (e.key === 'l' && e.ctrlKey) { e.preventDefault(); clearConsole(profileId) }
+    if (e.key === 'f' && e.ctrlKey) { e.preventDefault(); openSearch() }
+  }, [handleSend, historyIdx, cmdHistory, clearConsole, profileId, openSearch])
+
+  // Global Ctrl+F on console area
+  useEffect(() => {
+    const handler = (e: globalThis.KeyboardEvent) => {
+      if (e.ctrlKey && e.key === 'f') { e.preventDefault(); openSearch() }
+      if (e.key === 'Escape' && searchOpen) closeSearch()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [openSearch, closeSearch, searchOpen])
+
+  const fontSize   = settings?.consoleFontSize    ?? 13
+  const wordWrap   = settings?.consoleWordWrap     ?? false
+  const lineNums   = settings?.consoleLineNumbers  ?? false
+
+  if (!activeProfile) {
+    return <div className="flex items-center justify-center h-full text-sm text-text-muted">No profile selected</div>
   }
 
-  // Find matching lines for search
-  const matchingIndices = searchQuery.trim()
-    ? lines
-        .map((line, idx) => line.text.toLowerCase().includes(searchQuery.toLowerCase()) ? idx : -1)
-        .filter(idx => idx >= 0)
-    : []
-  const matchCount = matchingIndices.length
-  const currentMatchIdx = matchingIndices[searchIndex % Math.max(1, matchingIndices.length)] ?? -1
-
-  const fontSize    = settings?.consoleFontSize    ?? 13
-  const wordWrap    = settings?.consoleWordWrap     ?? false
-  const lineNumbers = settings?.consoleLineNumbers  ?? false
-
-  {console.log(lines)}
+  // Build match ref map: matchIndices[i] → line index
+  matchRefs.current = new Array(matchIndices.length).fill(null)
 
   return (
     <div className="flex flex-col h-full">
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-3 py-2 border-b border-surface-border bg-base-900 shrink-0">
         <Button
-          variant={running ? 'danger' : 'primary'}
-          size="sm"
-          onClick={handleToggle}
-          loading={starting}
-          disabled={!activeProfile}
+          variant={running ? 'danger' : 'primary'} size="sm"
+          onClick={handleToggle} loading={starting}
           style={!running ? { backgroundColor: color, color: '#08090d', borderColor: color } : {}}
         >
-          {running ? <><StopIcon /> Stop</> : <><PlayIcon /> Run</>}
+          {running ? 'Stop' : 'Run'}
         </Button>
 
-        {/* PID + running indicator */}
         {running && pid && (
           <span className="flex items-center gap-1.5 text-xs font-mono text-text-muted animate-fade-in">
             <span className="w-1.5 h-1.5 rounded-full animate-pulse-dot" style={{ backgroundColor: color }}/>
-            <span>PID <span className="text-text-secondary">{pid}</span></span>
+            PID <span className="text-text-secondary">{pid}</span>
           </span>
         )}
 
         <div className="flex-1"/>
 
-        {!autoScroll && (
-          <button
-            onClick={() => { setAutoScroll(true); bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }}
-            className="text-xs font-mono transition-colors"
-            style={{ color }}
-          >
+        {!autoScroll && !searchOpen && (
+          <button onClick={() => { setAutoScroll(true); bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }}
+            className="text-xs font-mono transition-colors" style={{ color }}>
             ↓ scroll to bottom
           </button>
         )}
 
-        <Button variant="ghost" size="sm" 
-          onClick={() => setShowSearch(true)} 
-          title="Search (Ctrl+F)"
-          className="!p-2">
-          <SearchIcon />
-        </Button>
+        <button onClick={openSearch}
+          className="text-xs text-text-muted hover:text-text-primary font-mono transition-colors"
+          title="Search (Ctrl+F)">
+          🔍
+        </button>
 
-        <Button variant="ghost" size="sm" onClick={() => clearConsole(profileId)} title="Clear (Ctrl+L)">
-          <TrashIcon /> Clear
-        </Button>
-
-        <div className="relative" ref={menuRef}>
-          <button 
-            onClick={() => setShowMenu(!showMenu)}
-            className="text-text-muted hover:text-text-primary transition-colors p-2 text-sm font-bold"
-            title="Console options">
-            ⋮
-          </button>
-          {showMenu && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-              <div className="absolute right-0 mt-1 w-48 bg-base-850 border border-surface-border rounded-lg shadow-panel py-1 z-50 animate-fade-in">
-                <button
-                  onClick={() => {
-                    clearAllConsoleLogs()
-                    clearConsole(profileId)
-                    setShowMenu(false)
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left text-text-primary hover:bg-surface-raised transition-colors"
-                >
-                  Reset all console logs
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+        <button onClick={() => clearConsole(profileId)}
+          className="text-xs text-text-muted hover:text-text-primary font-mono transition-colors"
+          title="Clear (Ctrl+L)">
+          Clear
+        </button>
 
         <span className="text-xs text-text-muted font-mono tabular-nums">
           {lines.length.toLocaleString()} lines
         </span>
       </div>
 
+      {/* Search bar */}
+      {searchOpen && (
+        <div className="flex items-center gap-2 px-3 py-1.5 border-b border-surface-border bg-base-900 shrink-0 animate-fade-in">
+          <input
+            ref={searchRef}
+            type="text"
+            value={searchQuery}
+            onChange={e => { setSearchQuery(e.target.value); setSearchIdx(0) }}
+            onKeyDown={e => {
+              if (e.key === 'Enter')  { e.preventDefault(); e.shiftKey ? goPrev() : goNext() }
+              if (e.key === 'Escape') closeSearch()
+            }}
+            placeholder="Search console… (Enter next, Shift+Enter prev)"
+            className="flex-1 bg-base-950 border border-surface-border rounded px-2.5 py-1
+              text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40"
+          />
+          {searchTerm && (
+            <span className="text-xs font-mono text-text-muted shrink-0">
+              {matchIndices.length === 0
+                ? 'No matches'
+                : `${clampedIdx + 1} / ${matchIndices.length}`}
+            </span>
+          )}
+          <button onClick={goPrev} disabled={matchIndices.length === 0}
+            className="text-xs text-text-muted hover:text-text-primary disabled:opacity-30 px-1" title="Previous (Shift+Enter)">▲</button>
+          <button onClick={goNext} disabled={matchIndices.length === 0}
+            className="text-xs text-text-muted hover:text-text-primary disabled:opacity-30 px-1" title="Next (Enter)">▼</button>
+          <button onClick={closeSearch} className="text-xs text-text-muted hover:text-text-primary px-1" title="Close (Esc)">✕</button>
+        </div>
+      )}
+
       {/* Error banner */}
       {errorMsg && (
         <div className="mx-3 mt-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-400 animate-fade-in flex items-center justify-between shrink-0">
           <span>{errorMsg}</span>
-          <button onClick={() => setErrorMsg(null)} className="ml-2 opacity-60 hover:opacity-100">x</button>
+          <button onClick={() => setErrorMsg(null)} className="ml-2 opacity-60 hover:opacity-100">✕</button>
         </div>
       )}
 
-      {/* Console output — horizontal scroll via overflow-x-auto on inner div */}
+      {/* Output */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto overflow-x-auto px-0 py-2 console-output"
-        style={{ fontFamily: '"JetBrains Mono","Fira Code",monospace', fontSize }}
-        onClick={() => inputRef.current?.focus()}
+        onClick={() => !searchOpen && inputRef.current?.focus()}
+        className="flex-1 overflow-y-auto overflow-x-auto bg-base-950 select-text"
+        style={{ fontSize, lineHeight: 1.6, fontFamily: 'monospace' }}
       >
-        {lines.length === 0 ? (
-          <EmptyConsole running={running} hasJar={!!activeProfile?.jarPath} />
-        ) : (
-          // min-w-max forces horizontal scroll instead of wrapping when wordWrap is off
-          <div className={wordWrap ? 'px-3' : 'min-w-max px-3'}>
-            {lines.map((line, idx) => (
+        <div className={wordWrap ? 'py-2' : 'py-2 min-w-max'}>
+          {lines.length === 0 && (
+            <div className="px-4 py-8 text-center text-text-muted text-xs font-mono">
+              {running ? 'Waiting for output…' : 'Process not running. Press Run to start.'}
+            </div>
+          )}
+          {lines.map((line, i) => {
+            // Find which match index this line corresponds to (if any)
+            const matchPos = matchIndices.indexOf(i)
+            const isCurrentMatch = matchPos === clampedIdx && matchPos !== -1
+            const isAnyMatch     = matchPos !== -1
+
+            return (
               <ConsoleLineRow
-                key={profileId + "-" + line.id}
+                key={line.id}
                 line={line}
-                lineNumber={idx + 1}
-                showLineNumbers={lineNumbers}
+                lineNum={i + 1}
+                showLineNum={lineNums}
                 wordWrap={wordWrap}
-                highlightQuery={searchQuery}
-                isCurrentMatch={idx === currentMatchIdx}
+                searchTerm={searchTerm}
+                isCurrentMatch={isCurrentMatch}
+                isAnyMatch={isAnyMatch}
+                ref={matchPos !== -1 ? (el: HTMLDivElement | null) => { matchRefs.current[matchPos] = el } : undefined}
               />
-            ))}
-          </div>
-        )}
-        <div ref={bottomRef}/>
+            )
+          })}
+          <div ref={bottomRef}/>
+        </div>
       </div>
 
       {/* Input */}
-      {showSearch && (
-        <div className="px-3 pt-2 pb-1 shrink-0 border-t border-surface-border bg-base-900">
-          <div className="flex items-center gap-2 bg-base-950 border border-surface-border rounded px-2 py-1.5">
-            <SearchIcon />
-            <input
-              ref={searchRef}
-              type="text"
-              value={searchQuery}
-              onChange={e => { setSearchQuery(e.target.value); setSearchIndex(0) }}
-              onKeyDown={e => {
-                if (e.key === 'Escape') {
-                  e.preventDefault()
-                  setShowSearch(false)
-                  setSearchQuery('')
-                } else if (e.key === 'Enter') {
-                  e.preventDefault()
-                  setSearchIndex(index => (index + 1) % Math.max(1, matchCount))
-                }
-              }}
-              placeholder="Search console… (Enter to find next, Esc to close)"
-              className="flex-1 bg-transparent text-text-primary placeholder:text-text-muted outline-none text-xs"
-              autoComplete="off"
-            />
-            {matchCount > 0 && (
-              <>
-                <button
-                  onClick={() => setSearchIndex(idx => (idx - 1 + matchCount) % matchCount)}
-                  title="Previous match"
-                  className="text-text-muted hover:text-text-primary transition-colors shrink-0"
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <polyline points="9 10 3 6 9 2"/>
-                  </svg>
-                </button>
-                <span className="text-xs text-text-muted font-mono whitespace-nowrap">
-                  {searchIndex + 1} / {matchCount}
-                </span>
-                <button
-                  onClick={() => setSearchIndex(idx => (idx + 1) % matchCount)}
-                  title="Next match"
-                  className="text-text-muted hover:text-text-primary transition-colors shrink-0"
-                >
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <polyline points="3 2 9 6 3 10"/>
-                  </svg>
-                </button>
-              </>
-            )}
-            <button
-              onClick={() => { setShowSearch(false); setSearchQuery('') }}
-              className="text-text-muted hover:text-text-primary transition-colors ml-1 shrink-0"
-              title="Close (Esc)">
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-      <div className="px-3 pb-3 shrink-0">
-        <div
-          className={[
-            'flex items-center gap-2 bg-base-900 border rounded-lg px-3 py-2 transition-colors',
-            !running && 'border-surface-border opacity-50',
-          ].filter(Boolean).join(' ')}
-          style={running ? { borderColor: `${color}50` } : {}}
-        >
-          <span className="font-mono text-sm select-none shrink-0" style={{ color }}>›</span>
-          <input
-            ref={inputRef}
-            type="text"
-            value={inputValue}
-            onChange={e => { setInputValue(e.target.value); setHistoryIdx(-1) }}
-            onKeyDown={handleKeyDown}
-            disabled={!running}
-            placeholder={running ? 'Send command… (↑↓ history, Ctrl+L clear)' : 'Start the process to send commands'}
-            className="flex-1 bg-transparent text-text-primary placeholder:text-text-muted outline-none font-mono text-sm"
-            style={{ fontSize }}
-            autoComplete="off" spellCheck={false}
-          />
-          <Button variant="ghost" size="sm" onClick={handleSend}
-            disabled={!running || !inputValue.trim()} className="!p-1 shrink-0" title="Send (Enter)">
-            <SendIcon />
-          </Button>
-        </div>
+      <div className="flex items-center gap-2 px-3 py-2 border-t border-surface-border bg-base-900 shrink-0">
+        <span className="text-text-muted font-mono text-xs">›</span>
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue}
+          onChange={e => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={!running}
+          placeholder={running ? 'Send command… (↑↓ history, Ctrl+L clear, Ctrl+F search)' : 'Start the process to send commands'}
+          className="flex-1 bg-transparent text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none disabled:opacity-40"
+          style={{ fontSize }}
+        />
       </div>
     </div>
   )
 }
 
-// ── Console line ──────────────────────────────────────────────────────────────
+// ── Console line row ──────────────────────────────────────────────────────────
 
 const LINE_COLORS: Record<ConsoleLine['type'], string> = {
   stdout: 'text-text-primary',
@@ -347,88 +295,65 @@ const LINE_COLORS: Record<ConsoleLine['type'], string> = {
   input:  'text-console-input',
   system: 'text-text-muted',
 }
-const LINE_PREFIX: Record<ConsoleLine['type'], string> = {
-  stdout: '', stderr: '', input: '› ', system: '# ',
-}
 
-function ConsoleLineRow({ line, lineNumber, showLineNumbers, wordWrap, highlightQuery, isCurrentMatch }: {
-  line: ConsoleLine; lineNumber: number; showLineNumbers: boolean; wordWrap: boolean; highlightQuery?: string; isCurrentMatch?: boolean
-}) {
-  const highlight = highlightQuery?.trim()
+const ConsoleLineRow = React.forwardRef<HTMLDivElement, {
+  line:           ConsoleLine
+  lineNum:        number
+  showLineNum:    boolean
+  wordWrap:       boolean
+  searchTerm:     string
+  isCurrentMatch: boolean
+  isAnyMatch:     boolean
+}>(({ line, lineNum, showLineNum, wordWrap, searchTerm, isCurrentMatch, isAnyMatch }, ref) => {
+  const text = line.text || ' '
+
+  const content = searchTerm && isAnyMatch
+    ? renderHighlighted(text, searchTerm, isCurrentMatch)
+    : text
 
   return (
-    <div 
-      data-console-line={lineNumber - 1}
-      className={['flex leading-5 min-h-[1.25rem]', LINE_COLORS[line.type], 
-        isCurrentMatch ? 'bg-yellow-500/15 border-l-2 border-yellow-500/50 pl-1' : 
-        (highlight && line.text.toLowerCase().includes(highlight.toLowerCase()) ? 'bg-yellow-500/5' : '')
-      ].join(' ')}>
-      {showLineNumbers && (
-        <span className="select-none text-text-muted/40 text-right pr-3 shrink-0 tabular-nums"
-          style={{ minWidth: '3em' }}>
-          {lineNumber}
+    <div
+      ref={ref}
+      className={[
+        'flex gap-0 px-2',
+        LINE_COLORS[line.type],
+        isCurrentMatch ? 'bg-yellow-400/10' : isAnyMatch ? 'bg-yellow-400/5' : 'hover:bg-white/[0.02]',
+      ].join(' ')}
+    >
+      {showLineNum && (
+        <span className="w-10 shrink-0 text-right pr-3 text-text-muted/40 select-none font-mono text-[0.7em] leading-[1.6] pt-px">
+          {lineNum}
         </span>
       )}
-      <span
-        className={[
-          'flex-1',
-          wordWrap ? 'break-all whitespace-pre-wrap' : 'whitespace-pre',
-        ].join(' ')}
-      >
-        <span className="select-none opacity-40">{LINE_PREFIX[line.type]}</span>
-        {highlight && line.text.toLowerCase().includes(highlight.toLowerCase())
-          ? highlight_LineText(line.text, highlight)
-          : line.text
-        }
+      <span className={['font-mono flex-1', wordWrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'].join(' ')}>
+        {content}
       </span>
     </div>
   )
-}
+})
+ConsoleLineRow.displayName = 'ConsoleLineRow'
 
-/**
- * Highlight matching text in a line.
- */
-function highlight_LineText(text: string, query: string): React.ReactNode {
-  const lowerText = text.toLowerCase()
-  const lowerQuery = query.toLowerCase()
+/** Split text around matches and return JSX with highlighted spans */
+function renderHighlighted(text: string, term: string, isCurrent: boolean): React.ReactNode {
   const parts: React.ReactNode[] = []
-  let lastIdx = 0
+  const lower = text.toLowerCase()
+  let last = 0
+  let idx  = lower.indexOf(term)
+  let key  = 0
 
-  let matchIdx = lowerText.indexOf(lowerQuery)
-  while (matchIdx !== -1) {
-    if (matchIdx > lastIdx) {
-      parts.push(text.substring(lastIdx, matchIdx))
-    }
+  while (idx !== -1) {
+    if (idx > last) parts.push(text.slice(last, idx))
     parts.push(
-      <span key={`m-${matchIdx}`} className="bg-yellow-500/30 font-medium">
-        {text.substring(matchIdx, matchIdx + query.length)}
-      </span>
+      <mark
+        key={key++}
+        className={isCurrent ? 'bg-yellow-300 text-black rounded-sm' : 'bg-yellow-400/30 text-inherit rounded-sm'}
+      >
+        {text.slice(idx, idx + term.length)}
+      </mark>
     )
-    lastIdx = matchIdx + query.length
-    matchIdx = lowerText.indexOf(lowerQuery, lastIdx)
+    last = idx + term.length
+    idx  = lower.indexOf(term, last)
   }
-  if (lastIdx < text.length) {
-    parts.push(text.substring(lastIdx))
-  }
+  if (last < text.length) parts.push(text.slice(last))
   return parts
 }
-
-function EmptyConsole({ running, hasJar }: { running: boolean; hasJar: boolean }) {
-  return (
-    <div className="flex flex-col items-center justify-center h-full gap-3 select-none opacity-30 py-12">
-      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="text-text-muted">
-        <rect x="2" y="3" width="20" height="14" rx="2"/>
-        <path d="M8 21h8M12 17v4"/><path d="M6 8l3 3-3 3" strokeWidth="1.5"/><path d="M11 14h6" strokeWidth="1.5"/>
-      </svg>
-      <p className="text-sm font-mono text-text-muted">
-        {!hasJar ? 'No JAR configured — go to Configure' : running ? 'Waiting for output…' : 'Process not running'}
-      </p>
-    </div>
-  )
-}
-
-const PlayIcon  = () => <svg width="10" height="10" viewBox="0 0 12 12" fill="currentColor"><path d="M2 1.5l9 4.5-9 4.5V1.5z"/></svg>
-const StopIcon  = () => <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor"><rect width="10" height="10" rx="1.5"/></svg>
-const TrashIcon = () => <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 4h10M5 4V2.5h4V4M6 7v4M8 7v4M3 4l.8 7.5a1 1 0 001 .5h4.4a1 1 0 001-.5L11 4"/></svg>
-const SendIcon  = () => <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l4 2 2 4 4-11z"/></svg>
-const SearchIcon = () => <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M11.5 11.5l3 3"/></svg>

@@ -5,6 +5,8 @@ import { v4 as uuidv4 } from 'uuid'
 import type { Profile, ProcessState, ConsoleLine, ProcessLogEntry, JavaProcessInfo } from './shared/types'
 import { IPC } from './shared/types'
 
+const SELF_PROCESS_NAME = 'Java Client Runner'
+
 interface ManagedProcess {
   process:     ChildProcess
   profileId:   string
@@ -14,32 +16,12 @@ interface ManagedProcess {
   lineCounter: number
 }
 
-interface RestartSchedule {
-  profileId: string
-  timeoutId: NodeJS.Timeout
-}
-
 class ProcessManager {
   private processes   = new Map<string, ManagedProcess>()
   private activityLog: ProcessLogEntry[] = []
-  private restarts    = new Map<string, RestartSchedule>()
-  private profiles    = new Map<string, Profile>()
-  private window: BrowserWindow | null = null
+  private window:      BrowserWindow | null = null
 
   setWindow(win: BrowserWindow): void { this.window = win }
-  
-  /**
-   * Store the current active profiles so we can restart them.
-   * Called by IPC or whenever profiles change.
-   */
-  setProfiles(profiles: Profile[]): void {
-    this.profiles.clear()
-    for (const p of profiles) {
-      this.profiles.set(p.id, p)
-    }
-  }
-
-  // ── Build args ──────────────────────────────────────────────────────────────
 
   private buildArgs(profile: Profile): { cmd: string; args: string[] } {
     const cmd  = profile.javaPath || 'java'
@@ -55,13 +37,9 @@ class ProcessManager {
     return { cmd, args }
   }
 
-  // ── Start ───────────────────────────────────────────────────────────────────
-
   start(profile: Profile): { ok: boolean; error?: string } {
-    if (this.processes.has(profile.id))
-      return { ok: false, error: 'Process already running' }
-    if (!profile.jarPath)
-      return { ok: false, error: 'No JAR file specified' }
+    if (this.processes.has(profile.id)) return { ok: false, error: 'Process already running' }
+    if (!profile.jarPath)              return { ok: false, error: 'No JAR file specified' }
 
     const { cmd, args } = this.buildArgs(profile)
     const cwd = profile.workingDir || path.dirname(profile.jarPath)
@@ -71,11 +49,7 @@ class ProcessManager {
 
     let proc: ChildProcess
     try {
-      proc = spawn(cmd, args, {
-        cwd, env: process.env,
-        shell: false, detached: false,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      })
+      proc = spawn(cmd, args, { cwd, env: process.env, shell: false, detached: false, stdio: ['pipe', 'pipe', 'pipe'] })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
       this.pushSystem(profile.id, `Failed to start: ${msg}`)
@@ -105,58 +79,18 @@ class ProcessManager {
     proc.on('error', (err) => this.pushSystem(profile.id, `Error: ${err.message}`))
     proc.on('exit', (code, signal) => {
       this.processes.delete(profile.id)
-      const reason = signal ? `signal ${signal}` : `exit code ${code ?? '?'}`
-      this.pushSystem(profile.id, `Process stopped (${reason})`)
+      this.pushSystem(profile.id, `Process stopped (${signal ? `signal ${signal}` : `exit code ${code ?? '?'}`})`)
       const entry = this.activityLog.find(e => e.profileId === profile.id && !e.stoppedAt)
       if (entry) { entry.stoppedAt = Date.now(); entry.exitCode = code ?? undefined; entry.signal = signal ?? undefined }
       this.broadcastStates()
-      
-      // Auto-restart if enabled and not intentionally stopped by user
-      this.handleAutoRestart(profile.id)
     })
 
     this.broadcastStates()
     return { ok: true }
   }
 
-  /**
-   * Handle automatic restart for a profile if configured.
-   */
-  private handleAutoRestart(profileId: string): void {
-    const profile = this.profiles.get(profileId)
-    if (!profile || !profile.restartOnCrash) return
-    
-    // Clear any existing restart timer
-    const existing = this.restarts.get(profileId)
-    if (existing) clearTimeout(existing.timeoutId)
-    
-    const delay = profile.restartIntervalMs ?? 5000
-    this.pushSystem(profileId, `Will restart in ${Math.round(delay / 1000)} seconds...`)
-    
-    const timeoutId = setTimeout(() => {
-      this.restarts.delete(profileId)
-      const latestProfile = this.profiles.get(profileId)
-      if (latestProfile) {
-        this.pushSystem(profileId, `Auto-restarting...`)
-        this.start(latestProfile)
-      }
-    }, delay)
-    
-    this.restarts.set(profileId, { profileId, timeoutId })
-  }
-
-  // ── Stop ────────────────────────────────────────────────────────────────────
-
   stop(profileId: string): { ok: boolean; error?: string } {
     const m = this.processes.get(profileId)
-    
-    // Cancel any pending restart
-    const restart = this.restarts.get(profileId)
-    if (restart) {
-      clearTimeout(restart.timeoutId)
-      this.restarts.delete(profileId)
-    }
-    
     if (!m) return { ok: false, error: 'Not running' }
     this.pushSystem(profileId, 'Stopping process...')
     const pid = m.process.pid
@@ -167,9 +101,7 @@ class ProcessManager {
     } else {
       try { m.process.kill('SIGTERM') } catch { /* ignore */ }
       setTimeout(() => {
-        if (this.processes.has(profileId)) {
-          try { m.process.kill('SIGKILL') } catch { /* ignore */ }
-        }
+        if (this.processes.has(profileId)) try { m.process.kill('SIGKILL') } catch { /* ignore */ }
       }, 5000)
     }
     return { ok: true }
@@ -189,58 +121,51 @@ class ProcessManager {
     }))
   }
 
-  getActivityLog():  ProcessLogEntry[] { return this.activityLog }
-  clearActivityLog(): void             { this.activityLog = [] }
+  getActivityLog():   ProcessLogEntry[] { return this.activityLog }
+  clearActivityLog(): void              { this.activityLog = [] }
 
-  // ── Process Scanner — ALL processes, java ones highlighted ─────────────────
-  //
-  // We scan every process on the machine. isJava=true when the process name or
-  // command line contains "java" (case-insensitive). managed=true when JRC
-  // started it. This is far more reliable than filtering beforehand because
-  // the Java(TM) Platform SE binary can appear under many names.
+  // ── Process Scanner ─────────────────────────────────────────────────────────
 
   scanAllProcesses(): JavaProcessInfo[] {
     const managedPids = new Set(
-      Array.from(this.processes.values())
-        .map(m => m.process.pid)
-        .filter((p): p is number => p != null)
+      Array.from(this.processes.values()).map(m => m.process.pid).filter((p): p is number => p != null)
     )
     if (process.platform === 'win32') return this.scanAllWindows(managedPids)
     return this.scanAllUnix(managedPids)
   }
 
+  private isSelf(name: string, cmd: string): boolean {
+    return cmd.includes(SELF_PROCESS_NAME) || name.includes(SELF_PROCESS_NAME)
+  }
+
+  /** Parse -jar <path> from a command line and return just the filename */
+  private parseJarName(cmd: string): string | undefined {
+    const m = cmd.match(/-jar\s+([^\s]+)/i)
+    if (!m) return undefined
+    return m[1].split(/[/\\]/).pop()
+  }
+
   private scanAllWindows(managedPids: Set<number>): JavaProcessInfo[] {
-    // Use -EncodedCommand to pass Base64-encoded UTF-16LE script — avoids ALL
-    // newline/quoting issues that break PowerShell when passed via -Command "..."
-    //
-    // Script: join Win32_Process (for CommandLine) with Get-Process (for all PIDs)
-    // via a hashtable lookup so we get command lines for every process, not just java.
+    // Extended PowerShell script — fetches memory, thread count, start time
     const psScript = [
-      '$procs = @{}',
-      'Get-WmiObject Win32_Process | ForEach-Object { $procs[$_.ProcessId] = $_.CommandLine }',
+      '$wmi = @{}',
+      'Get-WmiObject Win32_Process | ForEach-Object { $wmi[$_.ProcessId] = $_.CommandLine }',
       'Get-Process | ForEach-Object {',
-      '  $cmd = if ($procs[$_.Id]) { $procs[$_.Id] } else { $_.ProcessName }',
-      '  [PSCustomObject]@{ Id = $_.Id; Name = $_.ProcessName; Cmd = $cmd }',
+      '  $cmd = if ($wmi[$_.Id]) { $wmi[$_.Id] } else { $_.ProcessName }',
+      '  $mem = [math]::Round($_.WorkingSet64 / 1MB, 1)',
+      '  $thr = $_.Threads.Count',
+      '  $st  = if ($_.StartTime) { $_.StartTime.ToString("yyyy-MM-dd HH:mm:ss") } else { "" }',
+      '  [PSCustomObject]@{ Id=$_.Id; Name=$_.ProcessName; Cmd=$cmd; MemMB=$mem; Threads=$thr; Start=$st }',
       '} | ConvertTo-Json -Compress -Depth 2',
     ].join('; ')
 
-    // Encode as UTF-16LE Base64 (what PowerShell -EncodedCommand expects)
     const encoded = Buffer.from(psScript, 'utf16le').toString('base64')
-
     try {
       const raw_out = execSync(
-        // -OutputFormat Text suppresses the XML progress/verbose serialization
-        // that PowerShell emits when loading modules for the first time.
         `powershell -NoProfile -NonInteractive -OutputFormat Text -EncodedCommand ${encoded}`,
         { encoding: 'utf8', timeout: 20000 }
       )
-
-      // Strip any non-JSON prefix lines (e.g. progress XML <Objs ...> noise)
-      // The JSON output is always a single line starting with '[' or '{'
-      const jsonLine = raw_out.split('\n').find(l => {
-        const t = l.trim()
-        return t.startsWith('[') || t.startsWith('{')
-      })
+      const jsonLine = raw_out.split('\n').find(l => { const t = l.trim(); return t.startsWith('[') || t.startsWith('{') })
       if (!jsonLine) return this.scanAllWindowsTasklist(managedPids)
 
       const raw   = JSON.parse(jsonLine.trim())
@@ -251,8 +176,16 @@ class ProcessManager {
           const name = String(p.Name ?? '')
           const cmd  = String(p.Cmd  ?? name)
           if (isNaN(pid) || pid <= 0) return null
+          if (this.isSelf(name, cmd)) return null
           const isJava = /java/i.test(name) || /java/i.test(cmd)
-          return { pid, command: (cmd.length > 2 ? cmd : name).slice(0, 300), isJava, managed: managedPids.has(pid) } as JavaProcessInfo
+          return {
+            pid, name, command: (cmd.length > 2 ? cmd : name).slice(0, 400),
+            isJava, managed: managedPids.has(pid),
+            memoryMB:  typeof p.MemMB  === 'number' ? p.MemMB : undefined,
+            threads:   typeof p.Threads === 'number' ? p.Threads : undefined,
+            startTime: p.Start ? String(p.Start) : undefined,
+            jarName:   this.parseJarName(cmd),
+          } as JavaProcessInfo
         })
         .filter((x): x is JavaProcessInfo => x !== null)
         .sort((a, b) => (b.isJava ? 1 : 0) - (a.isJava ? 1 : 0))
@@ -261,26 +194,21 @@ class ProcessManager {
     }
   }
 
-  /**
-   * Fallback scanner using `tasklist /fo csv` — always available on Windows,
-   * no PowerShell required. Does not give command lines but gives PID + name.
-   */
   private scanAllWindowsTasklist(managedPids: Set<number>): JavaProcessInfo[] {
     try {
-      // tasklist /fo csv output: "Image Name","PID","Session Name","Session#","Mem Usage"
       const out = execSync('tasklist /fo csv /nh', { encoding: 'utf8', timeout: 8000 })
       const results: JavaProcessInfo[] = []
       for (const line of out.split('\n')) {
         const t = line.trim()
         if (!t) continue
-        // Remove surrounding quotes and split on ","
         const parts = t.replace(/"/g, '').split(',')
         if (parts.length < 2) continue
         const name = parts[0].trim()
         const pid  = parseInt(parts[1].trim(), 10)
         if (isNaN(pid) || pid <= 0) continue
+        if (this.isSelf(name, name)) continue
         const isJava = /java/i.test(name)
-        results.push({ pid, command: name, isJava, managed: managedPids.has(pid) })
+        results.push({ pid, name, command: name, isJava, managed: managedPids.has(pid) })
       }
       return results.sort((a, b) => (b.isJava ? 1 : 0) - (a.isJava ? 1 : 0))
     } catch { return [] }
@@ -289,17 +217,16 @@ class ProcessManager {
   private scanAllUnix(managedPids: Set<number>): JavaProcessInfo[] {
     try {
       const out = execSync('ps -eo pid,comm,args', { encoding: 'utf8', timeout: 5000 })
-      return out.split('\n')
-        .slice(1)
-        .filter(Boolean)
+      return out.split('\n').slice(1).filter(Boolean)
         .map(line => {
           const parts = line.trim().split(/\s+/)
           const pid   = parseInt(parts[0], 10)
           const name  = parts[1] ?? ''
-          const cmd   = parts.slice(2).join(' ').slice(0, 300)
+          const cmd   = parts.slice(2).join(' ').slice(0, 400)
           if (isNaN(pid)) return null
+          if (this.isSelf(name, cmd)) return null
           const isJava = /java/i.test(name) || /java/i.test(cmd)
-          return { pid, command: cmd || name, isJava, managed: managedPids.has(pid) } as JavaProcessInfo
+          return { pid, name, command: cmd || name, isJava, managed: managedPids.has(pid), jarName: this.parseJarName(cmd) } as JavaProcessInfo
         })
         .filter((x): x is JavaProcessInfo => x !== null)
         .sort((a, b) => (b.isJava ? 1 : 0) - (a.isJava ? 1 : 0))
@@ -308,11 +235,8 @@ class ProcessManager {
 
   killPid(pid: number): { ok: boolean; error?: string } {
     try {
-      if (process.platform === 'win32') {
-        execSync(`taskkill /PID ${pid} /T /F`, { timeout: 5000 })
-      } else {
-        process.kill(pid, 'SIGKILL')
-      }
+      if (process.platform === 'win32') execSync(`taskkill /PID ${pid} /T /F`, { timeout: 5000 })
+      else process.kill(pid, 'SIGKILL')
       for (const [id, m] of this.processes.entries()) {
         if (m.process.pid === pid) { this.processes.delete(id); break }
       }
@@ -330,13 +254,10 @@ class ProcessManager {
     return { ok: true, killed }
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
-
   private pushOutput(pid: string, chunk: string, type: 'stdout' | 'stderr', m: ManagedProcess) {
-    const lines = chunk.split(/\r?\n/)
-    for (let i = 0; i < lines.length; i++) {
-      if (i === lines.length - 1 && lines[i] === '') continue
-      this.pushLine(pid, lines[i], type, ++m.lineCounter)
+    for (const [i, text] of chunk.split(/\r?\n/).entries()) {
+      if (i === chunk.split(/\r?\n/).length - 1 && text === '') continue
+      this.pushLine(pid, text, type, ++m.lineCounter)
     }
   }
 

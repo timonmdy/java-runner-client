@@ -1,6 +1,6 @@
 {
   "name": "java-runner-client",
-  "version": "2.2.3",
+  "version": "2.0.7",
   "description": "Run and manage Java processes with profiles, console I/O, and system tray support",
   "main": "dist/main/main.js",
   "scripts": {
@@ -40,24 +40,10 @@
     "appId": "com.javarunner.client",
     "productName": "Java Runner Client",
     "icon": "resources/icon",
-    "files": [
-      "dist/**/*",
-      "resources/**/*"
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "resources/icon.ico"
-    },
-    "linux": {
-      "target": "AppImage",
-      "icon": "resources/icon.png"
-    },
-    "mac": {
-      "icon": "resources/icon.icns"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true
-    }
+    "files": ["dist/**/*", "resources/**/*"],
+    "win": { "target": "nsis", "icon": "resources/icon.ico" },
+    "linux": { "target": "AppImage", "icon": "resources/icon.png" },
+    "mac": { "icon": "resources/icon.icns" },
+    "nsis": { "oneClick": false, "allowToChangeInstallationDirectory": true }
   }
 }
