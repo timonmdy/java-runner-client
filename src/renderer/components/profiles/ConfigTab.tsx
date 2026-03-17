@@ -10,14 +10,24 @@ import { ArgList }    from '../common/ArgList'
 import { PropList }   from '../common/PropList'
 import type { Profile } from '../../types'
 
-type Section = 'files' | 'jvm' | 'props' | 'args'
+type Section = 'files' | 'jvm' | 'props' | 'args' | 'restart'
 
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'files', label: 'Files & Paths' },
   { id: 'jvm',   label: 'JVM Args'      },
   { id: 'props', label: 'Properties (-D)' },
   { id: 'args',  label: 'Program Args'  },
+  { id: 'restart', label: 'Restart'     },
 ]
+
+/**
+ * Track if there are any unsaved changes (both unadded inputs AND field modifications).
+ * This is called by MainLayout to check before switching tabs.
+ */
+let currentUnsavedState = { hasInputs: false, hasChanges: false }
+export function configTabHasUnsavedInputs(): boolean {
+  return currentUnsavedState.hasInputs || currentUnsavedState.hasChanges
+}
 
 export function ConfigTab() {
   const { activeProfile, saveProfile, isRunning } = useApp()
@@ -25,10 +35,42 @@ export function ConfigTab() {
   const [draft, setDraft]     = useState<Profile | null>(null)
   const [saved, setSaved]     = useState(false)
   const [section, setSection] = useState<Section>('files')
+  const [unsavedInputs, setUnsavedInputs] = useState(0)
+  const [hasFieldChanges, setHasFieldChanges] = useState(false)
+  // Track draft input values for ArgList/PropList to preserve them across tab switches
+  const [draftInputs, setDraftInputs] = useState({
+    jvmArgs: '',
+    propsList: { key: '', value: '' },
+    programArgs: ''
+  })
 
   useEffect(() => {
     if (activeProfile) setDraft({ ...activeProfile })
+    setUnsavedInputs(0)
+    setHasFieldChanges(false)
+    // Reset draft inputs when profile changes
+    setDraftInputs({ jvmArgs: '', propsList: { key: '', value: '' }, programArgs: '' })
   }, [activeProfile?.id])
+
+  // Detect if draft differs from active profile (excluding unadded input drafts)
+  useEffect(() => {
+    if (!draft || !activeProfile) return
+    const changed = 
+      draft.jarPath !== activeProfile.jarPath ||
+      draft.workingDir !== activeProfile.workingDir ||
+      draft.javaPath !== activeProfile.javaPath ||
+      draft.restartOnCrash !== activeProfile.restartOnCrash ||
+      draft.restartIntervalMs !== activeProfile.restartIntervalMs
+    setHasFieldChanges(changed)
+  }, [draft, activeProfile])
+
+  // Track unsaved state for MainLayout
+  useEffect(() => {
+    currentUnsavedState = {
+      hasInputs: unsavedInputs > 0,
+      hasChanges: hasFieldChanges
+    }
+  }, [unsavedInputs, hasFieldChanges])
 
   if (!draft || !activeProfile) {
     return <div className="flex items-center justify-center h-full text-sm text-text-muted">No profile selected</div>
@@ -42,7 +84,12 @@ export function ConfigTab() {
   const handleSave = async () => {
     await saveProfile(draft)
     setSaved(true)
+    setUnsavedInputs(0)
     setTimeout(() => setSaved(false), 1800)
+  }
+
+  const handleDraftChange = (hasUnsaved: boolean) => {
+    setUnsavedInputs(prev => hasUnsaved ? prev + 1 : Math.max(0, prev - 1))
   }
 
   return (
@@ -50,8 +97,15 @@ export function ConfigTab() {
       {/* Toolbar */}
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0">
         <h2 className="text-sm font-medium text-text-primary flex-1 truncate">{draft.name}</h2>
+        {hasFieldChanges && (
+          <span className="text-xs text-console-warn font-mono rounded bg-console-warn/10 px-2 py-1">
+            config changed
+          </span>
+        )}
         {running && (
-          <span className="text-xs text-console-warn font-mono">restart needed</span>
+          <span className="text-xs text-console-warn font-mono rounded bg-console-warn/10 px-2 py-1">
+            restart needed
+          </span>
         )}
         <Button variant="primary" size="sm" onClick={handleSave}
           style={{ backgroundColor: color, color: '#08090d', borderColor: color }}>
@@ -90,6 +144,9 @@ export function ConfigTab() {
             <ArgList
               items={draft.jvmArgs}
               onChange={jvmArgs => update({ jvmArgs })}
+              onDraftChange={handleDraftChange}
+              draft={draftInputs.jvmArgs}
+              onDraftUpdate={v => setDraftInputs(prev => ({ ...prev, jvmArgs: v }))}
               placeholder="-Xmx2g"
             />
           </ArgSection>
@@ -100,6 +157,10 @@ export function ConfigTab() {
             <PropList
               items={draft.systemProperties}
               onChange={systemProperties => update({ systemProperties })}
+              onDraftChange={handleDraftChange}
+              draftKey={draftInputs.propsList.key}
+              draftValue={draftInputs.propsList.value}
+              onDraftUpdate={(k, v) => setDraftInputs(prev => ({ ...prev, propsList: { key: k, value: v } }))}
             />
           </ArgSection>
         )}
@@ -109,9 +170,52 @@ export function ConfigTab() {
             <ArgList
               items={draft.programArgs}
               onChange={programArgs => update({ programArgs })}
+              onDraftChange={handleDraftChange}
+              draft={draftInputs.programArgs}
+              onDraftUpdate={v => setDraftInputs(prev => ({ ...prev, programArgs: v }))}
               placeholder="--nogui"
             />
           </ArgSection>
+        )}
+
+        {section === 'restart' && (
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">Auto-Restart on Crash</h3>
+              <p className="text-xs text-text-muted mt-0.5">Configure automatic restart settings if the process exits unexpectedly.</p>
+            </div>
+            
+            <div className="flex items-center gap-3 p-3 bg-base-950 border border-surface-border rounded">
+              <input
+                type="checkbox"
+                id="restart-enabled"
+                checked={draft.restartOnCrash ?? false}
+                onChange={e => update({ restartOnCrash: e.target.checked })}
+                className="rounded accent-emerald-500"
+              />
+              <label htmlFor="restart-enabled" className="text-xs text-text-secondary cursor-pointer flex-1">
+                Enable automatic restart when process crashes
+              </label>
+            </div>
+
+            {(draft.restartOnCrash ?? false) && (
+              <div className="space-y-2">
+                <label className="text-xs font-mono text-text-muted uppercase tracking-widest block">
+                  Restart delay (seconds)
+                </label>
+                <input
+                  type="number"
+                  value={Math.round((draft.restartIntervalMs ?? 5000) / 1000)}
+                  onChange={e => update({ restartIntervalMs: Math.max(1, parseInt(e.target.value) || 5) * 1000 })}
+                  min="1"
+                  max="300"
+                  className="w-full px-3 py-2 bg-base-950 border border-surface-border rounded text-xs text-text-primary placeholder:text-text-muted outline-none"
+                  placeholder="5"
+                />
+                <p className="text-xs text-text-muted">Wait this many seconds after crash before restarting (1-300)</p>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Command preview */}

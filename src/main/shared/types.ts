@@ -10,6 +10,7 @@ export interface Profile {
   jvmArgs: JvmArgument[]; systemProperties: SystemProperty[];
   programArgs: ProgramArgument[]; javaPath: string;
   autoStart: boolean; color: string; createdAt: number; updatedAt: number;
+  restartOnCrash?: boolean; restartIntervalMs?: number;
 }
 
 export interface AppSettings {

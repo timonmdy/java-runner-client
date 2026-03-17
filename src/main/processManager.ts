@@ -14,12 +14,30 @@ interface ManagedProcess {
   lineCounter: number
 }
 
+interface RestartSchedule {
+  profileId: string
+  timeoutId: NodeJS.Timeout
+}
+
 class ProcessManager {
   private processes   = new Map<string, ManagedProcess>()
   private activityLog: ProcessLogEntry[] = []
+  private restarts    = new Map<string, RestartSchedule>()
+  private profiles    = new Map<string, Profile>()
   private window: BrowserWindow | null = null
 
   setWindow(win: BrowserWindow): void { this.window = win }
+  
+  /**
+   * Store the current active profiles so we can restart them.
+   * Called by IPC or whenever profiles change.
+   */
+  setProfiles(profiles: Profile[]): void {
+    this.profiles.clear()
+    for (const p of profiles) {
+      this.profiles.set(p.id, p)
+    }
+  }
 
   // ── Build args ──────────────────────────────────────────────────────────────
 
@@ -92,16 +110,53 @@ class ProcessManager {
       const entry = this.activityLog.find(e => e.profileId === profile.id && !e.stoppedAt)
       if (entry) { entry.stoppedAt = Date.now(); entry.exitCode = code ?? undefined; entry.signal = signal ?? undefined }
       this.broadcastStates()
+      
+      // Auto-restart if enabled and not intentionally stopped by user
+      this.handleAutoRestart(profile.id)
     })
 
     this.broadcastStates()
     return { ok: true }
   }
 
+  /**
+   * Handle automatic restart for a profile if configured.
+   */
+  private handleAutoRestart(profileId: string): void {
+    const profile = this.profiles.get(profileId)
+    if (!profile || !profile.restartOnCrash) return
+    
+    // Clear any existing restart timer
+    const existing = this.restarts.get(profileId)
+    if (existing) clearTimeout(existing.timeoutId)
+    
+    const delay = profile.restartIntervalMs ?? 5000
+    this.pushSystem(profileId, `Will restart in ${Math.round(delay / 1000)} seconds...`)
+    
+    const timeoutId = setTimeout(() => {
+      this.restarts.delete(profileId)
+      const latestProfile = this.profiles.get(profileId)
+      if (latestProfile) {
+        this.pushSystem(profileId, `Auto-restarting...`)
+        this.start(latestProfile)
+      }
+    }, delay)
+    
+    this.restarts.set(profileId, { profileId, timeoutId })
+  }
+
   // ── Stop ────────────────────────────────────────────────────────────────────
 
   stop(profileId: string): { ok: boolean; error?: string } {
     const m = this.processes.get(profileId)
+    
+    // Cancel any pending restart
+    const restart = this.restarts.get(profileId)
+    if (restart) {
+      clearTimeout(restart.timeoutId)
+      this.restarts.delete(profileId)
+    }
+    
     if (!m) return { ok: false, error: 'Not running' }
     this.pushSystem(profileId, 'Stopping process...')
     const pid = m.process.pid

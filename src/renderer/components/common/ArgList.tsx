@@ -13,6 +13,9 @@ export interface ArgItem {
 interface Props {
   items:       ArgItem[]
   onChange:    (items: ArgItem[]) => void
+  onDraftChange?: (hasDraft: boolean) => void
+  draft?:      string  // Controlled draft value (optional - if not provided, uses local state)
+  onDraftUpdate?: (value: string) => void  // Callback when draft changes (for parent control)
   placeholder?: string
   addLabel?:   string
 }
@@ -20,16 +23,37 @@ interface Props {
 export function ArgList({
   items,
   onChange,
+  onDraftChange,
+  draft: controlledDraft,
+  onDraftUpdate,
   placeholder = '--arg',
   addLabel    = 'Add argument',
 }: Props) {
-  const [draft, setDraft] = useState('')
+  const [localDraft, setLocalDraft] = useState('')
+  // Use controlled draft if parent provides one, otherwise use local state
+  const draft = controlledDraft !== undefined ? controlledDraft : localDraft
+
+  const setDraft = (value: string) => {
+    if (controlledDraft !== undefined) {
+      // Controlled mode
+      onDraftUpdate?.(value)
+    } else {
+      // Uncontrolled mode
+      setLocalDraft(value)
+    }
+  }
 
   const add = () => {
     const v = draft.trim()
     if (!v) return
     onChange([...items, { value: v, enabled: true }])
     setDraft('')
+    onDraftChange?.(false)
+  }
+
+  const handleDraftChange = (value: string) => {
+    setDraft(value)
+    onDraftChange?.(value.trim().length > 0)
   }
 
   const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
@@ -93,7 +117,7 @@ export function ArgList({
         <input
           type="text"
           value={draft}
-          onChange={e => setDraft(e.target.value)}
+          onChange={e => handleDraftChange(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && add()}
           placeholder={placeholder}
           className="flex-1 bg-base-900 border border-dashed border-surface-border rounded-md px-2.5 py-1.5

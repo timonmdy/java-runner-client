@@ -9,10 +9,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { ProfileSidebar } from './profiles/ProfileSidebar'
 import { ConsoleTab }     from './console/ConsoleTab'
-import { ConfigTab }      from './profiles/ConfigTab'
+import { ConfigTab, configTabHasUnsavedInputs }      from './profiles/ConfigTab'
 import { ProfileTab }     from './profiles/ProfileTab'
 import { SettingsTab }    from './settings/SettingsTab'
 import { UtilitiesTab }   from './utils/UtilitiesTab'
+import { Dialog }         from './common/Dialog'
 import { useApp }         from '../store/AppStore'
 import { VscTerminal, VscAccount } from 'react-icons/vsc'
 import { LuList } from 'react-icons/lu'
@@ -23,6 +24,8 @@ type SidePanel = null | 'settings' | 'faq' | 'utilities'
 export function MainLayout() {
   const [activeTab,  setActiveTab]  = useState<MainTab>('console')
   const [sidePanel,  setSidePanel]  = useState<SidePanel>(null)
+  const [pendingTab, setPendingTab] = useState<MainTab | null>(null)
+  const [showConfirm, setShowConfirm] = useState(false)
   const { state, activeProfile, isRunning } = useApp()
 
   const running = activeProfile ? isRunning(activeProfile.id) : false
@@ -45,6 +48,29 @@ export function MainLayout() {
 
   const openPanel = (p: SidePanel) =>
     setSidePanel(prev => prev === p ? null : p)
+
+  // Handle tab switching with unsaved inputs check
+  const handleTabClick = (tab: MainTab) => {
+    if (activeTab === 'config' && configTabHasUnsavedInputs() && tab !== 'config') {
+      setPendingTab(tab)
+      setShowConfirm(true)
+      return
+    }
+    setActiveTab(tab)
+  }
+
+  const handleDiscardChanges = () => {
+    setShowConfirm(false)
+    if (pendingTab) {
+      setActiveTab(pendingTab)
+      setPendingTab(null)
+    }
+  }
+
+  const handleCancelSwitch = () => {
+    setShowConfirm(false)
+    setPendingTab(null)
+  }
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -91,7 +117,7 @@ export function MainLayout() {
               {TABS.map(tab => {
                 const isActive = activeTab === tab.id
                 return (
-                  <button key={tab.id} onClick={() => setActiveTab(tab.id as MainTab)}
+                  <button key={tab.id} onClick={() => handleTabClick(tab.id as MainTab)}
                     className={[
                       'flex items-center gap-1.5 px-3 py-2 text-xs border-b-2 -mb-px transition-all duration-150',
                       isActive ? 'font-medium' : 'text-text-muted border-transparent hover:text-text-primary',
@@ -120,6 +146,18 @@ export function MainLayout() {
           </>
         )}
       </div>
+
+      {/* Unsaved changes warning dialog */}
+      <Dialog
+        open={showConfirm}
+        title="Unsaved changes"
+        message="You have unsaved changes to this profile. Discard them and switch tabs?"
+        confirmLabel="Discard"
+        cancelLabel="Cancel"
+        danger={true}
+        onConfirm={handleDiscardChanges}
+        onCancel={handleCancelSwitch}
+      />
     </div>
   )
 }

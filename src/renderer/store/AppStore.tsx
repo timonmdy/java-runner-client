@@ -11,6 +11,7 @@ import React, {
 } from 'react'
 import { v4 as uuidv4 } from 'uuid'
 import type { Profile, AppSettings, ProcessState, ConsoleLine } from '../types'
+import { saveConsoleLogs, loadConsoleLogs, clearConsoleLogs, cleanupOrphanedLogs } from '../utils/consoleStorage'
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -34,6 +35,7 @@ const INITIAL_STATE: AppState = {
 
 type Action =
   | { type: 'INIT';         profiles: Profile[]; settings: AppSettings; states: ProcessState[] }
+  | { type: 'LOAD_CONSOLE_LOGS'; consoleLogs: Record<string, ConsoleLine[]> }
   | { type: 'SET_PROFILES'; profiles: Profile[] }
   | { type: 'SET_ACTIVE';   id: string }
   | { type: 'SET_STATES';   states: ProcessState[] }
@@ -54,12 +56,32 @@ function reducer(state: AppState, action: Action): AppState {
         settings:        action.settings,
         loading:         false,
       }
+    case 'LOAD_CONSOLE_LOGS':
+      return { ...state, consoleLogs: action.consoleLogs }
     case 'SET_PROFILES': return { ...state, profiles: action.profiles }
     case 'SET_ACTIVE':   return { ...state, activeProfileId: action.id }
     case 'SET_STATES':   return { ...state, processStates: action.states }
     case 'SET_SETTINGS': return { ...state, settings: action.settings }
     case 'APPEND_LOG': {
       const prev    = state.consoleLogs[action.profileId] ?? []
+      const lastLine = prev[prev.length - 1]
+      
+      // Prevent appending duplicate system messages (e.g., consecutive "Starting..." lines)
+      // Check both exact text match and pattern match for common startup messages
+      if (action.line.type === 'system' && lastLine?.type === 'system') {
+        if (lastLine.text === action.line.text) {
+          return state // Skip exact duplicate
+        }
+        // Also skip if both are startup-related system messages of the same type
+        const startupPatterns = [/^Starting:/, /^PID:/, /^Working dir:/, /^Process stopped/]
+        const isNewStartup = startupPatterns.some(p => p.test(action.line.text))
+        const isLastStartup = startupPatterns.some(p => p.test(lastLine.text))
+        if (isNewStartup && isLastStartup) {
+          // Skip adding another startup message right after one
+          return state
+        }
+      }
+      
       const next    = [...prev, action.line]
       const trimmed = next.length > action.maxLines ? next.slice(next.length - action.maxLines) : next
       return { ...state, consoleLogs: { ...state.consoleLogs, [action.profileId]: trimmed } }
@@ -104,6 +126,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
         window.api.getStates(),
       ])
       dispatch({ type: 'INIT', profiles, settings, states })
+      
+      // Load persisted console logs for each profile
+      const consoleLogs: Record<string, ConsoleLine[]> = {}
+      for (const profile of profiles) {
+        consoleLogs[profile.id] = loadConsoleLogs(profile.id)
+      }
+      dispatch({ type: 'LOAD_CONSOLE_LOGS', consoleLogs })
     }
     init()
   }, [])
@@ -125,6 +154,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return unsub
   }, [])
 
+  // Persist console logs to localStorage whenever they change
+  useEffect(() => {
+    for (const [profileId, lines] of Object.entries(state.consoleLogs)) {
+      saveConsoleLogs(profileId, lines)
+    }
+  }, [state.consoleLogs])
+
   const setActiveProfile = useCallback((id: string) => dispatch({ type: 'SET_ACTIVE', id }), [])
 
   const saveProfile = useCallback(async (p: Profile) => {
@@ -134,6 +170,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const deleteProfile = useCallback(async (id: string) => {
+    // Clear console logs for deleted profile
+    clearConsoleLogs(id)
+    
     await window.api.deleteProfile(id)
     const profiles = await window.api.getProfiles()
     dispatch({ type: 'SET_PROFILES', profiles })
@@ -165,7 +204,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const startProcess  = useCallback((p: Profile) => window.api.startProcess(p), [])
   const stopProcess   = useCallback((id: string) => window.api.stopProcess(id), [])
   const sendInput     = useCallback((profileId: string, input: string) => window.api.sendInput(profileId, input), [])
-  const clearConsole  = useCallback((profileId: string) => dispatch({ type: 'CLEAR_LOG', profileId }), [])
+  const clearConsole  = useCallback((profileId: string) => {
+    dispatch({ type: 'CLEAR_LOG', profileId })
+    clearConsoleLogs(profileId)
+  }, [])
   const saveSettings  = useCallback(async (s: AppSettings) => {
     await window.api.saveSettings(s)
     dispatch({ type: 'SET_SETTINGS', settings: s })

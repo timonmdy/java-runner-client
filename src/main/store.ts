@@ -20,6 +20,7 @@ const DEFAULT_PROFILE: Profile = {
   systemProperties: [], programArgs: [], javaPath: '',
   autoStart: false, color: '#4ade80',
   createdAt: Date.now(), updatedAt: Date.now(),
+  restartOnCrash: false, restartIntervalMs: 5000,
 }
 
 interface StoreSchema { profiles: Profile[]; settings: AppSettings; activeProfileId: string }

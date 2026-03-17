@@ -5,6 +5,7 @@ import React, { useRef, useEffect, useState, useCallback, KeyboardEvent } from '
 import { useApp } from '../../store/AppStore'
 import { Button } from '../common/Button'
 import type { ConsoleLine } from '../../types'
+import { clearAllConsoleLogs } from '../../utils/consoleStorage'
 
 export function ConsoleTab() {
   const { state, activeProfile, startProcess, stopProcess, sendInput, clearConsole, isRunning } = useApp()
@@ -25,14 +26,61 @@ export function ConsoleTab() {
   const [autoScroll, setAutoScroll] = useState(true)
   const [starting,   setStarting]   = useState(false)
   const [errorMsg,   setErrorMsg]   = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showSearch, setShowSearch] = useState(false)
+  const [searchIndex, setSearchIndex] = useState(0)
+  const [showMenu, setShowMenu] = useState(false)
 
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef  = useRef<HTMLInputElement>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const menuRef   = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (autoScroll) bottomRef.current?.scrollIntoView({ behavior: 'instant' })
   }, [lines.length, autoScroll])
+  // Close menu when clicking outside
+  useEffect(() => {
+    if (!showMenu) return
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setShowMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showMenu])
+
+  // Global CTRL+F listener for console search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!document.hidden && e.key === 'f' && e.ctrlKey) {
+        e.preventDefault()
+        setShowSearch(true)
+        setTimeout(() => searchRef.current?.focus(), 0)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown as any)
+    return () => window.removeEventListener('keydown', handleKeyDown as any)
+  }, [])
+
+  // Auto-scroll to current match when search index or lines change
+  useEffect(() => {
+    if (!searchQuery.trim()) return
+    const matchingIndices = lines
+      .map((line, idx) => line.text.toLowerCase().includes(searchQuery.toLowerCase()) ? idx : -1)
+      .filter(idx => idx >= 0)
+    const currentIdx = matchingIndices[searchIndex % Math.max(1, matchingIndices.length)] ?? -1
+    if (currentIdx >= 0) {
+      setTimeout(() => {
+        const matchedElement = document.querySelector(`[data-console-line="${currentIdx}"]`)
+        if (matchedElement) {
+          matchedElement.scrollIntoView({ behavior: 'auto', block: 'center' })
+        }
+      }, 0)
+    }
+  }, [searchIndex, searchQuery, lines])
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current
@@ -73,9 +121,20 @@ export function ConsoleTab() {
     if (e.key==='l' && e.ctrlKey) { e.preventDefault(); clearConsole(profileId) }
   }
 
+  // Find matching lines for search
+  const matchingIndices = searchQuery.trim()
+    ? lines
+        .map((line, idx) => line.text.toLowerCase().includes(searchQuery.toLowerCase()) ? idx : -1)
+        .filter(idx => idx >= 0)
+    : []
+  const matchCount = matchingIndices.length
+  const currentMatchIdx = matchingIndices[searchIndex % Math.max(1, matchingIndices.length)] ?? -1
+
   const fontSize    = settings?.consoleFontSize    ?? 13
   const wordWrap    = settings?.consoleWordWrap     ?? false
   const lineNumbers = settings?.consoleLineNumbers  ?? false
+
+  {console.log(lines)}
 
   return (
     <div className="flex flex-col h-full">
@@ -112,9 +171,42 @@ export function ConsoleTab() {
           </button>
         )}
 
+        <Button variant="ghost" size="sm" 
+          onClick={() => setShowSearch(true)} 
+          title="Search (Ctrl+F)"
+          className="!p-2">
+          <SearchIcon />
+        </Button>
+
         <Button variant="ghost" size="sm" onClick={() => clearConsole(profileId)} title="Clear (Ctrl+L)">
           <TrashIcon /> Clear
         </Button>
+
+        <div className="relative" ref={menuRef}>
+          <button 
+            onClick={() => setShowMenu(!showMenu)}
+            className="text-text-muted hover:text-text-primary transition-colors p-2 text-sm font-bold"
+            title="Console options">
+            ⋮
+          </button>
+          {showMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+              <div className="absolute right-0 mt-1 w-48 bg-base-850 border border-surface-border rounded-lg shadow-panel py-1 z-50 animate-fade-in">
+                <button
+                  onClick={() => {
+                    clearAllConsoleLogs()
+                    clearConsole(profileId)
+                    setShowMenu(false)
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-left text-text-primary hover:bg-surface-raised transition-colors"
+                >
+                  Reset all console logs
+                </button>
+              </div>
+            </>
+          )}
+        </div>
 
         <span className="text-xs text-text-muted font-mono tabular-nums">
           {lines.length.toLocaleString()} lines
@@ -144,11 +236,13 @@ export function ConsoleTab() {
           <div className={wordWrap ? 'px-3' : 'min-w-max px-3'}>
             {lines.map((line, idx) => (
               <ConsoleLineRow
-                key={line.id}
+                key={profileId + "-" + line.id}
                 line={line}
                 lineNumber={idx + 1}
                 showLineNumbers={lineNumbers}
                 wordWrap={wordWrap}
+                highlightQuery={searchQuery}
+                isCurrentMatch={idx === currentMatchIdx}
               />
             ))}
           </div>
@@ -157,6 +251,63 @@ export function ConsoleTab() {
       </div>
 
       {/* Input */}
+      {showSearch && (
+        <div className="px-3 pt-2 pb-1 shrink-0 border-t border-surface-border bg-base-900">
+          <div className="flex items-center gap-2 bg-base-950 border border-surface-border rounded px-2 py-1.5">
+            <SearchIcon />
+            <input
+              ref={searchRef}
+              type="text"
+              value={searchQuery}
+              onChange={e => { setSearchQuery(e.target.value); setSearchIndex(0) }}
+              onKeyDown={e => {
+                if (e.key === 'Escape') {
+                  e.preventDefault()
+                  setShowSearch(false)
+                  setSearchQuery('')
+                } else if (e.key === 'Enter') {
+                  e.preventDefault()
+                  setSearchIndex(index => (index + 1) % Math.max(1, matchCount))
+                }
+              }}
+              placeholder="Search console… (Enter to find next, Esc to close)"
+              className="flex-1 bg-transparent text-text-primary placeholder:text-text-muted outline-none text-xs"
+              autoComplete="off"
+            />
+            {matchCount > 0 && (
+              <>
+                <button
+                  onClick={() => setSearchIndex(idx => (idx - 1 + matchCount) % matchCount)}
+                  title="Previous match"
+                  className="text-text-muted hover:text-text-primary transition-colors shrink-0"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <polyline points="9 10 3 6 9 2"/>
+                  </svg>
+                </button>
+                <span className="text-xs text-text-muted font-mono whitespace-nowrap">
+                  {searchIndex + 1} / {matchCount}
+                </span>
+                <button
+                  onClick={() => setSearchIndex(idx => (idx + 1) % matchCount)}
+                  title="Next match"
+                  className="text-text-muted hover:text-text-primary transition-colors shrink-0"
+                >
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <polyline points="3 2 9 6 3 10"/>
+                  </svg>
+                </button>
+              </>
+            )}
+            <button
+              onClick={() => { setShowSearch(false); setSearchQuery('') }}
+              className="text-text-muted hover:text-text-primary transition-colors ml-1 shrink-0"
+              title="Close (Esc)">
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
       <div className="px-3 pb-3 shrink-0">
         <div
           className={[
@@ -200,11 +351,18 @@ const LINE_PREFIX: Record<ConsoleLine['type'], string> = {
   stdout: '', stderr: '', input: '› ', system: '# ',
 }
 
-function ConsoleLineRow({ line, lineNumber, showLineNumbers, wordWrap }: {
-  line: ConsoleLine; lineNumber: number; showLineNumbers: boolean; wordWrap: boolean
+function ConsoleLineRow({ line, lineNumber, showLineNumbers, wordWrap, highlightQuery, isCurrentMatch }: {
+  line: ConsoleLine; lineNumber: number; showLineNumbers: boolean; wordWrap: boolean; highlightQuery?: string; isCurrentMatch?: boolean
 }) {
+  const highlight = highlightQuery?.trim()
+
   return (
-    <div className={['flex leading-5 min-h-[1.25rem]', LINE_COLORS[line.type]].join(' ')}>
+    <div 
+      data-console-line={lineNumber - 1}
+      className={['flex leading-5 min-h-[1.25rem]', LINE_COLORS[line.type], 
+        isCurrentMatch ? 'bg-yellow-500/15 border-l-2 border-yellow-500/50 pl-1' : 
+        (highlight && line.text.toLowerCase().includes(highlight.toLowerCase()) ? 'bg-yellow-500/5' : '')
+      ].join(' ')}>
       {showLineNumbers && (
         <span className="select-none text-text-muted/40 text-right pr-3 shrink-0 tabular-nums"
           style={{ minWidth: '3em' }}>
@@ -218,10 +376,41 @@ function ConsoleLineRow({ line, lineNumber, showLineNumbers, wordWrap }: {
         ].join(' ')}
       >
         <span className="select-none opacity-40">{LINE_PREFIX[line.type]}</span>
-        {line.text}
+        {highlight && line.text.toLowerCase().includes(highlight.toLowerCase())
+          ? highlight_LineText(line.text, highlight)
+          : line.text
+        }
       </span>
     </div>
   )
+}
+
+/**
+ * Highlight matching text in a line.
+ */
+function highlight_LineText(text: string, query: string): React.ReactNode {
+  const lowerText = text.toLowerCase()
+  const lowerQuery = query.toLowerCase()
+  const parts: React.ReactNode[] = []
+  let lastIdx = 0
+
+  let matchIdx = lowerText.indexOf(lowerQuery)
+  while (matchIdx !== -1) {
+    if (matchIdx > lastIdx) {
+      parts.push(text.substring(lastIdx, matchIdx))
+    }
+    parts.push(
+      <span key={`m-${matchIdx}`} className="bg-yellow-500/30 font-medium">
+        {text.substring(matchIdx, matchIdx + query.length)}
+      </span>
+    )
+    lastIdx = matchIdx + query.length
+    matchIdx = lowerText.indexOf(lowerQuery, lastIdx)
+  }
+  if (lastIdx < text.length) {
+    parts.push(text.substring(lastIdx))
+  }
+  return parts
 }
 
 function EmptyConsole({ running, hasJar }: { running: boolean; hasJar: boolean }) {
@@ -242,3 +431,4 @@ const PlayIcon  = () => <svg width="10" height="10" viewBox="0 0 12 12" fill="cu
 const StopIcon  = () => <svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor"><rect width="10" height="10" rx="1.5"/></svg>
 const TrashIcon = () => <svg width="11" height="11" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 4h10M5 4V2.5h4V4M6 7v4M8 7v4M3 4l.8 7.5a1 1 0 001 .5h4.4a1 1 0 001-.5L11 4"/></svg>
 const SendIcon  = () => <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l4 2 2 4 4-11z"/></svg>
+const SearchIcon = () => <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="6.5" cy="6.5" r="4.5"/><path d="M11.5 11.5l3 3"/></svg>

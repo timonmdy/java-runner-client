@@ -14,17 +14,56 @@ export interface PropItem {
 interface Props {
   items:    PropItem[]
   onChange: (items: PropItem[]) => void
+  onDraftChange?: (hasDraft: boolean) => void
+  draftKey?: string
+  draftValue?: string
+  onDraftUpdate?: (key: string, value: string) => void
 }
 
-export function PropList({ items, onChange }: Props) {
-  const [draftKey, setDraftKey]     = useState('')
-  const [draftValue, setDraftValue] = useState('')
+export function PropList({ 
+  items, 
+  onChange, 
+  onDraftChange,
+  draftKey: controlledDraftKey,
+  draftValue: controlledDraftValue,
+  onDraftUpdate
+}: Props) {
+  const [localDraftKey, setLocalDraftKey]     = useState('')
+  const [localDraftValue, setLocalDraftValue] = useState('')
+  
+  // Use controlled values if parent provides them, otherwise use local state
+  const draftKey = controlledDraftKey !== undefined ? controlledDraftKey : localDraftKey
+  const draftValue = controlledDraftValue !== undefined ? controlledDraftValue : localDraftValue
+
+  const handleDraftKeyChange = (newKey: string) => {
+    if (controlledDraftKey !== undefined) {
+      onDraftUpdate?.(newKey, draftValue)
+    } else {
+      setLocalDraftKey(newKey)
+    }
+    onDraftChange?.(newKey.trim().length > 0)
+  }
+
+  const handleDraftValueChange = (newValue: string) => {
+    if (controlledDraftValue !== undefined) {
+      onDraftUpdate?.(draftKey, newValue)
+    } else {
+      setLocalDraftValue(newValue)
+    }
+    // Trigger on draft change when key is non-empty
+    onDraftChange?.(draftKey.trim().length > 0)
+  }
 
   const add = () => {
     if (!draftKey.trim()) return
     onChange([...items, { key: draftKey.trim(), value: draftValue.trim(), enabled: true }])
-    setDraftKey('')
-    setDraftValue('')
+    if (controlledDraftKey !== undefined) {
+      onDraftUpdate?.('', '')
+    } else {
+      setLocalDraftKey('')
+      setLocalDraftValue('')
+    }
+    onDraftChange?.(false)
   }
 
   const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
@@ -115,7 +154,7 @@ export function PropList({ items, onChange }: Props) {
         <input
           type="text"
           value={draftKey}
-          onChange={e => setDraftKey(e.target.value)}
+          onChange={e => handleDraftKeyChange(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && add()}
           placeholder="server.port"
           className="flex-1 bg-base-900 border border-dashed border-surface-border rounded-md px-2.5 py-1.5
@@ -126,7 +165,7 @@ export function PropList({ items, onChange }: Props) {
         <input
           type="text"
           value={draftValue}
-          onChange={e => setDraftValue(e.target.value)}
+          onChange={e => handleDraftValueChange(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && add()}
           placeholder="8080"
           className="flex-1 bg-base-900 border border-dashed border-surface-border rounded-md px-2.5 py-1.5

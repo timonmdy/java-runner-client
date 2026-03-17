@@ -48,6 +48,7 @@ export function ProfileSidebar({
   const ctxRunning = ctxProfile ? isRunning(ctxProfile.id) : false
 
   const handleStart = useCallback(async (profile: Profile) => {
+    console.log("starting");
     if (!profile.jarPath) { setActionError(`"${profile.name}" has no JAR configured.`); return }
     const res = await startProcess(profile)
     if (!res.ok) setActionError(res.error ?? 'Failed to start')

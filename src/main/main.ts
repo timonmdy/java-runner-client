@@ -17,13 +17,34 @@ const RESOURCES = IS_DEV
  * Priority: .ico → .png → 1×1 transparent fallback.
  */
 function getIconImage(): Electron.NativeImage {
+  // Try both ico and png
   for (const name of ['icon.ico', 'icon.png']) {
     const p = path.join(RESOURCES, name)
-    if (fs.existsSync(p)) {
-      const img = nativeImage.createFromPath(p)
-      if (!img.isEmpty()) return img
+    try {
+      if (fs.existsSync(p)) {
+        const img = nativeImage.createFromPath(p)
+        if (!img.isEmpty()) {
+          return img
+        }
+      }
+    } catch (err) {
+      // Silently continue to next format
     }
   }
+  
+  // If running packaged and no icon found, try alternate locations
+  if (!IS_DEV && !fs.existsSync(path.join(RESOURCES, 'icon.ico'))) {
+    const altPath = path.join(process.resourcesPath, 'icon.ico')
+    try {
+      if (fs.existsSync(altPath)) {
+        const img = nativeImage.createFromPath(altPath)
+        if (!img.isEmpty()) return img
+      }
+    } catch (err) {
+      // Continue to fallback
+    }
+  }
+  
   // 1×1 transparent PNG as last resort so Tray never throws
   return nativeImage.createFromDataURL(
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
@@ -79,12 +100,18 @@ function createWindow(): void {
 // ── Tray ──────────────────────────────────────────────────────────────────────
 
 function createTray(): void {
-  const icon = getIconImage()
-  // On Windows the tray expects a small icon; resize to 16 px
-  tray = new Tray(icon.resize({ width: 16, height: 16 }))
-  tray.setToolTip('Java Runner Client')
-  updateTrayMenu()
-  tray.on('double-click', () => { mainWindow?.show(); mainWindow?.focus() })
+  try {
+    const icon = getIconImage()
+    // On Windows the tray expects a small icon; resize to 16 px
+    const resized = icon.resize({ width: 16, height: 16 })
+    tray = new Tray(resized)
+    tray.setToolTip('Java Runner Client')
+    updateTrayMenu()
+    tray.on('double-click', () => { mainWindow?.show(); mainWindow?.focus() })
+  } catch (err) {
+    console.error('Failed to create tray:', err)
+    // Tray is optional; app should still work without it
+  }
 }
 
 function updateTrayMenu(): void {
@@ -130,8 +157,16 @@ function applyStartupSetting(enabled: boolean): void {
 function registerIpcHandlers(): void {
   // Profiles
   ipcMain.handle(IPC.PROFILES_GET_ALL, () => getAllProfiles())
-  ipcMain.handle(IPC.PROFILES_SAVE,    (_, p)  => { saveProfile(p);   return true })
-  ipcMain.handle(IPC.PROFILES_DELETE,  (_, id) => { deleteProfile(id); return true })
+  ipcMain.handle(IPC.PROFILES_SAVE,    (_, p)  => { 
+    saveProfile(p)
+    processManager.setProfiles(getAllProfiles())
+    return true 
+  })
+  ipcMain.handle(IPC.PROFILES_DELETE,  (_, id) => { 
+    deleteProfile(id)
+    processManager.setProfiles(getAllProfiles())
+    return true 
+  })
 
   // Process control
   ipcMain.handle(IPC.PROCESS_START,      (_, p)           => processManager.start(p))
@@ -180,6 +215,7 @@ app.whenReady().then(() => {
   registerIpcHandlers()
 
   const profiles = getAllProfiles()
+  processManager.setProfiles(profiles)
   for (const p of profiles) {
     if (p.autoStart && p.jarPath) processManager.start(p)
   }
