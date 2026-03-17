@@ -8,5 +8,5 @@
     "noUnusedLocals": false, "noUnusedParameters": false,
     "baseUrl": ".", "paths": { "@/*": ["src/renderer/*"] }
   },
-  "include": ["src/renderer", "src/main/shared"]
+  "include": ["src/renderer", "src/main/shared", "src/config/FAQ.config.ts"]
 }

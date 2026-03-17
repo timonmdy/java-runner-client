@@ -121,6 +121,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       id: uuidv4(), name: 'New Profile', jarPath: '', workingDir: '',
       jvmArgs: [{ value: '-Xmx1g', enabled: true }], systemProperties: [], programArgs: [],
       javaPath: '', autoStart: false,
+      autoRestart: false, autoRestartInterval: 10,
       color: PROFILE_COLORS[state.profiles.length % PROFILE_COLORS.length],
       createdAt: Date.now(), updatedAt: Date.now(),
     }

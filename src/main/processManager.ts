@@ -7,19 +7,30 @@ import { IPC } from './shared/types'
 
 const SELF_PROCESS_NAME = 'Java Client Runner'
 
+type SystemMessageType = 'start' | 'stopping' | 'stopped' | 'restart' | 'error-starting' | 'error-runtime' | 'info-pid' | 'info-workdir' | 'info-restart'
+
 interface ManagedProcess {
   process:     ChildProcess
   profileId:   string
   profileName: string
   jarPath:     string
   startedAt:   number
-  lineCounter: number
+  // Set to true when the user explicitly stops the process (no auto-restart)
+  intentionallyStopped: boolean
 }
 
 class ProcessManager {
   private processes   = new Map<string, ManagedProcess>()
   private activityLog: ProcessLogEntry[] = []
   private window:      BrowserWindow | null = null
+  // Tracks pending auto-restart timers so they can be cancelled on explicit stop
+  private restartTimers = new Map<string, ReturnType<typeof setTimeout>>()
+  // Stores latest profile snapshot for auto-restart (profile may have been updated)
+  private profileSnapshots = new Map<string, Profile>()
+  // Persistent line counters per profileId (survives process restarts)
+  private lineCounters = new Map<string, number>()
+  // Track seen line IDs per profileId to detect duplicates (Set for O(1) lookup)
+  private seenLineIds = new Map<string, Set<string | number>>()
 
   setWindow(win: BrowserWindow): void { this.window = win }
 
@@ -41,29 +52,43 @@ class ProcessManager {
     if (this.processes.has(profile.id)) return { ok: false, error: 'Process already running' }
     if (!profile.jarPath)              return { ok: false, error: 'No JAR file specified' }
 
+    // Cancel any pending restart timer
+    this.cancelRestartTimer(profile.id)
+
+    // Store latest profile for potential auto-restart later
+    this.profileSnapshots.set(profile.id, profile)
+
     const { cmd, args } = this.buildArgs(profile)
     const cwd = profile.workingDir || path.dirname(profile.jarPath)
 
-    this.pushSystem(profile.id, `Starting: ${cmd} ${args.join(' ')}`)
-    this.pushSystem(profile.id, `Working dir: ${cwd}`)
+    // These lines are only pushed ONCE per actual start call — not on tab switch
+    this.pushSystem('start', profile.id, 'pending', `Starting: ${cmd} ${args.join(' ')}`)
+    this.pushSystem('info-workdir', profile.id, 'pending', `Working dir: ${cwd}`)
 
     let proc: ChildProcess
     try {
       proc = spawn(cmd, args, { cwd, env: process.env, shell: false, detached: false, stdio: ['pipe', 'pipe', 'pipe'] })
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err)
-      this.pushSystem(profile.id, `Failed to start: ${msg}`)
+      this.pushSystem('error-starting', profile.id, 'pending', `Failed to start: ${msg}`)
       return { ok: false, error: msg }
     }
 
     const managed: ManagedProcess = {
       process: proc, profileId: profile.id, profileName: profile.name,
-      jarPath: profile.jarPath, startedAt: Date.now(), lineCounter: 0,
+      jarPath: profile.jarPath, startedAt: Date.now(),
+      intentionallyStopped: false,
     }
     this.processes.set(profile.id, managed)
+    
+    // Initialize line counter if not exists
+    if (!this.lineCounters.has(profile.id)) {
+      this.lineCounters.set(profile.id, 0)
+      this.seenLineIds.set(profile.id, new Set())
+    }
 
     const pid = proc.pid ?? 0
-    this.pushSystem(profile.id, `PID: ${pid}`)
+    this.pushSystem('info-pid', profile.id, String(pid), `PID: ${pid}`)
 
     const logEntry: ProcessLogEntry = {
       id: uuidv4(), profileId: profile.id, profileName: profile.name,
@@ -76,13 +101,28 @@ class ProcessManager {
     proc.stdout?.on('data', (chunk: string) => this.pushOutput(profile.id, chunk, 'stdout', managed))
     proc.stderr?.setEncoding('utf8')
     proc.stderr?.on('data', (chunk: string) => this.pushOutput(profile.id, chunk, 'stderr', managed))
-    proc.on('error', (err) => this.pushSystem(profile.id, `Error: ${err.message}`))
+    proc.on('error', (err) => this.pushSystem('error-runtime', profile.id, String(pid), `Error: ${err.message}`))
     proc.on('exit', (code, signal) => {
       this.processes.delete(profile.id)
-      this.pushSystem(profile.id, `Process stopped (${signal ? `signal ${signal}` : `exit code ${code ?? '?'}`})`)
+      this.pushSystem('stopped', profile.id, String(pid), `Process stopped (${signal ? `signal ${signal}` : `exit code ${code ?? '?'}`})`)
       const entry = this.activityLog.find(e => e.profileId === profile.id && !e.stoppedAt)
       if (entry) { entry.stoppedAt = Date.now(); entry.exitCode = code ?? undefined; entry.signal = signal ?? undefined }
       this.broadcastStates()
+
+      // Auto-restart on crash (non-zero exit, not intentionally stopped)
+      if (!managed.intentionallyStopped && code !== 0) {
+        const snapshot = this.profileSnapshots.get(profile.id)
+        if (snapshot?.autoRestart) {
+          const delaySec = Math.max(1, snapshot.autoRestartInterval ?? 10)
+          this.pushSystem('info-restart', profile.id, String(pid), `Auto-restart in ${delaySec}s...`)
+          const timer = setTimeout(() => {
+            this.restartTimers.delete(profile.id)
+            const latest = this.profileSnapshots.get(profile.id) ?? snapshot
+            this.start(latest)
+          }, delaySec * 1000)
+          this.restartTimers.set(profile.id, timer)
+        }
+      }
     })
 
     this.broadcastStates()
@@ -92,7 +132,12 @@ class ProcessManager {
   stop(profileId: string): { ok: boolean; error?: string } {
     const m = this.processes.get(profileId)
     if (!m) return { ok: false, error: 'Not running' }
-    this.pushSystem(profileId, 'Stopping process...')
+
+    // Mark as intentional so the exit handler won't auto-restart
+    m.intentionallyStopped = true
+    this.cancelRestartTimer(profileId)
+
+    this.pushSystem('stopping', profileId, String(m.process.pid ?? 0), 'Stopping process...')
     const pid = m.process.pid
     if (process.platform === 'win32' && pid) {
       try { execSync(`taskkill /PID ${pid} /T /F`, { timeout: 5000 }) } catch {
@@ -107,11 +152,25 @@ class ProcessManager {
     return { ok: true }
   }
 
+  /** Update stored profile snapshot (called when profile is saved) */
+  updateProfileSnapshot(profile: Profile): void {
+    if (this.profileSnapshots.has(profile.id)) {
+      this.profileSnapshots.set(profile.id, profile)
+    }
+  }
+
+  private cancelRestartTimer(profileId: string): void {
+    const t = this.restartTimers.get(profileId)
+    if (t) { clearTimeout(t); this.restartTimers.delete(profileId) }
+  }
+
   sendInput(profileId: string, input: string): { ok: boolean; error?: string } {
     const m = this.processes.get(profileId)
     if (!m) return { ok: false, error: 'Not running' }
     m.process.stdin?.write(input.endsWith('\n') ? input : `${input}\n`)
-    this.pushLine(profileId, input, 'input', ++m.lineCounter)
+    const counter = (this.lineCounters.get(profileId) ?? 0) + 1
+    this.lineCounters.set(profileId, counter)
+    this.pushLine(profileId, input, 'input', counter)
     return { ok: true }
   }
 
@@ -138,7 +197,6 @@ class ProcessManager {
     return cmd.includes(SELF_PROCESS_NAME) || name.includes(SELF_PROCESS_NAME)
   }
 
-  /** Parse -jar <path> from a command line and return just the filename */
   private parseJarName(cmd: string): string | undefined {
     const m = cmd.match(/-jar\s+([^\s]+)/i)
     if (!m) return undefined
@@ -146,7 +204,6 @@ class ProcessManager {
   }
 
   private scanAllWindows(managedPids: Set<number>): JavaProcessInfo[] {
-    // Extended PowerShell script — fetches memory, thread count, start time
     const psScript = [
       '$wmi = @{}',
       'Get-WmiObject Win32_Process | ForEach-Object { $wmi[$_.ProcessId] = $_.CommandLine }',
@@ -254,19 +311,39 @@ class ProcessManager {
     return { ok: true, killed }
   }
 
-  private pushOutput(pid: string, chunk: string, type: 'stdout' | 'stderr', m: ManagedProcess) {
+  private pushOutput(profileId: string, chunk: string, type: 'stdout' | 'stderr', m: ManagedProcess) {
     for (const [i, text] of chunk.split(/\r?\n/).entries()) {
       if (i === chunk.split(/\r?\n/).length - 1 && text === '') continue
-      this.pushLine(pid, text, type, ++m.lineCounter)
+      const counter = (this.lineCounters.get(profileId) ?? 0) + 1
+      this.lineCounters.set(profileId, counter)
+      this.pushLine(profileId, text, type, counter)
     }
   }
 
-  private pushLine(profileId: string, text: string, type: ConsoleLine['type'], id: number) {
+  private pushLine(profileId: string, text: string, type: ConsoleLine['type'], id: number | string) {
+    // Check for duplicate IDs
+    const seenIds = this.seenLineIds.get(profileId)
+    if (seenIds?.has(id)) {
+      throw new Error(`Duplicate line ID detected for profile ${profileId}: ${id}`)
+    }
+    
+    // Track this ID
+    if (seenIds) {
+      seenIds.add(id)
+      // Keep Set efficient by clearing old entries if it grows too large
+      if (seenIds.size > 10000) {
+        // Reset if we've hit a reasonable limit (shouldn't happen but good safeguard)
+        this.seenLineIds.set(profileId, new Set([id]))
+      }
+    }
+    
     this.window?.webContents.send(IPC.CONSOLE_LINE, profileId, { id, text, type, timestamp: Date.now() })
   }
 
-  private pushSystem(profileId: string, text: string) {
-    this.pushLine(profileId, text, 'system', Date.now())
+  private pushSystem(type: SystemMessageType, profileId: string, pid: string, text: string) {
+    const counter = (this.lineCounters.get(profileId) ?? 0) + 1
+    this.lineCounters.set(profileId, counter)
+    this.pushLine(profileId, text, 'system', counter)
   }
 
   private broadcastStates() {

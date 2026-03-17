@@ -7,6 +7,7 @@ import React, {
 } from 'react'
 import { useApp } from '../../store/AppStore'
 import { Button } from '../common/Button'
+import { VscSearch, VscChevronUp, VscChevronDown, VscClose } from 'react-icons/vsc'
 import type { ConsoleLine } from '../../types'
 
 export function ConsoleTab() {
@@ -29,7 +30,7 @@ export function ConsoleTab() {
   const [errorMsg,    setErrorMsg]    = useState<string | null>(null)
   const [searchOpen,  setSearchOpen]  = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [searchIdx,   setSearchIdx]   = useState(0)   // current match index
+  const [searchIdx,   setSearchIdx]   = useState(0)
 
   const scrollRef  = useRef<HTMLDivElement>(null)
   const inputRef   = useRef<HTMLInputElement>(null)
@@ -37,7 +38,11 @@ export function ConsoleTab() {
   const bottomRef  = useRef<HTMLDivElement>(null)
   const matchRefs  = useRef<(HTMLDivElement | null)[]>([])
 
-  // Reset per-profile state on profile switch
+  // Track whether we have already injected the "starting" lines for this run
+  // Key: profileId, Value: pid of the run we last started from this tab
+  const startedForRef = useRef<Record<string, number | undefined>>({})
+
+  // Reset per-profile UI state on profile switch
   useEffect(() => {
     setInputValue(''); setHistoryIdx(-1); setErrorMsg(null)
     setSearchOpen(false); setSearchQuery(''); setSearchIdx(0)
@@ -143,7 +148,6 @@ export function ConsoleTab() {
     return <div className="flex items-center justify-center h-full text-sm text-text-muted">No profile selected</div>
   }
 
-  // Build match ref map: matchIndices[i] → line index
   matchRefs.current = new Array(matchIndices.length).fill(null)
 
   return (
@@ -170,14 +174,14 @@ export function ConsoleTab() {
         {!autoScroll && !searchOpen && (
           <button onClick={() => { setAutoScroll(true); bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }}
             className="text-xs font-mono transition-colors" style={{ color }}>
-            ↓ scroll to bottom
+            scroll to bottom
           </button>
         )}
 
         <button onClick={openSearch}
-          className="text-xs text-text-muted hover:text-text-primary font-mono transition-colors"
+          className="text-text-muted hover:text-text-primary transition-colors p-1"
           title="Search (Ctrl+F)">
-          🔍
+          <VscSearch size={13} />
         </button>
 
         <button onClick={() => clearConsole(profileId)}
@@ -215,10 +219,16 @@ export function ConsoleTab() {
             </span>
           )}
           <button onClick={goPrev} disabled={matchIndices.length === 0}
-            className="text-xs text-text-muted hover:text-text-primary disabled:opacity-30 px-1" title="Previous (Shift+Enter)">▲</button>
+            className="text-text-muted hover:text-text-primary disabled:opacity-30 p-0.5" title="Previous (Shift+Enter)">
+            <VscChevronUp size={13} />
+          </button>
           <button onClick={goNext} disabled={matchIndices.length === 0}
-            className="text-xs text-text-muted hover:text-text-primary disabled:opacity-30 px-1" title="Next (Enter)">▼</button>
-          <button onClick={closeSearch} className="text-xs text-text-muted hover:text-text-primary px-1" title="Close (Esc)">✕</button>
+            className="text-text-muted hover:text-text-primary disabled:opacity-30 p-0.5" title="Next (Enter)">
+            <VscChevronDown size={13} />
+          </button>
+          <button onClick={closeSearch} className="text-text-muted hover:text-text-primary p-0.5" title="Close (Esc)">
+            <VscClose size={13} />
+          </button>
         </div>
       )}
 
@@ -226,7 +236,9 @@ export function ConsoleTab() {
       {errorMsg && (
         <div className="mx-3 mt-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-400 animate-fade-in flex items-center justify-between shrink-0">
           <span>{errorMsg}</span>
-          <button onClick={() => setErrorMsg(null)} className="ml-2 opacity-60 hover:opacity-100">✕</button>
+          <button onClick={() => setErrorMsg(null)} className="ml-2 opacity-60 hover:opacity-100">
+            <VscClose size={12} />
+          </button>
         </div>
       )}
 
@@ -245,7 +257,6 @@ export function ConsoleTab() {
             </div>
           )}
           {lines.map((line, i) => {
-            // Find which match index this line corresponds to (if any)
             const matchPos = matchIndices.indexOf(i)
             const isCurrentMatch = matchPos === clampedIdx && matchPos !== -1
             const isAnyMatch     = matchPos !== -1
@@ -260,7 +271,9 @@ export function ConsoleTab() {
                 searchTerm={searchTerm}
                 isCurrentMatch={isCurrentMatch}
                 isAnyMatch={isAnyMatch}
-                ref={matchPos !== -1 ? (el: HTMLDivElement | null) => { matchRefs.current[matchPos] = el } : undefined}
+                ref={matchPos !== -1
+                  ? (el: HTMLDivElement | null) => { matchRefs.current[matchPos] = el }
+                  : undefined}
               />
             )
           })}
@@ -333,7 +346,6 @@ const ConsoleLineRow = React.forwardRef<HTMLDivElement, {
 })
 ConsoleLineRow.displayName = 'ConsoleLineRow'
 
-/** Split text around matches and return JSX with highlighted spans */
 function renderHighlighted(text: string, term: string, isCurrent: boolean): React.ReactNode {
   const parts: React.ReactNode[] = []
   const lower = text.toLowerCase()
@@ -346,7 +358,9 @@ function renderHighlighted(text: string, term: string, isCurrent: boolean): Reac
     parts.push(
       <mark
         key={key++}
-        className={isCurrent ? 'bg-yellow-300 text-black rounded-sm' : 'bg-yellow-400/30 text-inherit rounded-sm'}
+        className={isCurrent
+          ? 'bg-yellow-300 text-black rounded-sm'
+          : 'bg-yellow-400/30 text-inherit rounded-sm'}
       >
         {text.slice(idx, idx + term.length)}
       </mark>

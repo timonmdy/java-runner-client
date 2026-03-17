@@ -3,11 +3,11 @@ import { Button } from './Button'
 
 interface Props {
   open: boolean; title: string; message: string
-  confirmLabel?: string; danger?: boolean
+  confirmLabel?: string; cancelLabel?: string; danger?: boolean
   onConfirm: () => void; onCancel: () => void
 }
 
-export function Dialog({ open, title, message, confirmLabel = 'Confirm', danger, onConfirm, onCancel }: Props) {
+export function Dialog({ open, title, message, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger, onConfirm, onCancel }: Props) {
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 animate-fade-in">
@@ -15,7 +15,7 @@ export function Dialog({ open, title, message, confirmLabel = 'Confirm', danger,
         <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
         <p className="text-xs text-text-secondary whitespace-pre-wrap leading-relaxed">{message}</p>
         <div className="flex justify-end gap-2 pt-1">
-          <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+          <Button variant="ghost" size="sm" onClick={onCancel}>{cancelLabel}</Button>
           <Button variant={danger ? 'danger' : 'primary'} size="sm" onClick={onConfirm}>{confirmLabel}</Button>
         </div>
       </div>

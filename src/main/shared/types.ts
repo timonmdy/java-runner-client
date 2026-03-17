@@ -9,6 +9,8 @@ export interface Profile {
   jvmArgs: JvmArgument[]; systemProperties: SystemProperty[];
   programArgs: ProgramArgument[]; javaPath: string;
   autoStart: boolean; color: string; createdAt: number; updatedAt: number;
+  autoRestart:         boolean;
+  autoRestartInterval: number; // seconds
 }
 
 export interface AppSettings {
@@ -50,7 +52,7 @@ export interface JavaProcessInfo {
   memoryMB?:  number;
   startTime?: string;
   threads?:   number;
-  jarName?:   string;   // parsed from -jar flag in command line
+  jarName?:   string;
 }
 
 export const IPC = {

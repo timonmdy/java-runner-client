@@ -8,6 +8,7 @@ export const FAQ_TOPICS: FaqTopic[] = [
       { q: 'What is Java Runner Client?', a: 'Java Runner Client (JRC) lets you run and manage JAR files as persistent background processes. You create a profile for each JAR, configure its arguments, and start/stop it from the Console tab.' },
       { q: 'How do I get started quickly?', a: '1. Click "New Profile" in the sidebar.\n2. Go to Configure → Files & Paths and select your .jar.\n3. Go to Console and click Run.' },
       { q: 'Where is the config file stored?', a: 'Windows: %APPDATA%\\java-runner-client\\java-runner-config.json\nLinux: ~/.config/java-runner-client/\nmacOS: ~/Library/Application Support/java-runner-client/' },
+      { q: 'What is a "managed" (by JRC) process?', a: 'A "managed" process is a Java process that JRC started and is tracking. Despite the name, it\'s a single Java process per profile, not two processes—JRC spawns one process directly via Node.js and wraps it in a ManagedProcess object that tracks metadata (PID, start time, exit code). JRC captures all stdout/stderr output in real-time, assigns persistent line IDs that survive restarts, and monitors the process lifecycle. If it crashes with a non-zero exit code and auto-restart is enabled, JRC automatically restarts it after a configurable delay. All managed processes are tracked in the Processes map, and you can manually kill any process from the Utilities → Process Scanner and view activity history in the Activity Log.' },
     ],
   },
   {

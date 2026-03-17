@@ -65,47 +65,66 @@ function updateTrayMenu(): void {
   tray.setContextMenu(Menu.buildFromTemplate([
     { label: 'Open Java Runner Client', click: () => { mainWindow?.show(); mainWindow?.focus() } },
     { type: 'separator' },
-    ...(items.length > 0 ? [...items, { type: 'separator' as const }] : [{ label: 'No processes running', enabled: false }, { type: 'separator' as const }]),
+    ...(items.length > 0
+      ? [...items, { type: 'separator' as const }]
+      : [{ label: 'No processes running', enabled: false }, { type: 'separator' as const }]),
     { label: 'Quit', click: () => { forceQuit = true; app.quit() } },
   ]))
-}
-
-function registerIpc(): void {
-  ipcMain.handle(IPC.PROFILES_GET_ALL, ()       => getAllProfiles())
-  ipcMain.handle(IPC.PROFILES_SAVE,    (_, p)   => saveProfile(p))
-  ipcMain.handle(IPC.PROFILES_DELETE,  (_, id)  => deleteProfile(id))
-  ipcMain.handle(IPC.PROCESS_START,    (_, p)   => processManager.start(p))
-  ipcMain.handle(IPC.PROCESS_STOP,     (_, id)  => processManager.stop(id))
-  ipcMain.handle(IPC.PROCESS_SEND_INPUT, (_, id, input) => processManager.sendInput(id, input))
-  ipcMain.handle(IPC.PROCESS_GET_STATES, ()     => processManager.getStates())
-  ipcMain.handle(IPC.PROCESS_GET_LOG,   ()      => processManager.getActivityLog())
-  ipcMain.handle(IPC.PROCESS_CLEAR_LOG, ()      => processManager.clearActivityLog())
-  ipcMain.handle(IPC.PROCESS_SCAN_ALL,  ()      => processManager.scanAllProcesses())
-  ipcMain.handle(IPC.PROCESS_KILL_PID,  (_, pid)=> processManager.killPid(pid))
-  ipcMain.handle(IPC.PROCESS_KILL_ALL_JAVA, ()  => processManager.killAllJava())
-  ipcMain.handle(IPC.SETTINGS_GET,  ()    => getSettings())
-  ipcMain.handle(IPC.SETTINGS_SAVE, (_, s) => { saveSettings(s); applyStartupSetting(s.launchOnStartup) })
-  ipcMain.handle(IPC.DIALOG_PICK_JAR,  async () => { const r = await dialog.showOpenDialog({ filters: [{ name: 'JAR', extensions: ['jar'] }], properties: ['openFile'] }); return r.canceled ? null : r.filePaths[0] })
-  ipcMain.handle(IPC.DIALOG_PICK_DIR,  async () => { const r = await dialog.showOpenDialog({ properties: ['openDirectory'] }); return r.canceled ? null : r.filePaths[0] })
-  ipcMain.handle(IPC.DIALOG_PICK_JAVA, async () => { const r = await dialog.showOpenDialog({ properties: ['openFile'] }); return r.canceled ? null : r.filePaths[0] })
-  ipcMain.on(IPC.WINDOW_MINIMIZE, () => mainWindow?.minimize())
-  ipcMain.on(IPC.WINDOW_CLOSE,    () => { if (getSettings().minimizeToTray) mainWindow?.hide(); else { forceQuit = true; app.quit() } })
-}
-
-function applyStartupSetting(enable: boolean): void {
-  if (process.platform !== 'win32') return
-  app.setLoginItemSettings({ openAtLogin: enable, openAsHidden: true, args: ['--hidden'] })
 }
 
 app.whenReady().then(() => {
   createWindow()
   createTray()
-  registerIpc()
+
+  // ── IPC handlers ────────────────────────────────────────────────────────────
+
+  ipcMain.handle(IPC.PROFILES_GET_ALL, () => getAllProfiles())
+
+  ipcMain.handle(IPC.PROFILES_SAVE, (_e, profile) => {
+    saveProfile(profile)
+    // Keep processManager snapshot in sync so auto-restart uses latest config
+    processManager.updateProfileSnapshot(profile)
+  })
+
+  ipcMain.handle(IPC.PROFILES_DELETE,      (_e, id)      => deleteProfile(id))
+  ipcMain.handle(IPC.PROCESS_START,        (_e, profile) => processManager.start(profile))
+  ipcMain.handle(IPC.PROCESS_STOP,         (_e, id)      => processManager.stop(id))
+  ipcMain.handle(IPC.PROCESS_SEND_INPUT,   (_e, id, inp) => processManager.sendInput(id, inp))
+  ipcMain.handle(IPC.PROCESS_GET_STATES,   ()            => processManager.getStates())
+  ipcMain.handle(IPC.PROCESS_GET_LOG,      ()            => processManager.getActivityLog())
+  ipcMain.handle(IPC.PROCESS_CLEAR_LOG,    ()            => processManager.clearActivityLog())
+  ipcMain.handle(IPC.PROCESS_SCAN_ALL,     ()            => processManager.scanAllProcesses())
+  ipcMain.handle(IPC.PROCESS_KILL_PID,     (_e, pid)     => processManager.killPid(pid))
+  ipcMain.handle(IPC.PROCESS_KILL_ALL_JAVA,()            => processManager.killAllJava())
+  ipcMain.handle(IPC.SETTINGS_GET,         ()            => getSettings())
+  ipcMain.handle(IPC.SETTINGS_SAVE,        (_e, s)       => saveSettings(s))
+
+  ipcMain.handle(IPC.DIALOG_PICK_JAR, async () => {
+    const r = await dialog.showOpenDialog(mainWindow!, { filters: [{ name: 'JAR', extensions: ['jar'] }], properties: ['openFile'] })
+    return r.canceled ? null : r.filePaths[0]
+  })
+  ipcMain.handle(IPC.DIALOG_PICK_DIR, async () => {
+    const r = await dialog.showOpenDialog(mainWindow!, { properties: ['openDirectory'] })
+    return r.canceled ? null : r.filePaths[0]
+  })
+  ipcMain.handle(IPC.DIALOG_PICK_JAVA, async () => {
+    const r = await dialog.showOpenDialog(mainWindow!, { filters: [{ name: 'Executable', extensions: ['exe', '*'] }], properties: ['openFile'] })
+    return r.canceled ? null : r.filePaths[0]
+  })
+
+  ipcMain.on(IPC.WINDOW_MINIMIZE, () => mainWindow?.minimize())
+  ipcMain.on(IPC.WINDOW_CLOSE,    () => { if (getSettings().minimizeToTray) mainWindow?.hide(); else { forceQuit = true; app.quit() } })
+
+  // Auto-start profiles
   const profiles = getAllProfiles()
-  for (const p of profiles) if (p.autoStart && p.jarPath) processManager.start(p)
-  applyStartupSetting(getSettings().launchOnStartup)
-  setInterval(updateTrayMenu, 5000)
+  for (const p of profiles) {
+    if (p.autoStart && p.jarPath) processManager.start(p)
+  }
+
+  // Keep tray menu in sync with process state changes
+  mainWindow?.webContents.on('did-finish-load', updateTrayMenu)
 })
 
-app.on('window-all-closed', () => { /* keep alive via tray */ })
+app.on('window-all-closed', () => { /* keep alive in tray */ })
 app.on('before-quit', () => { forceQuit = true })
+app.on('activate', () => { mainWindow?.show() })
