@@ -5,35 +5,48 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   release:
     runs-on: windows-latest
 
     steps:
+      # Checkout repo
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Setup Node
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
+      # Install dependencies
       - name: Install deps
         run: npm ci
 
-      - name: Build (npm dist)
+      # Build
+      - name: Build (dist)
         run: npm run dist
 
-      - name: Get version from package.json
+      # Read version
+      - name: Get version
         id: version
         shell: pwsh
         run: |
           $pkg = Get-Content package.json | ConvertFrom-Json
           $version = $pkg.version
+
           echo "version=$version" >> $env:GITHUB_OUTPUT
           echo "tag=v$version" >> $env:GITHUB_OUTPUT
           echo "name=jrc-v$version" >> $env:GITHUB_OUTPUT
 
+      # Get latest release tag
       - name: Get latest release
         id: latest
         uses: actions/github-script@v7
@@ -49,42 +62,48 @@ jobs:
               return null;
             }
 
-      - name: Fail if version unchanged
+      # Fail if version didn't change
+      - name: Compare versions
+        shell: bash
         run: |
           echo "Latest: ${{ steps.latest.outputs.result }}"
           echo "Current: ${{ steps.version.outputs.tag }}"
+
           if [ "${{ steps.latest.outputs.result }}" = "${{ steps.version.outputs.tag }}" ]; then
             echo "Version unchanged. Failing."
             exit 1
           fi
-        shell: bash
 
-      - name: Find EXE
+      # Find EXE
+      - name: Locate EXE
         id: exe
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
           $file = Get-ChildItem -Recurse -Filter "Java.Runner.Client.Setup.$version.exe" | Select-Object -First 1
+
           if (-not $file) {
             Write-Error "EXE not found"
             exit 1
           }
+
           echo "path=$($file.FullName)" >> $env:GITHUB_OUTPUT
 
-      - name: Create release notes
-        id: notes
-        shell: bash
+      # Create release notes
+      - name: Generate release notes
         run: |
           cat <<EOF > RELEASE_NOTES.md
           ## 🚀 Release ${{ steps.version.outputs.name }}
 
           ### Changes
-          - Describe your changes here
+          - Add your changes here
 
           ### Notes
           - Auto-generated release
           EOF
+        shell: bash
 
+      # Create draft release + upload EXE
       - name: Create draft release
         uses: softprops/action-gh-release@v2
         with:
@@ -93,3 +112,5 @@ jobs:
           body_path: RELEASE_NOTES.md
           draft: true
           files: ${{ steps.exe.outputs.path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
