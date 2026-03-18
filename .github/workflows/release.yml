@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build (npm dist)
+        run: npm run dist
+
+      - name: Get version from package.json
+        id: version
+        shell: pwsh
+        run: |
+          $pkg = Get-Content package.json | ConvertFrom-Json
+          $version = $pkg.version
+          echo "version=$version" >> $env:GITHUB_OUTPUT
+          echo "tag=v$version" >> $env:GITHUB_OUTPUT
+          echo "name=jrc-v$version" >> $env:GITHUB_OUTPUT
+
+      - name: Get latest release
+        id: latest
+        uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              const res = await github.rest.repos.getLatestRelease({
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+              return res.data.tag_name;
+            } catch (e) {
+              return null;
+            }
+
+      - name: Fail if version unchanged
+        run: |
+          echo "Latest: ${{ steps.latest.outputs.result }}"
+          echo "Current: ${{ steps.version.outputs.tag }}"
+          if [ "${{ steps.latest.outputs.result }}" = "${{ steps.version.outputs.tag }}" ]; then
+            echo "Version unchanged. Failing."
+            exit 1
+          fi
+        shell: bash
+
+      - name: Find EXE
+        id: exe
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $file = Get-ChildItem -Recurse -Filter "Java.Runner.Client.Setup.$version.exe" | Select-Object -First 1
+          if (-not $file) {
+            Write-Error "EXE not found"
+            exit 1
+          }
+          echo "path=$($file.FullName)" >> $env:GITHUB_OUTPUT
+
+      - name: Create release notes
+        id: notes
+        shell: bash
+        run: |
+          cat <<EOF > RELEASE_NOTES.md
+          ## 🚀 Release ${{ steps.version.outputs.name }}
+
+          ### Changes
+          - Describe your changes here
+
+          ### Notes
+          - Auto-generated release
+          EOF
+
+      - name: Create draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.name }}
+          body_path: RELEASE_NOTES.md
+          draft: true
+          files: ${{ steps.exe.outputs.path }}
