@@ -12,7 +12,7 @@ import type { ProfileTemplate } from './shared/GitHub.types'
 const IS_DEV    = !app.isPackaged
 const RESOURCES = IS_DEV
   ? path.join(__dirname, '../../resources')
-  : path.join(process.resourcesPath, 'resources')
+  : path.join(app.getAppPath(), 'resources')
 
 function httpsGet(url: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -40,13 +40,17 @@ function getIconImage(): Electron.NativeImage {
     ? ['icon.ico', 'icon.png']
     : ['icon.png', 'icon.ico']
 
+  console.log(`[Tray] Looking for icon in: ${RESOURCES}`)
   for (const name of candidates) {
     const p = path.join(RESOURCES, name)
+    console.log(`[Tray] Checking: ${p}`)
     if (fs.existsSync(p)) {
+      console.log(`[Tray] Found icon: ${p}`)
       const img = nativeImage.createFromPath(p)
       if (!img.isEmpty()) return img
     }
   }
+  console.log(`[Tray] No icon found, using fallback`)
   // 1x1 transparent fallback so tray never crashes
   return nativeImage.createFromDataURL(
     'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='

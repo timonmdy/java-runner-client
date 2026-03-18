@@ -4,10 +4,10 @@
   "name": "Spring Boot App",
   "description": "Spring Boot application with common configuration for development and production profiles.",
   "category": "Web Apps",
-  "tags": ["spring", "spring-boot", "java", "web", "rest-api"],
+  "tags": ["spring", "spring-boot", "java", "web"],
   "defaults": {
     "jvmArgs": [
-      { "value": "-Xmx512m", "enabled": true },
+      { "value": "-Xmx512m", "enabled": false },
       { "value": "-Xms128m", "enabled": true }
     ],
     "systemProperties": [
