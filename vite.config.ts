@@ -8,7 +8,23 @@ export default defineConfig({
   base: './',
   root: 'src/renderer',
   define: { __APP_VERSION__: JSON.stringify(version) },
-  build: { outDir: '../../dist/renderer', emptyOutDir: true },
+  build: {
+    outDir: '../../dist/renderer',
+    emptyOutDir: true,
+    minify: 'terser',
+    terserOptions: {
+      compress: { drop_console: true },
+      format: { comments: false },
+    },
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+        },
+      },
+    },
+    reportCompressedSize: true,
+  },
   resolve: { alias: { '@': path.resolve(__dirname, 'src/renderer') } },
   server: { port: 5173 },
 })
