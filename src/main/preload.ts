@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron'
+import { contextBridge, ipcRenderer, shell } from 'electron'
 
 contextBridge.exposeInMainWorld('api', {
   getProfiles:      () => ipcRenderer.invoke('profiles:getAll'),
@@ -33,4 +33,5 @@ contextBridge.exposeInMainWorld('api', {
   pickJava:       () => ipcRenderer.invoke('dialog:pickJava'),
   minimizeWindow: () => ipcRenderer.send('window:minimize'),
   closeWindow:    () => ipcRenderer.send('window:close'),
+  openExternal:   (url: string) => shell.openExternal(url),
 })

@@ -1,17 +1,55 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { useApp }  from '../../store/AppStore'
-import { Button }  from '../common/Button'
-import { Toggle }  from '../common/Toggle'
+import { useApp } from '../../store/AppStore'
+import { Button } from '../common/Button'
+import { Toggle } from '../common/Toggle'
 import type { AppSettings } from '../../types'
+import { IoReload } from 'react-icons/io5'
+import { MdWarning, MdInfo } from 'react-icons/md'
+import { getLatestRelease } from '../../../main/service/GitHub.service'
+import { globalConfig } from '../../../config/Global.config'
+import { version } from '../../../../package.json'
 
 export function SettingsTab() {
   const { state, saveSettings } = useApp()
   const [draft, setDraft] = useState<AppSettings | null>(null)
   const [saved, setSaved] = useState(false)
+  const [latestVersion, setLatestVersion] = useState<string | null>(null)
+  const [isCheckingVersion, setIsCheckingVersion] = useState(true)
+
+  const compareVersions = (current: string, latest: string): number => {
+    // Remove "jrc-v" prefix from latest version if present
+    const latestClean = latest.slice(globalConfig.releaseTagPrefix.length);
+    const currParts = current.split('.').map(Number)
+    const latestParts = latestClean.split('.').map(Number)
+  
+
+    for (let i = 0; i < Math.max(currParts.length, latestParts.length); i++) {
+      const curr = currParts[i] || 0
+      const lat = latestParts[i] || 0
+      if (curr < lat) return -1
+      if (curr > lat) return 1
+    }
+    return 0
+  }
+
+  const checkLatestVersion = async () => {
+    try {
+      const latest = (await getLatestRelease()).name;
+      setLatestVersion(latest)
+    } catch (error) {
+      console.error('Failed to check for updates:', error)
+    } finally {
+      setIsCheckingVersion(false)
+    }
+  }
 
   useEffect(() => {
     if (state.settings) setDraft({ ...state.settings })
   }, [state.settings])
+
+  useEffect(() => {
+    checkLatestVersion()
+  }, [])
 
   const isDirty = useMemo(() => {
     if (!draft || !state.settings) return false
@@ -31,7 +69,12 @@ export function SettingsTab() {
     setTimeout(() => setSaved(false), 2000)
   }
 
-  const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : ''
+  const hasNewerVersion = latestVersion && compareVersions(version, latestVersion) < 0
+
+  const handleOpenReleases = () => {
+    const url = `${globalConfig.repositoryUrl}/releases/latest`
+    window.api?.openExternal(url).catch(() => window.open(url))
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -97,7 +140,28 @@ export function SettingsTab() {
           <Divider />
 
           <Section title="About">
-            <Row label="Version"><span className="font-mono text-sm text-accent">{version}</span></Row>
+            <Row label="Version">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-sm text-accent">{version}</span>
+                {!isCheckingVersion && hasNewerVersion && (
+                  <button
+                    onClick={handleOpenReleases}
+                    title={`A newer version ${latestVersion} is available. Click to view releases.`}
+                    className="flex items-center justify-center text-yellow-500 hover:text-yellow-400 transition-colors cursor-pointer"
+                  >
+                    <MdWarning size={16} />
+                  </button>
+                )}
+                {!isCheckingVersion && !hasNewerVersion && latestVersion && (
+                  <span
+                    title={`Latest version: ${latestVersion}`}
+                    className="flex items-center justify-center text-text-muted hover:text-text-secondary transition-colors"
+                  >
+                    <MdInfo size={16} />
+                  </span>
+                )}
+              </div>
+            </Row>
             <Row label="Stack"><span className="font-mono text-xs text-text-secondary">Electron · React · TypeScript</span></Row>
             <Row label="Config"><span className="font-mono text-xs text-text-muted">%APPDATA%\java-runner-client</span></Row>
           </Section>
@@ -117,9 +181,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Row({ label, hint, sub, children }: {
-  label:     string
-  hint?:     string
-  sub?:      boolean
+  label: string
+  hint?: string
+  sub?: boolean
   children?: React.ReactNode
 }) {
   return (
@@ -138,10 +202,10 @@ function Divider() {
 }
 
 function NumInput({ value, min, max, step, onChange }: {
-  value:    number
-  min:      number
-  max:      number
-  step:     number
+  value: number
+  min: number
+  max: number
+  step: number
   onChange: (v: number) => void
 }) {
   return (

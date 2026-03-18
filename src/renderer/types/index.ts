@@ -26,6 +26,7 @@ declare global {
       pickJava:         () => Promise<string | null>
       minimizeWindow:   () => void
       closeWindow:      () => void
+      openExternal:     (url: string) => Promise<void>
     }
   }
 }
