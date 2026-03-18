@@ -1,0 +1,21 @@
+{
+  "templateVersion": 1,
+  "minAppVersion": "2.1.0",
+  "name": "Generic JAR",
+  "description": "A clean starting point for any JAR application with minimal configuration.",
+  "category": "General",
+  "tags": ["generic", "jar", "java"],
+  "defaults": {
+    "jvmArgs": [
+      { "value": "-Xmx1g", "enabled": true },
+      { "value": "-Xms128m", "enabled": false }
+    ],
+    "systemProperties": [],
+    "programArgs": [],
+    "javaPath":            "",
+    "autoStart":           false,
+    "autoRestart":         false,
+    "autoRestartInterval": 10,
+    "color":               "#a78bfa"
+  }
+}

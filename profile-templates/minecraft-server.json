@@ -1,0 +1,39 @@
+{
+  "templateVersion": 1,
+  "minAppVersion": "2.1.0",
+  "name": "Minecraft Server",
+  "description": "Standard Minecraft server setup with recommended JVM flags for performance and garbage collection tuning.",
+  "category": "Game Servers",
+  "tags": ["minecraft", "game-server", "fabric", "paper", "spigot"],
+  "defaults": {
+    "jvmArgs": [
+      { "value": "-Xmx4g",                               "enabled": true  },
+      { "value": "-Xms1g",                               "enabled": true  },
+      { "value": "-XX:+UseG1GC",                         "enabled": true  },
+      { "value": "-XX:+ParallelRefProcEnabled",           "enabled": true  },
+      { "value": "-XX:MaxGCPauseMillis=200",              "enabled": true  },
+      { "value": "-XX:+UnlockExperimentalVMOptions",      "enabled": true  },
+      { "value": "-XX:+DisableExplicitGC",                "enabled": true  },
+      { "value": "-XX:G1NewSizePercent=30",               "enabled": true  },
+      { "value": "-XX:G1MaxNewSizePercent=40",            "enabled": true  },
+      { "value": "-XX:G1HeapRegionSize=8M",               "enabled": true  },
+      { "value": "-XX:G1ReservePercent=20",               "enabled": true  },
+      { "value": "-XX:G1HeapWastePercent=5",              "enabled": true  },
+      { "value": "-XX:G1MixedGCCountTarget=4",            "enabled": true  },
+      { "value": "-XX:InitiatingHeapOccupancyPercent=15", "enabled": true  },
+      { "value": "-XX:G1MixedGCLiveThresholdPercent=90",  "enabled": true  },
+      { "value": "-XX:SurvivorRatio=32",                  "enabled": true  },
+      { "value": "-XX:+PerfDisableSharedMem",             "enabled": true  },
+      { "value": "-XX:MaxTenuringThreshold=1",            "enabled": true  }
+    ],
+    "systemProperties": [],
+    "programArgs": [
+      { "value": "--nogui", "enabled": true }
+    ],
+    "javaPath":            "",
+    "autoStart":           false,
+    "autoRestart":         true,
+    "autoRestartInterval": 10,
+    "color":               "#4ade80"
+  }
+}

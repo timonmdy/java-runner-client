@@ -1,0 +1,25 @@
+{
+  "templateVersion": 1,
+  "minAppVersion": "2.1.0",
+  "name": "Spring Boot App",
+  "description": "Spring Boot application with common configuration for development and production profiles.",
+  "category": "Web Apps",
+  "tags": ["spring", "spring-boot", "java", "web", "rest-api"],
+  "defaults": {
+    "jvmArgs": [
+      { "value": "-Xmx512m", "enabled": true },
+      { "value": "-Xms128m", "enabled": true }
+    ],
+    "systemProperties": [
+      { "key": "spring.profiles.active", "value": "prod",  "enabled": true  },
+      { "key": "server.port",            "value": "8080",  "enabled": true  },
+      { "key": "logging.level.root",     "value": "INFO",  "enabled": true  }
+    ],
+    "programArgs": [],
+    "javaPath":            "",
+    "autoStart":           false,
+    "autoRestart":         true,
+    "autoRestartInterval": 5,
+    "color":               "#60a5fa"
+  }
+}

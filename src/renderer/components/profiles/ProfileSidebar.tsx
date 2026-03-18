@@ -1,14 +1,14 @@
 import React, { useState, useCallback } from 'react'
-import { useApp } from '../../store/AppStore'
-import { Dialog }      from '../common/Dialog'
-import { ContextMenu } from '../common/ContextMenu'
+import { useApp, PROFILE_COLORS } from '../../store/AppStore'
+import { Dialog }        from '../common/Dialog'
+import { ContextMenu }   from '../common/ContextMenu'
+import { TemplateModal } from './TemplateModal'
 import type { ContextMenuItem } from '../common/ContextMenu'
 import type { Profile } from '../../types'
 import {
   VscPlay, VscDebugStop, VscCheck, VscClearAll, VscTrash,
-  VscSettings, VscQuestion, VscTools, VscAdd,
+  VscSettings, VscQuestion, VscTools, VscAdd, VscLayout,
 } from 'react-icons/vsc'
-import { PROFILE_COLORS } from '../../../config/Profile.config'
 
 interface Props {
   onOpenSettings:  () => void
@@ -28,9 +28,10 @@ export function ProfileSidebar({
     createProfile, deleteProfile, startProcess, stopProcess, clearConsole, isRunning,
   } = useApp()
 
-  const [ctxMenu,      setCtxMenu]      = useState<CtxState | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null)
-  const [actionError,  setActionError]  = useState<string | null>(null)
+  const [ctxMenu,        setCtxMenu]        = useState<CtxState | null>(null)
+  const [deleteTarget,   setDeleteTarget]   = useState<Profile | null>(null)
+  const [actionError,    setActionError]    = useState<string | null>(null)
+  const [templateOpen,   setTemplateOpen]   = useState(false)
 
   const canDelete = state.profiles.length > 1
 
@@ -71,16 +72,28 @@ export function ProfileSidebar({
   return (
     <>
       <aside className="w-52 shrink-0 flex flex-col bg-base-950 border-r border-surface-border">
-        <div className="px-2 pt-2 pb-1 shrink-0">
+
+        {/* New profile buttons */}
+        <div className="px-2 pt-2 pb-1 shrink-0 space-y-1">
           <button
-            onClick={createProfile}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-text-muted hover:text-accent hover:bg-surface-raised transition-colors border border-dashed border-surface-border hover:border-accent/40"
+            onClick={() => createProfile()}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono
+              text-text-muted hover:text-accent hover:bg-surface-raised transition-colors border border-dashed border-surface-border hover:border-accent/40"
           >
             <VscAdd size={11} />
             New Profile
           </button>
+          <button
+            onClick={() => setTemplateOpen(true)}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono
+              text-text-muted hover:text-text-primary hover:bg-surface-raised/50 transition-colors"
+          >
+            <VscLayout size={11} />
+            From Template
+          </button>
         </div>
 
+        {/* Profile list */}
         <div className="flex-1 overflow-y-auto py-1 space-y-0.5 px-2">
           {state.profiles.length === 0 && (
             <p className="px-2 py-4 text-xs text-text-muted font-mono text-center leading-relaxed">
@@ -99,6 +112,7 @@ export function ProfileSidebar({
           ))}
         </div>
 
+        {/* Footer nav */}
         <div className="px-2 pt-1 pb-2 border-t border-surface-border space-y-0.5">
           <FooterButton label="Utilities" active={activeSidePanel === 'utilities'} onClick={onOpenUtilities} icon={<VscTools size={13} />} />
           <FooterButton label="FAQ"       active={activeSidePanel === 'faq'}       onClick={onOpenFaq}       icon={<VscQuestion size={13} />} />
@@ -109,6 +123,8 @@ export function ProfileSidebar({
       {ctxMenu && ctxItems.length > 0 && (
         <ContextMenu x={ctxMenu.x} y={ctxMenu.y} items={ctxItems} onClose={() => setCtxMenu(null)} />
       )}
+
+      <TemplateModal open={templateOpen} onClose={() => setTemplateOpen(false)} />
 
       <Dialog
         open={!!actionError}
@@ -123,8 +139,7 @@ export function ProfileSidebar({
         open={!!deleteTarget}
         title="Delete profile?"
         message={`"${deleteTarget?.name}" will be permanently removed. This cannot be undone.`}
-        confirmLabel="Delete"
-        danger
+        confirmLabel="Delete" danger
         onConfirm={async () => { if (deleteTarget) await deleteProfile(deleteTarget.id); setDeleteTarget(null) }}
         onCancel={() => setDeleteTarget(null)}
       />
@@ -133,11 +148,8 @@ export function ProfileSidebar({
 }
 
 function ProfileItem({ profile, active, running, onClick, onContextMenu }: {
-  profile:       Profile
-  active:        boolean
-  running:       boolean
-  onClick:       () => void
-  onContextMenu: (e: React.MouseEvent) => void
+  profile: Profile; active: boolean; running: boolean
+  onClick: () => void; onContextMenu: (e: React.MouseEvent) => void
 }) {
   const color   = profile.color || PROFILE_COLORS[0]
   const jarName = profile.jarPath ? profile.jarPath.split(/[/\\]/).pop() ?? '' : ''
@@ -152,12 +164,9 @@ function ProfileItem({ profile, active, running, onClick, onContextMenu }: {
       ].join(' ')}
     >
       <span className="relative shrink-0">
-        <span className="block w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
+        <span className="block w-2 h-2 rounded-full" style={{ backgroundColor: color }}/>
         {running && (
-          <span
-            className="absolute inset-0 rounded-full animate-pulse-dot"
-            style={{ backgroundColor: color, opacity: 0.5 }}
-          />
+          <span className="absolute inset-0 rounded-full animate-pulse-dot" style={{ backgroundColor: color, opacity: 0.5 }}/>
         )}
       </span>
       <span className="flex-1 min-w-0 flex flex-col">
@@ -170,16 +179,13 @@ function ProfileItem({ profile, active, running, onClick, onContextMenu }: {
           </span>
         )}
       </span>
-      {running && <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />}
+      {running && <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }}/>}
     </button>
   )
 }
 
 function FooterButton({ label, active, onClick, icon }: {
-  label:   string
-  active:  boolean
-  onClick: () => void
-  icon:    React.ReactNode
+  label: string; active: boolean; onClick: () => void; icon: React.ReactNode
 }) {
   return (
     <button
