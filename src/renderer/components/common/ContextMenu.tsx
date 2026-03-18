@@ -9,7 +9,12 @@ export interface ContextMenuItem {
   onClick?:  () => void
 }
 
-interface Props { x: number; y: number; items: ContextMenuItem[]; onClose: () => void }
+interface Props {
+  x:       number
+  y:       number
+  items:   ContextMenuItem[]
+  onClose: () => void
+}
 
 export function ContextMenu({ x, y, items, onClose }: Props) {
   const ref = useRef<HTMLDivElement>(null)
@@ -27,7 +32,6 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
     }
   }, [onClose])
 
-  // Clamp to viewport
   const style: React.CSSProperties = { position: 'fixed', zIndex: 1000 }
   if (x + 180 > window.innerWidth) style.right  = window.innerWidth - x
   else                              style.left   = x
@@ -38,9 +42,12 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
     <div ref={ref} style={style}>
       <div className="bg-base-900 border border-surface-border rounded-lg shadow-2xl py-1 min-w-[175px] animate-fade-in">
         {items.map((item, i) => {
-          if (item.type === 'separator') return <div key={i} className="my-1 border-t border-surface-border/60"/>
+          if (item.type === 'separator') {
+            return <div key={i} className="my-1 border-t border-surface-border/60" />
+          }
           return (
-            <button key={i}
+            <button
+              key={i}
               disabled={item.disabled}
               onClick={() => { if (!item.disabled && item.onClick) { item.onClick(); onClose() } }}
               className={[
@@ -48,7 +55,8 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
                 item.disabled ? 'opacity-30 cursor-not-allowed' :
                 item.danger   ? 'text-red-400 hover:bg-red-500/10' :
                                 'text-text-primary hover:bg-surface-raised',
-              ].join(' ')}>
+              ].join(' ')}
+            >
               {item.icon && <span className="opacity-70 shrink-0">{item.icon}</span>}
               <span className="flex-1">{item.label}</span>
             </button>

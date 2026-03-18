@@ -1,58 +1,73 @@
-// ── Shared type definitions ──────────────────────────────────────────────────
-
 export interface SystemProperty  { key: string; value: string; enabled: boolean }
 export interface JvmArgument     { value: string; enabled: boolean }
 export interface ProgramArgument { value: string; enabled: boolean }
 
 export interface Profile {
-  id: string; name: string; jarPath: string; workingDir: string;
-  jvmArgs: JvmArgument[]; systemProperties: SystemProperty[];
-  programArgs: ProgramArgument[]; javaPath: string;
-  autoStart: boolean; color: string; createdAt: number; updatedAt: number;
-  autoRestart:         boolean;
-  autoRestartInterval: number; // seconds
+  id: string
+  name: string
+  jarPath: string
+  workingDir: string
+  jvmArgs: JvmArgument[]
+  systemProperties: SystemProperty[]
+  programArgs: ProgramArgument[]
+  javaPath: string
+  autoStart: boolean
+  autoRestart: boolean
+  autoRestartInterval: number // seconds
+  color: string
+  createdAt: number
+  updatedAt: number
 }
 
 export interface AppSettings {
-  launchOnStartup:    boolean;
-  startMinimized:     boolean;
-  minimizeToTray:     boolean;
-  consoleFontSize:    number;
-  consoleMaxLines:    number;
-  consoleWordWrap:    boolean;
-  consoleLineNumbers: boolean;
-  consoleHistorySize: number;
-  theme: 'dark';
+  launchOnStartup: boolean
+  startMinimized: boolean
+  minimizeToTray: boolean
+  consoleFontSize: number
+  consoleMaxLines: number
+  consoleWordWrap: boolean
+  consoleLineNumbers: boolean
+  consoleHistorySize: number
+  theme: 'dark'
 }
 
 export interface ConsoleLine {
-  id: number; text: string;
-  type: 'stdout' | 'stderr' | 'input' | 'system';
-  timestamp: number;
+  id: number
+  text: string
+  type: 'stdout' | 'stderr' | 'input' | 'system'
+  timestamp: number
 }
 
 export interface ProcessState {
-  profileId: string; running: boolean;
-  pid?: number; startedAt?: number; exitCode?: number;
+  profileId: string
+  running: boolean
+  pid?: number
+  startedAt?: number
+  exitCode?: number
 }
 
 export interface ProcessLogEntry {
-  id: string; profileId: string; profileName: string;
-  jarPath: string; pid: number; startedAt: number;
-  stoppedAt?: number; exitCode?: number; signal?: string;
+  id: string
+  profileId: string
+  profileName: string
+  jarPath: string
+  pid: number
+  startedAt: number
+  stoppedAt?: number
+  exitCode?: number
+  signal?: string
 }
 
 export interface JavaProcessInfo {
-  pid:        number;
-  name:       string;
-  command:    string;
-  isJava:     boolean;
-  managed:    boolean;
-  // Extended info (may be undefined on fallback scanner)
-  memoryMB?:  number;
-  startTime?: string;
-  threads?:   number;
-  jarName?:   string;
+  pid: number
+  name: string
+  command: string
+  isJava: boolean
+  managed: boolean
+  memoryMB?: number
+  startTime?: string
+  threads?: number
+  jarName?: string
 }
 
 export const IPC = {

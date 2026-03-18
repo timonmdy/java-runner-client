@@ -13,16 +13,19 @@ contextBridge.exposeInMainWorld('api', {
   scanAllProcesses: () => ipcRenderer.invoke('process:scanAll'),
   killPid:          (pid: number) => ipcRenderer.invoke('process:killPid', pid),
   killAllJava:      () => ipcRenderer.invoke('process:killAllJava'),
+
   onConsoleLine: (cb: (profileId: string, line: unknown) => void) => {
     const h = (_: Electron.IpcRendererEvent, pid: string, line: unknown) => cb(pid, line)
     ipcRenderer.on('console:line', h)
     return () => ipcRenderer.off('console:line', h)
   },
+
   onStatesUpdate: (cb: (states: unknown[]) => void) => {
     const h = (_: Electron.IpcRendererEvent, s: unknown[]) => cb(s)
     ipcRenderer.on('process:statesUpdate', h)
     return () => ipcRenderer.off('process:statesUpdate', h)
   },
+
   getSettings:    () => ipcRenderer.invoke('settings:get'),
   saveSettings:   (s: unknown) => ipcRenderer.invoke('settings:save', s),
   pickJar:        () => ipcRenderer.invoke('dialog:pickJar'),

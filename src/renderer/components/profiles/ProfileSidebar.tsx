@@ -1,9 +1,5 @@
-/**
- * ProfileSidebar — new-profile button at top, profile list, context menu,
- * and footer nav (Settings, FAQ, Utilities).
- */
 import React, { useState, useCallback } from 'react'
-import { useApp, PROFILE_COLORS } from '../../store/AppStore'
+import { useApp } from '../../store/AppStore'
 import { Dialog }      from '../common/Dialog'
 import { ContextMenu } from '../common/ContextMenu'
 import type { ContextMenuItem } from '../common/ContextMenu'
@@ -12,6 +8,7 @@ import {
   VscPlay, VscDebugStop, VscCheck, VscClearAll, VscTrash,
   VscSettings, VscQuestion, VscTools, VscAdd,
 } from 'react-icons/vsc'
+import { PROFILE_COLORS } from '../../../config/Profile.config'
 
 interface Props {
   onOpenSettings:  () => void
@@ -61,7 +58,7 @@ export function ProfileSidebar({
       ? { label: 'Stop',  icon: <VscDebugStop size={11} />, danger: true, onClick: () => handleStop(ctxProfile) }
       : { label: 'Start', icon: <VscPlay size={11} />, disabled: !ctxProfile.jarPath, onClick: () => handleStart(ctxProfile) },
     { type: 'separator' },
-    { label: 'Select', icon: <VscCheck size={12} />, onClick: () => { setActiveProfile(ctxProfile.id); onProfileClick?.() } },
+    { label: 'Select',        icon: <VscCheck size={12} />,   onClick: () => { setActiveProfile(ctxProfile.id); onProfileClick?.() } },
     { label: 'Clear Console', icon: <VscClearAll size={12} />, onClick: () => clearConsole(ctxProfile.id) },
     { type: 'separator' },
     {
@@ -74,18 +71,16 @@ export function ProfileSidebar({
   return (
     <>
       <aside className="w-52 shrink-0 flex flex-col bg-base-950 border-r border-surface-border">
-
-        {/* New profile button at top */}
         <div className="px-2 pt-2 pb-1 shrink-0">
-          <button onClick={createProfile}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono
-              text-text-muted hover:text-accent hover:bg-surface-raised transition-colors border border-dashed border-surface-border hover:border-accent/40">
+          <button
+            onClick={createProfile}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-text-muted hover:text-accent hover:bg-surface-raised transition-colors border border-dashed border-surface-border hover:border-accent/40"
+          >
             <VscAdd size={11} />
             New Profile
           </button>
         </div>
 
-        {/* Profile list */}
         <div className="flex-1 overflow-y-auto py-1 space-y-0.5 px-2">
           {state.profiles.length === 0 && (
             <p className="px-2 py-4 text-xs text-text-muted font-mono text-center leading-relaxed">
@@ -104,7 +99,6 @@ export function ProfileSidebar({
           ))}
         </div>
 
-        {/* Footer nav */}
         <div className="px-2 pt-1 pb-2 border-t border-surface-border space-y-0.5">
           <FooterButton label="Utilities" active={activeSidePanel === 'utilities'} onClick={onOpenUtilities} icon={<VscTools size={13} />} />
           <FooterButton label="FAQ"       active={activeSidePanel === 'faq'}       onClick={onOpenFaq}       icon={<VscQuestion size={13} />} />
@@ -129,7 +123,8 @@ export function ProfileSidebar({
         open={!!deleteTarget}
         title="Delete profile?"
         message={`"${deleteTarget?.name}" will be permanently removed. This cannot be undone.`}
-        confirmLabel="Delete" danger
+        confirmLabel="Delete"
+        danger
         onConfirm={async () => { if (deleteTarget) await deleteProfile(deleteTarget.id); setDeleteTarget(null) }}
         onCancel={() => setDeleteTarget(null)}
       />
@@ -138,13 +133,14 @@ export function ProfileSidebar({
 }
 
 function ProfileItem({ profile, active, running, onClick, onContextMenu }: {
-  profile: Profile; active: boolean; running: boolean
-  onClick: () => void; onContextMenu: (e: React.MouseEvent) => void
+  profile:       Profile
+  active:        boolean
+  running:       boolean
+  onClick:       () => void
+  onContextMenu: (e: React.MouseEvent) => void
 }) {
   const color   = profile.color || PROFILE_COLORS[0]
-  const jarName = profile.jarPath
-    ? profile.jarPath.split(/[/\\]/).pop() ?? ''
-    : ''
+  const jarName = profile.jarPath ? profile.jarPath.split(/[/\\]/).pop() ?? '' : ''
 
   return (
     <button
@@ -156,9 +152,12 @@ function ProfileItem({ profile, active, running, onClick, onContextMenu }: {
       ].join(' ')}
     >
       <span className="relative shrink-0">
-        <span className="block w-2 h-2 rounded-full" style={{ backgroundColor: color }}/>
+        <span className="block w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
         {running && (
-          <span className="absolute inset-0 rounded-full animate-pulse-dot" style={{ backgroundColor: color, opacity: 0.5 }}/>
+          <span
+            className="absolute inset-0 rounded-full animate-pulse-dot"
+            style={{ backgroundColor: color, opacity: 0.5 }}
+          />
         )}
       </span>
       <span className="flex-1 min-w-0 flex flex-col">
@@ -171,20 +170,25 @@ function ProfileItem({ profile, active, running, onClick, onContextMenu }: {
           </span>
         )}
       </span>
-      {running && <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }}/>}
+      {running && <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: color }} />}
     </button>
   )
 }
 
 function FooterButton({ label, active, onClick, icon }: {
-  label: string; active: boolean; onClick: () => void; icon: React.ReactNode
+  label:   string
+  active:  boolean
+  onClick: () => void
+  icon:    React.ReactNode
 }) {
   return (
-    <button onClick={onClick}
+    <button
+      onClick={onClick}
       className={[
         'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors',
         active ? 'bg-surface-raised text-text-primary' : 'text-text-muted hover:text-text-primary hover:bg-surface-raised/50',
-      ].join(' ')}>
+      ].join(' ')}
+    >
       {icon}
       {label}
     </button>

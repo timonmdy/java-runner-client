@@ -1,15 +1,11 @@
-/**
- * ConfigTab — per-profile configuration.
- * Sub-tabs: General | Files & Paths | JVM Args | Properties (-D) | Program Args
- */
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { useApp }     from '../../store/AppStore'
-import { Button }     from '../common/Button'
-import { Input }      from '../common/Input'
-import { Toggle }     from '../common/Toggle'
-import { ArgList }    from '../common/ArgList'
-import { PropList }   from '../common/PropList'
-import { Dialog }     from '../common/Dialog'
+import { useApp }   from '../../store/AppStore'
+import { Button }   from '../common/Button'
+import { Input }    from '../common/Input'
+import { Toggle }   from '../common/Toggle'
+import { ArgList }  from '../common/ArgList'
+import { PropList } from '../common/PropList'
+import { Dialog }   from '../common/Dialog'
 import type { Profile } from '../../types'
 
 type Section = 'general' | 'files' | 'jvm' | 'props' | 'args'
@@ -29,7 +25,6 @@ export function ConfigTab() {
   const [saved,         setSaved]         = useState(false)
   const [section,       setSection]       = useState<Section>('general')
   const [pendingArg,    setPendingArg]    = useState(false)
-  // Pending section change waiting for user confirmation
   const [pendingChange, setPendingChange] = useState<Section | null>(null)
 
   useEffect(() => {
@@ -54,7 +49,6 @@ export function ConfigTab() {
 
   const requestSectionChange = useCallback((next: Section) => {
     if (pendingArg && next !== section) {
-      // Show in-app dialog instead of window.confirm
       setPendingChange(next)
       return
     }
@@ -69,7 +63,11 @@ export function ConfigTab() {
   }, [draft, stopProcess, startProcess])
 
   if (!draft || !activeProfile) {
-    return <div className="flex items-center justify-center h-full text-sm text-text-muted">No profile selected</div>
+    return (
+      <div className="flex items-center justify-center h-full text-sm text-text-muted">
+        No profile selected
+      </div>
+    )
   }
 
   const running = isRunning(draft.id)
@@ -82,7 +80,6 @@ export function ConfigTab() {
   return (
     <>
       <div className="flex flex-col h-full">
-        {/* Toolbar */}
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0">
           <h2 className="text-sm font-medium text-text-primary flex-1 truncate">{draft.name}</h2>
           {isDirty && !saved && (
@@ -91,13 +88,14 @@ export function ConfigTab() {
           {running && isDirty && (
             <span className="text-xs text-text-muted font-mono">· restart needed</span>
           )}
-          <Button variant="primary" size="sm" onClick={handleSave}
-            style={{ backgroundColor: color, color: '#08090d', borderColor: color }}>
+          <Button
+            variant="primary" size="sm" onClick={handleSave}
+            style={{ backgroundColor: color, color: '#08090d', borderColor: color }}
+          >
             {saved ? 'Saved' : 'Save'}
           </Button>
         </div>
 
-        {/* Section tabs */}
         <div className="flex gap-0 px-4 border-b border-surface-border shrink-0">
           {SECTIONS.map(s => (
             <button
@@ -111,20 +109,17 @@ export function ConfigTab() {
             >
               {s.label}
               {pendingArg && s.id === section && (
-                <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-console-warn align-middle"/>
+                <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-console-warn align-middle" />
               )}
             </button>
           ))}
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
           {section === 'general' && (
             <GeneralSection draft={draft} update={update} running={running} color={color} onRestart={handleRestart} />
           )}
-          {section === 'files' && (
-            <FilesSection draft={draft} update={update} />
-          )}
+          {section === 'files' && <FilesSection draft={draft} update={update} />}
           {section === 'jvm' && (
             <ArgSection title="JVM Arguments" hint="Flags passed to the JVM before -jar, e.g. -Xmx2g  -XX:+UseG1GC">
               <ArgList items={draft.jvmArgs} onChange={jvmArgs => update({ jvmArgs })}
@@ -144,17 +139,10 @@ export function ConfigTab() {
             </ArgSection>
           )}
 
-          {/* Command preview */}
-          <div className="rounded-lg bg-base-950 border border-surface-border p-3">
-            <p className="text-xs text-text-muted font-mono uppercase tracking-widest mb-2">Command preview</p>
-            <p className="text-xs font-mono text-text-secondary break-all leading-5 select-text">
-              {buildCmdPreview(draft)}
-            </p>
-          </div>
+          <CommandPreview profile={draft} />
         </div>
       </div>
 
-      {/* In-app confirmation for unsaved pending arg */}
       <Dialog
         open={pendingChange !== null}
         title="Unsaved argument input"
@@ -174,32 +162,29 @@ export function ConfigTab() {
 // ── Sections ──────────────────────────────────────────────────────────────────
 
 function GeneralSection({ draft, update, running, color, onRestart }: {
-  draft: Profile; update: (p: Partial<Profile>) => void
-  running: boolean; color: string; onRestart: () => void
+  draft:      Profile
+  update:     (p: Partial<Profile>) => void
+  running:    boolean
+  color:      string
+  onRestart:  () => void
 }) {
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">Auto-start</h3>
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
-          <div>
-            <p className="text-xs text-text-primary font-medium">Auto-start on app launch</p>
-            <p className="text-xs text-text-muted mt-0.5">Automatically run this profile when JRC starts</p>
-          </div>
-          <Toggle checked={draft.autoStart} onChange={v => update({ autoStart: v })} />
-        </div>
-      </div>
+      <ToggleRow
+        title="Auto-start on app launch"
+        hint="Automatically run this profile when JRC starts"
+        checked={draft.autoStart}
+        onChange={v => update({ autoStart: v })}
+      />
 
       <div className="space-y-3">
         <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">Auto-restart</h3>
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
-          <div>
-            <p className="text-xs text-text-primary font-medium">Automatically restart JAR on crash</p>
-            <p className="text-xs text-text-muted mt-0.5">Restarts the process if it exits with a non-zero code</p>
-          </div>
-          <Toggle checked={draft.autoRestart ?? false} onChange={v => update({ autoRestart: v })} />
-        </div>
-
+        <ToggleRow
+          title="Automatically restart JAR on crash"
+          hint="Restarts the process if it exits with a non-zero code"
+          checked={draft.autoRestart ?? false}
+          onChange={v => update({ autoRestart: v })}
+        />
         {draft.autoRestart && (
           <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
             <div>
@@ -208,9 +193,7 @@ function GeneralSection({ draft, update, running, color, onRestart }: {
             </div>
             <div className="flex items-center gap-2">
               <input
-                type="number"
-                min={1}
-                max={3600}
+                type="number" min={1} max={3600}
                 value={draft.autoRestartInterval ?? 10}
                 onChange={e => update({ autoRestartInterval: Math.max(1, parseInt(e.target.value) || 10) })}
                 className="w-20 bg-base-950 border border-surface-border rounded px-2 py-1 text-xs font-mono text-text-primary text-right focus:outline-none focus:border-accent/40"
@@ -227,6 +210,7 @@ function GeneralSection({ draft, update, running, color, onRestart }: {
           <button
             onClick={onRestart}
             className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-surface-border bg-base-900 text-xs text-text-secondary hover:text-text-primary hover:border-accent/30 transition-colors"
+            style={{ '--hover-color': color } as React.CSSProperties}
           >
             Restart process
           </button>
@@ -236,31 +220,49 @@ function GeneralSection({ draft, update, running, color, onRestart }: {
   )
 }
 
+function ToggleRow({ title, hint, checked, onChange }: {
+  title:    string
+  hint:     string
+  checked:  boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
+      <div>
+        <p className="text-xs text-text-primary font-medium">{title}</p>
+        <p className="text-xs text-text-muted mt-0.5">{hint}</p>
+      </div>
+      <Toggle checked={checked} onChange={onChange} />
+    </div>
+  )
+}
+
 function FilesSection({ draft, update }: { draft: Profile; update: (p: Partial<Profile>) => void }) {
-  const handlePickJar = async () => {
-    const p = await window.api.pickJar()
-    if (p) update({ jarPath: p })
-  }
-  const handlePickDir = async () => {
-    const p = await window.api.pickDir()
-    if (p) update({ workingDir: p })
-  }
-  const handlePickJava = async () => {
-    const p = await window.api.pickJava()
-    if (p) update({ javaPath: p })
+  const pick = async (fn: () => Promise<string | null>, key: keyof Profile) => {
+    const p = await fn()
+    if (p) update({ [key]: p })
   }
 
   return (
     <div className="space-y-4">
-      <Input label="JAR File" value={draft.jarPath} onChange={e => update({ jarPath: e.target.value })}
+      <Input
+        label="JAR File" value={draft.jarPath}
+        onChange={e => update({ jarPath: e.target.value })}
         placeholder="Path to your .jar file" hint="The JAR file to execute"
-        rightElement={<FolderBtn onClick={handlePickJar} />} />
-      <Input label="Working Directory" value={draft.workingDir} onChange={e => update({ workingDir: e.target.value })}
+        rightElement={<FolderBtn onClick={() => pick(window.api.pickJar, 'jarPath')} />}
+      />
+      <Input
+        label="Working Directory" value={draft.workingDir}
+        onChange={e => update({ workingDir: e.target.value })}
         placeholder="Defaults to JAR directory" hint="Leave empty to use the directory containing the JAR"
-        rightElement={<FolderBtn onClick={handlePickDir} />} />
-      <Input label="Java Executable" value={draft.javaPath} onChange={e => update({ javaPath: e.target.value })}
+        rightElement={<FolderBtn onClick={() => pick(window.api.pickDir, 'workingDir')} />}
+      />
+      <Input
+        label="Java Executable" value={draft.javaPath}
+        onChange={e => update({ javaPath: e.target.value })}
         placeholder="java  (uses system PATH)" hint="Leave empty to use the java found on PATH"
-        rightElement={<FolderBtn onClick={handlePickJava} />} />
+        rightElement={<FolderBtn onClick={() => pick(window.api.pickJava, 'javaPath')} />}
+      />
     </div>
   )
 }
@@ -281,19 +283,27 @@ function FolderBtn({ onClick }: { onClick: () => void }) {
   return (
     <button onClick={onClick} className="text-text-muted hover:text-accent transition-colors">
       <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-        <path d="M1 3.5h4l1.5 2H13v7H1V3.5z"/>
+        <path d="M1 3.5h4l1.5 2H13v7H1V3.5z" />
       </svg>
     </button>
   )
 }
 
-function buildCmdPreview(p: Profile): string {
-  const parts: string[] = [p.javaPath || 'java']
-  p.jvmArgs.filter(a => a.enabled && a.value).forEach(a => parts.push(a.value))
-  p.systemProperties.filter(a => a.enabled && a.key).forEach(a =>
+function CommandPreview({ profile }: { profile: Profile }) {
+  const parts: string[] = [profile.javaPath || 'java']
+  profile.jvmArgs.filter(a => a.enabled && a.value).forEach(a => parts.push(a.value))
+  profile.systemProperties.filter(a => a.enabled && a.key).forEach(a =>
     parts.push(a.value ? `-D${a.key}=${a.value}` : `-D${a.key}`)
   )
-  parts.push('-jar', p.jarPath || '<no jar>')
-  p.programArgs.filter(a => a.enabled && a.value).forEach(a => parts.push(a.value))
-  return parts.join(' ')
+  parts.push('-jar', profile.jarPath || '<no jar>')
+  profile.programArgs.filter(a => a.enabled && a.value).forEach(a => parts.push(a.value))
+
+  return (
+    <div className="rounded-lg bg-base-950 border border-surface-border p-3">
+      <p className="text-xs text-text-muted font-mono uppercase tracking-widest mb-2">Command preview</p>
+      <p className="text-xs font-mono text-text-secondary break-all leading-5 select-text">
+        {parts.join(' ')}
+      </p>
+    </div>
+  )
 }
