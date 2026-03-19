@@ -13,9 +13,7 @@ export function ProfileTab() {
 
   useEffect(() => { if (activeProfile) setDraft({ ...activeProfile }) }, [activeProfile?.id])
 
-  if (!draft || !activeProfile) {
-    return <div className="flex items-center justify-center h-full text-sm text-text-muted">No profile selected</div>
-  }
+  if (!draft || !activeProfile) return <div className="flex items-center justify-center h-full text-sm text-text-muted">No profile selected</div>
 
   const update = (patch: Partial<Profile>) => setDraft(prev => prev ? { ...prev, ...patch } : prev)
   const color  = draft.color || PROFILE_COLORS[0]

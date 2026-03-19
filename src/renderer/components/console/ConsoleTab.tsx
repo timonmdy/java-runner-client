@@ -1,3 +1,6 @@
+/**
+ * ConsoleTab — live output, stdin, history, Ctrl+L clear, Ctrl+F search.
+ */
 import React, {
   useRef, useEffect, useState, useCallback, useMemo, KeyboardEvent,
 } from 'react'
@@ -27,11 +30,11 @@ export function ConsoleTab() {
   const [searchQuery, setSearchQuery] = useState('')
   const [searchIdx,   setSearchIdx]   = useState(0)
 
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const inputRef  = useRef<HTMLInputElement>(null)
-  const searchRef = useRef<HTMLInputElement>(null)
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const matchRefs = useRef<(HTMLDivElement | null)[]>([])
+  const scrollRef  = useRef<HTMLDivElement>(null)
+  const inputRef   = useRef<HTMLInputElement>(null)
+  const searchRef  = useRef<HTMLInputElement>(null)
+  const bottomRef  = useRef<HTMLDivElement>(null)
+  const matchRefs  = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
     setInputValue(''); setHistoryIdx(-1); setErrorMsg(null)
@@ -72,12 +75,16 @@ export function ConsoleTab() {
   }, [clampedIdx, matchIndices, scrollToMatch])
 
   const openSearch = useCallback(() => {
-    setSearchOpen(true); setAutoScroll(false)
+    setSearchOpen(true)
+    setAutoScroll(false)
     setTimeout(() => searchRef.current?.focus(), 50)
   }, [])
 
   const closeSearch = useCallback(() => {
-    setSearchOpen(false); setSearchQuery(''); setSearchIdx(0); setAutoScroll(true)
+    setSearchOpen(false)
+    setSearchQuery('')
+    setSearchIdx(0)
+    setAutoScroll(true)
   }, [])
 
   const goNext = useCallback(() => setSearchIdx(i => i + 1), [])
@@ -102,7 +109,8 @@ export function ConsoleTab() {
     if (!cmd || !running) return
     await sendInput(profileId, cmd)
     setCmdHistory(prev => [cmd, ...prev.filter(c => c !== cmd)].slice(0, settings?.consoleHistorySize ?? 200))
-    setInputValue(''); setHistoryIdx(-1)
+    setInputValue('')
+    setHistoryIdx(-1)
   }, [inputValue, running, profileId, sendInput, settings])
 
   const handleKeyDown = useCallback((e: KeyboardEvent<HTMLInputElement>) => {
@@ -159,12 +167,15 @@ export function ConsoleTab() {
           </button>
         )}
 
-        <button onClick={openSearch} className="text-text-muted hover:text-text-primary transition-colors p-1" title="Search (Ctrl+F)">
+        <button onClick={openSearch}
+          className="text-text-muted hover:text-text-primary transition-colors p-1"
+          title="Search (Ctrl+F)">
           <VscSearch size={13} />
         </button>
 
         <button onClick={() => clearConsole(profileId)}
-          className="text-xs text-text-muted hover:text-text-primary font-mono transition-colors" title="Clear (Ctrl+L)">
+          className="text-xs text-text-muted hover:text-text-primary font-mono transition-colors"
+          title="Clear (Ctrl+L)">
           Clear
         </button>
 
@@ -176,35 +187,49 @@ export function ConsoleTab() {
       {searchOpen && (
         <div className="flex items-center gap-2 px-3 py-1.5 border-b border-surface-border bg-base-900 shrink-0 animate-fade-in">
           <input
-            ref={searchRef} type="text" value={searchQuery}
+            ref={searchRef}
+            type="text"
+            value={searchQuery}
             onChange={e => { setSearchQuery(e.target.value); setSearchIdx(0) }}
             onKeyDown={e => {
               if (e.key === 'Enter')  { e.preventDefault(); e.shiftKey ? goPrev() : goNext() }
               if (e.key === 'Escape') closeSearch()
             }}
             placeholder="Search console... (Enter next, Shift+Enter prev)"
-            className="flex-1 bg-base-950 border border-surface-border rounded px-2.5 py-1 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40"
+            className="flex-1 bg-base-950 border border-surface-border rounded px-2.5 py-1
+              text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40"
           />
           {searchTerm && (
             <span className="text-xs font-mono text-text-muted shrink-0">
               {matchIndices.length === 0 ? 'No matches' : `${clampedIdx + 1} / ${matchIndices.length}`}
             </span>
           )}
-          <button onClick={goPrev} disabled={matchIndices.length === 0} className="text-text-muted hover:text-text-primary disabled:opacity-30 p-0.5" title="Previous"><VscChevronUp size={13} /></button>
-          <button onClick={goNext} disabled={matchIndices.length === 0} className="text-text-muted hover:text-text-primary disabled:opacity-30 p-0.5" title="Next"><VscChevronDown size={13} /></button>
-          <button onClick={closeSearch} className="text-text-muted hover:text-text-primary p-0.5"><VscClose size={13} /></button>
+          <button onClick={goPrev} disabled={matchIndices.length === 0}
+            className="text-text-muted hover:text-text-primary disabled:opacity-30 p-0.5" title="Previous (Shift+Enter)">
+            <VscChevronUp size={13} />
+          </button>
+          <button onClick={goNext} disabled={matchIndices.length === 0}
+            className="text-text-muted hover:text-text-primary disabled:opacity-30 p-0.5" title="Next (Enter)">
+            <VscChevronDown size={13} />
+          </button>
+          <button onClick={closeSearch} className="text-text-muted hover:text-text-primary p-0.5" title="Close (Esc)">
+            <VscClose size={13} />
+          </button>
         </div>
       )}
 
       {errorMsg && (
         <div className="mx-3 mt-2 px-3 py-2 bg-red-500/10 border border-red-500/20 rounded-lg text-xs text-red-400 animate-fade-in flex items-center justify-between shrink-0">
           <span>{errorMsg}</span>
-          <button onClick={() => setErrorMsg(null)} className="ml-2 opacity-60 hover:opacity-100"><VscClose size={12} /></button>
+          <button onClick={() => setErrorMsg(null)} className="ml-2 opacity-60 hover:opacity-100">
+            <VscClose size={12} />
+          </button>
         </div>
       )}
 
       <div
-        ref={scrollRef} onScroll={handleScroll}
+        ref={scrollRef}
+        onScroll={handleScroll}
         onClick={() => !searchOpen && inputRef.current?.focus()}
         className="flex-1 overflow-y-auto overflow-x-auto bg-base-950 select-text"
         style={{ fontSize, lineHeight: 1.6, fontFamily: 'monospace' }}
@@ -219,12 +244,20 @@ export function ConsoleTab() {
             const matchPos       = matchIndices.indexOf(i)
             const isCurrentMatch = matchPos === clampedIdx && matchPos !== -1
             const isAnyMatch     = matchPos !== -1
+
             return (
               <ConsoleLineRow
-                key={line.id} line={line} lineNum={i + 1}
-                showLineNum={lineNums} wordWrap={wordWrap}
-                searchTerm={searchTerm} isCurrentMatch={isCurrentMatch} isAnyMatch={isAnyMatch}
-                ref={matchPos !== -1 ? (el: HTMLDivElement | null) => { matchRefs.current[matchPos] = el } : undefined}
+                key={line.id}
+                line={line}
+                lineNum={i + 1}
+                showLineNum={lineNums}
+                wordWrap={wordWrap}
+                searchTerm={searchTerm}
+                isCurrentMatch={isCurrentMatch}
+                isAnyMatch={isAnyMatch}
+                ref={matchPos !== -1
+                  ? (el: HTMLDivElement | null) => { matchRefs.current[matchPos] = el }
+                  : undefined}
               />
             )
           })}
@@ -235,9 +268,12 @@ export function ConsoleTab() {
       <div className="flex items-center gap-2 px-3 py-2 border-t border-surface-border bg-base-900 shrink-0">
         <span className="text-text-muted font-mono text-xs">›</span>
         <input
-          ref={inputRef} type="text" value={inputValue}
+          ref={inputRef}
+          type="text"
+          value={inputValue}
           onChange={e => setInputValue(e.target.value)}
-          onKeyDown={handleKeyDown} disabled={!running}
+          onKeyDown={handleKeyDown}
+          disabled={!running}
           placeholder={running ? 'Send command... (up/down history, Ctrl+L clear, Ctrl+F search)' : 'Start the process to send commands'}
           className="flex-1 bg-transparent text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none disabled:opacity-40"
           style={{ fontSize }}
@@ -255,20 +291,33 @@ const LINE_COLORS: Record<ConsoleLine['type'], string> = {
 }
 
 const ConsoleLineRow = React.forwardRef<HTMLDivElement, {
-  line: ConsoleLine; lineNum: number; showLineNum: boolean; wordWrap: boolean
-  searchTerm: string; isCurrentMatch: boolean; isAnyMatch: boolean
+  line:           ConsoleLine
+  lineNum:        number
+  showLineNum:    boolean
+  wordWrap:       boolean
+  searchTerm:     string
+  isCurrentMatch: boolean
+  isAnyMatch:     boolean
 }>(({ line, lineNum, showLineNum, wordWrap, searchTerm, isCurrentMatch, isAnyMatch }, ref) => {
-  const text    = line.text || ' '
-  const content = searchTerm && isAnyMatch ? renderHighlighted(text, searchTerm, isCurrentMatch) : text
+  const text = line.text || ' '
+
+  const content = searchTerm && isAnyMatch
+    ? renderHighlighted(text, searchTerm, isCurrentMatch)
+    : text
 
   return (
     <div
       ref={ref}
-      className={['flex gap-0 px-2', LINE_COLORS[line.type],
-        isCurrentMatch ? 'bg-yellow-400/10' : isAnyMatch ? 'bg-yellow-400/5' : 'hover:bg-white/[0.02]'].join(' ')}
+      className={[
+        'flex gap-0 px-2',
+        LINE_COLORS[line.type],
+        isCurrentMatch ? 'bg-yellow-400/10' : isAnyMatch ? 'bg-yellow-400/5' : 'hover:bg-white/[0.02]',
+      ].join(' ')}
     >
       {showLineNum && (
-        <span className="w-10 shrink-0 text-right pr-3 text-text-muted/40 select-none font-mono text-[0.7em] leading-[1.6] pt-px">{lineNum}</span>
+        <span className="w-10 shrink-0 text-right pr-3 text-text-muted/40 select-none font-mono text-[0.7em] leading-[1.6] pt-px">
+          {lineNum}
+        </span>
       )}
       <span className={['font-mono flex-1', wordWrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre'].join(' ')}>
         {content}
@@ -281,7 +330,9 @@ ConsoleLineRow.displayName = 'ConsoleLineRow'
 function renderHighlighted(text: string, term: string, isCurrent: boolean): React.ReactNode {
   const parts: React.ReactNode[] = []
   const lower = text.toLowerCase()
-  let last = 0; let idx = lower.indexOf(term); let key = 0
+  let last = 0
+  let idx  = lower.indexOf(term)
+  let key  = 0
 
   while (idx !== -1) {
     if (idx > last) parts.push(text.slice(last, idx))
@@ -290,7 +341,8 @@ function renderHighlighted(text: string, term: string, isCurrent: boolean): Reac
         {text.slice(idx, idx + term.length)}
       </mark>
     )
-    last = idx + term.length; idx = lower.indexOf(term, last)
+    last = idx + term.length
+    idx  = lower.indexOf(term, last)
   }
   if (last < text.length) parts.push(text.slice(last))
   return parts

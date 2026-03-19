@@ -3,7 +3,7 @@ import path from 'path'
 import fs   from 'fs'
 import https from 'https'
 import { IPC } from './shared/types'
-import { getAllProfiles, saveProfile, deleteProfile, getSettings, saveSettings } from './store'
+import { getAllProfiles, saveProfile, deleteProfile, reorderProfiles, getSettings, saveSettings } from './store'
 import { processManager } from './processManager'
 import { restApiServer }  from './restApiServer'
 import { latestReleaseUrl, templateListUrl, rawTemplateUrl } from './shared/config/GitHub.config'
@@ -73,15 +73,9 @@ function createWindow(): void {
 
   mainWindow = new BrowserWindow({
     width: 1200, height: 760, minWidth: 900, minHeight: 600,
-    frame: false, backgroundColor: '#08090d',
-    icon: getIconImage(),
-    show: false,
-    webPreferences: {
-      preload:          path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration:  false,
-      sandbox:          false,
-    },
+    frame: false, backgroundColor: '#08090d', icon: getIconImage(),
+    show: IS_DEV ? true : false,
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: false },
   })
 
   if (IS_DEV) mainWindow.loadURL('http://localhost:5173')
@@ -92,7 +86,7 @@ function createWindow(): void {
     else mainWindow?.show()
   })
 
-  mainWindow.on('close', e => {
+  mainWindow.on('close', (e) => {
     if (forceQuit) return
     if (getSettings().minimizeToTray) { e.preventDefault(); mainWindow?.hide() }
   })
@@ -101,7 +95,7 @@ function createWindow(): void {
 }
 
 function createTray(): void {
-  tray = new Tray(getTrayIcon())
+  tray = new Tray(getIconImage().resize({ width: 16, height: 16 }))
   tray.setToolTip('Java Runner Client')
   updateTrayMenu()
   tray.on('double-click', () => { mainWindow?.show(); mainWindow?.focus() })
@@ -112,7 +106,7 @@ function updateTrayMenu(): void {
   const states   = processManager.getStates()
   const profiles = getAllProfiles()
   const items = states.map(s => ({
-    label:   `  ${profiles.find(p => p.id === s.profileId)?.name ?? s.profileId}  (PID ${s.pid ?? '?'})`,
+    label: `  ${profiles.find(p => p.id === s.profileId)?.name ?? s.profileId}  (PID ${s.pid ?? '?'})`,
     enabled: false,
   }))
   tray.setContextMenu(Menu.buildFromTemplate([
@@ -188,29 +182,19 @@ app.whenReady().then(() => {
   ipcMain.handle(IPC.PROFILES_SAVE, (_e, profile) => {
     saveProfile(profile)
     processManager.updateProfileSnapshot(profile)
-    updateTrayMenu()
   })
-
-  ipcMain.handle(IPC.PROFILES_DELETE, (_e, id) => {
-    deleteProfile(id)
-    updateTrayMenu()
-  })
-
-  // ── Process IPC ────────────────────────────────────────────────────────────
-
-  ipcMain.handle(IPC.PROCESS_START,        (_e, profile) => { const r = processManager.start(profile); updateTrayMenu(); return r })
-  ipcMain.handle(IPC.PROCESS_STOP,         (_e, id)      => { const r = processManager.stop(id);        updateTrayMenu(); return r })
-  ipcMain.handle(IPC.PROCESS_SEND_INPUT,   (_e, id, inp) => processManager.sendInput(id, inp))
-  ipcMain.handle(IPC.PROCESS_GET_STATES,   ()            => processManager.getStates())
-  ipcMain.handle(IPC.PROCESS_GET_LOG,      ()            => processManager.getActivityLog())
-  ipcMain.handle(IPC.PROCESS_CLEAR_LOG,    ()            => processManager.clearActivityLog())
-  ipcMain.handle(IPC.PROCESS_SCAN_ALL,     ()            => processManager.scanAllProcesses())
-  ipcMain.handle(IPC.PROCESS_KILL_PID,     (_e, pid)     => processManager.killPid(pid))
-  ipcMain.handle(IPC.PROCESS_KILL_ALL_JAVA,()            => processManager.killAllJava())
-
-  // ── Settings IPC ───────────────────────────────────────────────────────────
-
-  ipcMain.handle(IPC.SETTINGS_GET, () => getSettings())
+  ipcMain.handle(IPC.PROFILES_DELETE,       (_e, id)      => deleteProfile(id))
+  ipcMain.handle(IPC.PROFILES_REORDER,      (_e, ids)     => reorderProfiles(ids))
+  ipcMain.handle(IPC.PROCESS_START,         (_e, profile) => processManager.start(profile))
+  ipcMain.handle(IPC.PROCESS_STOP,          (_e, id)      => processManager.stop(id))
+  ipcMain.handle(IPC.PROCESS_SEND_INPUT,    (_e, id, inp) => processManager.sendInput(id, inp))
+  ipcMain.handle(IPC.PROCESS_GET_STATES,    ()            => processManager.getStates())
+  ipcMain.handle(IPC.PROCESS_GET_LOG,       ()            => processManager.getActivityLog())
+  ipcMain.handle(IPC.PROCESS_CLEAR_LOG,     ()            => processManager.clearActivityLog())
+  ipcMain.handle(IPC.PROCESS_SCAN_ALL,      ()            => processManager.scanAllProcesses())
+  ipcMain.handle(IPC.PROCESS_KILL_PID,      (_e, pid)     => processManager.killPid(pid))
+  ipcMain.handle(IPC.PROCESS_KILL_ALL_JAVA, ()            => processManager.killAllJava())
+  ipcMain.handle(IPC.SETTINGS_GET,          ()            => getSettings())
   ipcMain.handle(IPC.SETTINGS_SAVE, (_e, s) => {
     const old = getSettings()
     saveSettings(s)
@@ -222,8 +206,6 @@ app.whenReady().then(() => {
       restApiServer.start(s.restApiPort)
     }
   })
-
-  // ── Dialog IPC ─────────────────────────────────────────────────────────────
 
   ipcMain.handle(IPC.DIALOG_PICK_JAR, async () => {
     const r = await dialog.showOpenDialog(mainWindow!, { filters: [{ name: 'JAR', extensions: ['jar'] }], properties: ['openFile'] })
@@ -259,7 +241,6 @@ app.whenReady().then(() => {
     if (p.autoStart && p.jarPath) processManager.start(p)
   }
 
-  // Keep tray in sync when process state changes
   mainWindow?.webContents.on('did-finish-load', updateTrayMenu)
 })
 

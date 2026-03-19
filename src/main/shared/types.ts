@@ -9,6 +9,7 @@ export interface Profile {
   autoStart: boolean; color: string; createdAt: number; updatedAt: number;
   autoRestart:         boolean;
   autoRestartInterval: number;
+  order?: number;
 }
 
 export interface AppSettings {
@@ -48,6 +49,7 @@ export interface JavaProcessInfo {
   command:    string;
   isJava:     boolean;
   managed:    boolean;
+  protected:  boolean;
   memoryMB?:  number;
   startTime?: string;
   threads?:   number;
@@ -55,26 +57,27 @@ export interface JavaProcessInfo {
 }
 
 export const IPC = {
-  PROFILES_GET_ALL:       'profiles:getAll',
-  PROFILES_SAVE:          'profiles:save',
-  PROFILES_DELETE:        'profiles:delete',
-  PROCESS_START:          'process:start',
-  PROCESS_STOP:           'process:stop',
-  PROCESS_SEND_INPUT:     'process:sendInput',
-  PROCESS_GET_STATES:     'process:getStates',
-  PROCESS_GET_LOG:        'process:getLog',
-  PROCESS_CLEAR_LOG:      'process:clearLog',
-  PROCESS_SCAN_ALL:       'process:scanAll',
-  PROCESS_KILL_PID:       'process:killPid',
-  PROCESS_KILL_ALL_JAVA:  'process:killAllJava',
-  CONSOLE_LINE:           'console:line',
+  PROFILES_GET_ALL:      'profiles:getAll',
+  PROFILES_SAVE:         'profiles:save',
+  PROFILES_DELETE:       'profiles:delete',
+  PROFILES_REORDER:      'profiles:reorder',
+  PROCESS_START:         'process:start',
+  PROCESS_STOP:          'process:stop',
+  PROCESS_SEND_INPUT:    'process:sendInput',
+  PROCESS_GET_STATES:    'process:getStates',
+  PROCESS_GET_LOG:       'process:getLog',
+  PROCESS_CLEAR_LOG:     'process:clearLog',
+  PROCESS_SCAN_ALL:      'process:scanAll',
+  PROCESS_KILL_PID:      'process:killPid',
+  PROCESS_KILL_ALL_JAVA: 'process:killAllJava',
+  CONSOLE_LINE:          'console:line',
   CONSOLE_CLEAR:          'console:clear',
-  SETTINGS_GET:           'settings:get',
-  SETTINGS_SAVE:          'settings:save',
-  DIALOG_PICK_JAR:        'dialog:pickJar',
-  DIALOG_PICK_DIR:        'dialog:pickDir',
-  DIALOG_PICK_JAVA:       'dialog:pickJava',
-  WINDOW_MINIMIZE:        'window:minimize',
-  WINDOW_CLOSE:           'window:close',
-  TRAY_SHOW:              'tray:show',
+  SETTINGS_GET:          'settings:get',
+  SETTINGS_SAVE:         'settings:save',
+  DIALOG_PICK_JAR:       'dialog:pickJar',
+  DIALOG_PICK_DIR:       'dialog:pickDir',
+  DIALOG_PICK_JAVA:      'dialog:pickJava',
+  WINDOW_MINIMIZE:       'window:minimize',
+  WINDOW_CLOSE:          'window:close',
+  TRAY_SHOW:             'tray:show',
 } as const
