@@ -16,17 +16,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
+      # Checkout FIRST (needed to read package.json)
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - run: npm ci
-
-      - run: npm run dist
-
-      # Get version
+      # Get version early
       - name: Get version
         id: version
         shell: pwsh
@@ -54,7 +47,7 @@ jobs:
               return null;
             }
 
-      # Decide if release should run
+      # Decide if we should continue
       - name: Check if version changed
         id: should_release
         shell: bash
@@ -64,16 +57,34 @@ jobs:
 
           if [ "${{ steps.latest.outputs.result }}" = "${{ steps.version.outputs.tag }}" ]; then
             echo "release=false" >> $GITHUB_OUTPUT
-            echo "No version change → skipping release"
+            echo "No version change → stopping early"
           else
             echo "release=true" >> $GITHUB_OUTPUT
-            echo "Version changed → creating release"
+            echo "Version changed → continue"
           fi
 
-      # ⛔ Stop here if no release
+      # 🚀 HARD STOP (nothing else runs)
       - name: Stop if no release
         if: steps.should_release.outputs.release == 'false'
-        run: echo "Skipping release..."
+        run: exit 0
+
+      # -------------------------
+      # ONLY RUNS IF VERSION CHANGED
+      # -------------------------
+
+      - name: Setup Node
+        if: steps.should_release.outputs.release == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        if: steps.should_release.outputs.release == 'true'
+        run: npm ci
+
+      - name: Build (dist)
+        if: steps.should_release.outputs.release == 'true'
+        run: npm run dist
 
       # Find EXE
       - name: Locate EXE
@@ -91,7 +102,7 @@ jobs:
 
           echo "path=$($file.FullName)" >> $env:GITHUB_OUTPUT
 
-      # Notes
+      # Release notes
       - name: Generate release notes
         if: steps.should_release.outputs.release == 'true'
         run: |
@@ -106,7 +117,7 @@ jobs:
           EOF
         shell: bash
 
-      # Release
+      # Create release
       - name: Create draft release
         if: steps.should_release.outputs.release == 'true'
         uses: softprops/action-gh-release@v2
