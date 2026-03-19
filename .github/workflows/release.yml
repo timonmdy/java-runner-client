@@ -107,13 +107,19 @@ jobs:
         if: steps.should_release.outputs.release == 'true'
         run: |
           cat <<EOF > RELEASE_NOTES.md
-          ## 🚀 Release ${{ steps.version.outputs.name }}
-
-          ### Changes
-          - Add your changes here
-
-          ### Notes
-          - Auto-generated release
+          ### Version ${{ steps.version.outputs.name }}
+          Bugfixes:
+          - [...]
+           
+          ___
+          
+          Additions:
+          - [...]
+          
+          ___
+          
+          Adjustments/Changes:
+          - [...]
           EOF
         shell: bash
 
