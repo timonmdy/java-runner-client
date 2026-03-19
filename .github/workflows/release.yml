@@ -16,25 +16,17 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      # Checkout repo
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # Setup Node
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      # Install dependencies
-      - name: Install deps
-        run: npm ci
+      - run: npm ci
 
-      # Build
-      - name: Build (dist)
-        run: npm run dist
+      - run: npm run dist
 
-      # Read version
+      # Get version
       - name: Get version
         id: version
         shell: pwsh
@@ -46,7 +38,7 @@ jobs:
           echo "tag=v$version" >> $env:GITHUB_OUTPUT
           echo "name=jrc-v$version" >> $env:GITHUB_OUTPUT
 
-      # Get latest release tag
+      # Get latest release
       - name: Get latest release
         id: latest
         uses: actions/github-script@v7
@@ -62,20 +54,30 @@ jobs:
               return null;
             }
 
-      # Fail if version didn't change
-      - name: Compare versions
+      # Decide if release should run
+      - name: Check if version changed
+        id: should_release
         shell: bash
         run: |
           echo "Latest: ${{ steps.latest.outputs.result }}"
           echo "Current: ${{ steps.version.outputs.tag }}"
 
           if [ "${{ steps.latest.outputs.result }}" = "${{ steps.version.outputs.tag }}" ]; then
-            echo "Version unchanged. Failing."
-            exit 1
+            echo "release=false" >> $GITHUB_OUTPUT
+            echo "No version change → skipping release"
+          else
+            echo "release=true" >> $GITHUB_OUTPUT
+            echo "Version changed → creating release"
           fi
+
+      # ⛔ Stop here if no release
+      - name: Stop if no release
+        if: steps.should_release.outputs.release == 'false'
+        run: echo "Skipping release..."
 
       # Find EXE
       - name: Locate EXE
+        if: steps.should_release.outputs.release == 'true'
         id: exe
         shell: pwsh
         run: |
@@ -89,8 +91,9 @@ jobs:
 
           echo "path=$($file.FullName)" >> $env:GITHUB_OUTPUT
 
-      # Create release notes
+      # Notes
       - name: Generate release notes
+        if: steps.should_release.outputs.release == 'true'
         run: |
           cat <<EOF > RELEASE_NOTES.md
           ## 🚀 Release ${{ steps.version.outputs.name }}
@@ -103,8 +106,9 @@ jobs:
           EOF
         shell: bash
 
-      # Create draft release + upload EXE
+      # Release
       - name: Create draft release
+        if: steps.should_release.outputs.release == 'true'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.version.outputs.tag }}
