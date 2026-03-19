@@ -1,4 +1,4 @@
-export interface FaqItem  { q: string; a: string }
+export interface FaqItem { q: string; a: string }
 export interface FaqTopic { id: string; label: string; items: FaqItem[] }
 
 export const FAQ_TOPICS: FaqTopic[] = [
@@ -18,6 +18,10 @@ export const FAQ_TOPICS: FaqTopic[] = [
       { q: 'How do I pass JVM memory settings?', a: 'In Configure -> JVM Args, add -Xmx2g (maximum heap 2 GB) and -Xms512m (initial heap 512 MB). Each argument is on its own row and can be toggled on/off.' },
       { q: 'How do I auto-start a JAR on app launch?', a: 'Open Configure -> General for that profile and enable "Auto-start on app launch". You can also enable "Launch on Windows startup" in Settings.' },
       { q: 'How do I reorder profiles in the sidebar?', a: 'Drag and drop profiles in the sidebar to reorder them. The new order is saved automatically — no need to confirm or press Save.' },
+      {
+        q: 'How can I quickly delete a profile?',
+        a: 'Right-click a profile and press Delete. Hold Shift while clicking Delete to skip the confirmation and remove it instantly.',
+      }
     ],
   },
   {
