@@ -93,7 +93,7 @@ jobs:
         shell: pwsh
         run: |
           $version = "${{ steps.version.outputs.version }}"
-          $file = Get-ChildItem -Recurse -Filter "Java.Runner.Client.Setup.$version.exe" | Select-Object -First 1
+          $file = Get-ChildItem -Recurse -Filter "Java Runner Client Setup $version.exe" | Select-Object -First 1
 
           if (-not $file) {
             Write-Error "EXE not found"
