@@ -1,0 +1,36 @@
+name: Version Info
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  version-info:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get PR version
+        id: pr
+        run: |
+          echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+
+      - name: Get main version
+        id: main
+        run: |
+          git fetch origin main
+          git show origin/main:package.json | jq -r .version > main_version.txt
+          echo "version=$(cat main_version.txt)" >> $GITHUB_OUTPUT
+
+      - name: Compare versions
+        run: |
+          echo "PR version: ${{ steps.pr.outputs.version }}"
+          echo "Main version: ${{ steps.main.outputs.version }}"
+
+          if [ "${{ steps.pr.outputs.version }}" != "${{ steps.main.outputs.version }}" ]; then
+            echo "✅ Version changed → This WILL create a release on merge"
+          else
+            echo "ℹ️ Version unchanged → No release will be created"
+          fi
