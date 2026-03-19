@@ -1,7 +1,7 @@
 import React from 'react'
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AppProvider } from './store/AppStore'
-import { TitleBar }   from './components/common/TitleBar'
+import { TitleBar } from './components/common/TitleBar'
 import { MainLayout } from './components/MainLayout'
 
 export default function App() {

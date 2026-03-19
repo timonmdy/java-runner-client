@@ -36,7 +36,7 @@ export function MainLayout() {
 
   const color   = activeProfile?.color ?? '#4ade80'
   const running = activeProfile ? isRunning(activeProfile.id) : false
-
+  
   // When profile changes, go to console
   const prevIdRef = React.useRef(state.activeProfileId)
   useEffect(() => {

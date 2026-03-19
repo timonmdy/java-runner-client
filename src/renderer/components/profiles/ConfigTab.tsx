@@ -1,3 +1,7 @@
+/**
+ * ConfigTab — per-profile configuration.
+ * Sub-tabs: General | Files & Paths | JVM Args | Properties (-D) | Program Args
+ */
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useApp }     from '../../store/AppStore'
 import { Button }     from '../common/Button'
@@ -48,8 +52,12 @@ export function ConfigTab() {
   }, [draft, saveProfile])
 
   const requestSectionChange = useCallback((next: Section) => {
-    if (pendingArg && next !== section) { setPendingChange(next); return }
-    setPendingArg(false); setSection(next)
+    if (pendingArg && next !== section) {
+      setPendingChange(next)
+      return
+    }
+    setPendingArg(false)
+    setSection(next)
   }, [pendingArg, section])
 
   const handleRestart = useCallback(async () => {
@@ -64,26 +72,39 @@ export function ConfigTab() {
 
   const running = isRunning(draft.id)
   const color   = draft.color || '#4ade80'
-  const update  = (patch: Partial<Profile>) => { setSaved(false); setDraft(prev => prev ? { ...prev, ...patch } : prev) }
+  const update  = (patch: Partial<Profile>) => {
+    setSaved(false)
+    setDraft(prev => prev ? { ...prev, ...patch } : prev)
+  }
 
   return (
     <>
       <div className="flex flex-col h-full">
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0">
           <h2 className="text-sm font-medium text-text-primary flex-1 truncate">{draft.name}</h2>
-          {isDirty && !saved && <span className="text-xs text-console-warn font-mono">unsaved changes</span>}
-          {running && isDirty && <span className="text-xs text-text-muted font-mono">· restart needed</span>}
-          <Button variant="primary" size="sm" onClick={handleSave} style={{ backgroundColor: color, color: '#08090d', borderColor: color }}>
+          {isDirty && !saved && (
+            <span className="text-xs text-console-warn font-mono">unsaved changes</span>
+          )}
+          {running && isDirty && (
+            <span className="text-xs text-text-muted font-mono">· restart needed</span>
+          )}
+          <Button variant="primary" size="sm" onClick={handleSave}
+            style={{ backgroundColor: color, color: '#08090d', borderColor: color }}>
             {saved ? 'Saved' : 'Save'}
           </Button>
         </div>
 
         <div className="flex gap-0 px-4 border-b border-surface-border shrink-0">
           {SECTIONS.map(s => (
-            <button key={s.id} onClick={() => requestSectionChange(s.id)}
-              className={['px-3 py-2 text-xs font-mono border-b-2 -mb-px transition-colors',
-                section === s.id ? 'font-medium' : 'text-text-muted border-transparent hover:text-text-primary'].join(' ')}
-              style={section === s.id ? { borderBottomColor: color, color } : {}}>
+            <button
+              key={s.id}
+              onClick={() => requestSectionChange(s.id)}
+              className={[
+                'px-3 py-2 text-xs font-mono border-b-2 -mb-px transition-colors',
+                section === s.id ? 'font-medium' : 'text-text-muted border-transparent hover:text-text-primary',
+              ].join(' ')}
+              style={section === s.id ? { borderBottomColor: color, color } : {}}
+            >
               {s.label}
               {pendingArg && s.id === section && (
                 <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-console-warn align-middle"/>
@@ -93,27 +114,36 @@ export function ConfigTab() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-          {section === 'general' && <GeneralSection draft={draft} update={update} running={running} color={color} onRestart={handleRestart} />}
-          {section === 'files'   && <FilesSection   draft={draft} update={update} />}
-          {section === 'jvm'     && (
+          {section === 'general' && (
+            <GeneralSection draft={draft} update={update} running={running} color={color} onRestart={handleRestart} />
+          )}
+          {section === 'files' && (
+            <FilesSection draft={draft} update={update} />
+          )}
+          {section === 'jvm' && (
             <ArgSection title="JVM Arguments" hint="Flags passed to the JVM before -jar, e.g. -Xmx2g  -XX:+UseG1GC">
-              <ArgList items={draft.jvmArgs} onChange={jvmArgs => update({ jvmArgs })} onPendingChange={setPendingArg} placeholder="-Xmx2g" />
+              <ArgList items={draft.jvmArgs} onChange={jvmArgs => update({ jvmArgs })}
+                onPendingChange={setPendingArg} placeholder="-Xmx2g" />
             </ArgSection>
           )}
           {section === 'props' && (
             <ArgSection title="System Properties" hint="Passed as -Dkey=value. Spring profiles, ports, logging levels, etc.">
-              <PropList items={draft.systemProperties} onChange={systemProperties => update({ systemProperties })} onPendingChange={setPendingArg} />
+              <PropList items={draft.systemProperties} onChange={systemProperties => update({ systemProperties })}
+                onPendingChange={setPendingArg} />
             </ArgSection>
           )}
           {section === 'args' && (
             <ArgSection title="Program Arguments" hint="Appended after the JAR path, e.g. --nogui  --world myWorld">
-              <ArgList items={draft.programArgs} onChange={programArgs => update({ programArgs })} onPendingChange={setPendingArg} placeholder="--nogui" />
+              <ArgList items={draft.programArgs} onChange={programArgs => update({ programArgs })}
+                onPendingChange={setPendingArg} placeholder="--nogui" />
             </ArgSection>
           )}
 
           <div className="rounded-lg bg-base-950 border border-surface-border p-3">
             <p className="text-xs text-text-muted font-mono uppercase tracking-widest mb-2">Command preview</p>
-            <p className="text-xs font-mono text-text-secondary break-all leading-5 select-text">{buildCmdPreview(draft)}</p>
+            <p className="text-xs font-mono text-text-secondary break-all leading-5 select-text">
+              {buildCmdPreview(draft)}
+            </p>
           </div>
         </div>
       </div>
@@ -121,9 +151,13 @@ export function ConfigTab() {
       <Dialog
         open={pendingChange !== null}
         title="Unsaved argument input"
-        message={'You have text in the argument input that has not been added yet.\n\nClick "+ Add" first, otherwise it will not take effect.\n\nSwitch anyway?'}
-        confirmLabel="Switch" cancelLabel="Stay"
-        onConfirm={() => { if (pendingChange) { setPendingArg(false); setSection(pendingChange) } setPendingChange(null) }}
+        message={'You have text in the argument input that hasn\'t been added yet.\n\nClick "+ Add" first, otherwise it will not take effect.\n\nSwitch anyway?'}
+        confirmLabel="Switch"
+        cancelLabel="Stay"
+        onConfirm={() => {
+          if (pendingChange) { setPendingArg(false); setSection(pendingChange) }
+          setPendingChange(null)
+        }}
         onCancel={() => setPendingChange(null)}
       />
     </>
@@ -164,9 +198,12 @@ function GeneralSection({ draft, update, running, color, onRestart }: {
               <p className="text-xs text-text-muted mt-0.5">Seconds to wait before restarting</p>
             </div>
             <div className="flex items-center gap-2">
-              <input type="number" min={1} max={3600} value={draft.autoRestartInterval ?? 10}
+              <input
+                type="number" min={1} max={3600}
+                value={draft.autoRestartInterval ?? 10}
                 onChange={e => update({ autoRestartInterval: Math.max(1, parseInt(e.target.value) || 10) })}
-                className="w-20 bg-base-950 border border-surface-border rounded px-2 py-1 text-xs font-mono text-text-primary text-right focus:outline-none focus:border-accent/40"/>
+                className="w-20 bg-base-950 border border-surface-border rounded px-2 py-1 text-xs font-mono text-text-primary text-right focus:outline-none focus:border-accent/40"
+              />
               <span className="text-xs text-text-muted font-mono">sec</span>
             </div>
           </div>
@@ -176,8 +213,10 @@ function GeneralSection({ draft, update, running, color, onRestart }: {
       {running && (
         <div className="space-y-3">
           <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">Process</h3>
-          <button onClick={onRestart}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-surface-border bg-base-900 text-xs text-text-secondary hover:text-text-primary hover:border-accent/30 transition-colors">
+          <button
+            onClick={onRestart}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-surface-border bg-base-900 text-xs text-text-secondary hover:text-text-primary hover:border-accent/30 transition-colors"
+          >
             Restart process
           </button>
         </div>

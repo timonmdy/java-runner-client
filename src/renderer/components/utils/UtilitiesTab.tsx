@@ -1,3 +1,8 @@
+/**
+ * UtilitiesTab — Activity Log + Process Scanner.
+ * Process Scanner: expandable rows, protected processes grayed out,
+ * excluded from "Kill All Java".
+ */
 import React, { useState, useCallback } from 'react'
 import { Dialog } from '../common/Dialog'
 import { Button } from '../common/Button'
@@ -19,8 +24,10 @@ export function UtilitiesTab() {
       <div className="flex items-center gap-0 px-4 border-b border-surface-border bg-base-900 shrink-0">
         {PANELS.map(p => (
           <button key={p.id} onClick={() => setPanel(p.id as Panel)}
-            className={['flex items-center gap-1.5 px-3 py-2.5 text-xs font-mono border-b-2 -mb-px transition-colors',
-              panel === p.id ? 'text-text-primary border-text-muted font-medium' : 'text-text-muted border-transparent hover:text-text-primary'].join(' ')}>
+            className={[
+              'flex items-center gap-1.5 px-3 py-2.5 text-xs font-mono border-b-2 -mb-px transition-colors',
+              panel === p.id ? 'text-text-primary border-text-muted font-medium' : 'text-text-muted border-transparent hover:text-text-primary',
+            ].join(' ')}>
             <p.Icon size={13}/>{p.label}
           </button>
         ))}
@@ -32,6 +39,8 @@ export function UtilitiesTab() {
     </div>
   )
 }
+
+// ── Activity Log ──────────────────────────────────────────────────────────────
 
 function ActivityLogPanel() {
   const [entries,      setEntries]      = useState<ProcessLogEntry[] | null>(null)
@@ -100,6 +109,8 @@ function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
   )
 }
 
+// ── Process Scanner ───────────────────────────────────────────────────────────
+
 interface KillIntent { proc: JavaProcessInfo; nonJava: boolean }
 
 function ScannerPanel() {
@@ -135,7 +146,7 @@ function ScannerPanel() {
 
   const handleKillAll = async () => {
     const res = await window.api.killAllJava()
-    setStatusMsg({ text: `Killed ${res.killed} java process${res.killed === 1 ? '' : 'es'}`, ok: true })
+    setStatusMsg({ text: `Killed ${res.killed} java process${res.killed === 1 ? '' : 'es'} (protected processes skipped)`, ok: true })
     setKillAllConfirm(false)
     setTimeout(scan, 800)
   }
@@ -147,7 +158,8 @@ function ScannerPanel() {
         .filter(r => !searchLower || r.command.toLowerCase().includes(searchLower) || String(r.pid).includes(searchLower))
     : null
 
-  const javaVisible = visible?.some(r => r.isJava) ?? false
+  // Only killable (non-protected) java processes shown in the "Kill All" button
+  const killableJavaVisible = visible?.some(r => r.isJava && !r.protected) ?? false
 
   return (
     <div className="flex flex-col h-full">
@@ -164,10 +176,11 @@ function ScannerPanel() {
         {results !== null && (
           <input type="text" value={search} onChange={e => setSearch(e.target.value)}
             placeholder="Search PID or command..."
-            className="h-7 bg-base-950 border border-surface-border rounded-md px-2.5 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 w-48"/>
+            className="h-7 bg-base-950 border border-surface-border rounded-md px-2.5 text-xs font-mono
+              text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 w-48"/>
         )}
         <div className="flex-1"/>
-        {javaVisible && <Button variant="danger" size="sm" onClick={() => setKillAllConfirm(true)}>Kill All Java</Button>}
+        {killableJavaVisible && <Button variant="danger" size="sm" onClick={() => setKillAllConfirm(true)}>Kill All Java</Button>}
         <Button variant="primary" size="sm" onClick={scan} loading={scanning}>{results === null ? 'Scan' : 'Re-scan'}</Button>
       </div>
 
@@ -187,7 +200,8 @@ function ScannerPanel() {
         {visible !== null && visible.length > 0 && (
           <div className="space-y-1.5">
             {visible.map(proc => (
-              <ProcessRow key={proc.pid} proc={proc}
+              <ProcessRow
+                key={proc.pid} proc={proc}
                 expanded={expandedPid === proc.pid}
                 onToggle={() => setExpandedPid(expandedPid === proc.pid ? null : proc.pid)}
                 onKill={() => setKillIntent({ proc, nonJava: !proc.isJava })}
@@ -198,15 +212,19 @@ function ScannerPanel() {
       </div>
 
       <Dialog open={!!killIntent}
-        title={killIntent?.nonJava ? 'Kill non-Java process?' : `Kill PID ${killIntent?.proc.pid}?`}
-        message={killIntent?.nonJava
-          ? `Warning: this process does not appear to be Java.\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}\n\nForcefully terminating unknown processes can cause data loss.`
-          : `Forcefully terminate PID ${killIntent?.proc.pid}?\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}`}
-        confirmLabel={killIntent?.nonJava ? 'Kill anyway' : 'Kill Process'}
+        title={killIntent?.nonJava ? 'Kill non-Java process?' : killIntent?.proc.protected ? 'Kill protected process?' : `Kill PID ${killIntent?.proc.pid}?`}
+        message={
+          killIntent?.proc.protected
+            ? `This process is marked as protected and was excluded from "Kill All Java".\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}\n\nAre you sure you want to forcefully terminate it?`
+            : killIntent?.nonJava
+              ? `Warning: this process does not appear to be Java.\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}\n\nForcefully terminating unknown processes can cause data loss.`
+              : `Forcefully terminate PID ${killIntent?.proc.pid}?\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}`
+        }
+        confirmLabel={killIntent?.proc.protected ? 'Kill anyway' : killIntent?.nonJava ? 'Kill anyway' : 'Kill Process'}
         danger onConfirm={handleKill} onCancel={() => setKillIntent(null)}/>
 
       <Dialog open={killAllConfirm} title="Kill all Java processes?"
-        message="This forcefully terminates every java process on this machine - including those not managed by JRC. Running servers will lose unsaved data."
+        message="This forcefully terminates every non-protected java process on this machine — including those not managed by JRC. Protected processes will be skipped. Running servers will lose unsaved data."
         confirmLabel="Kill All" danger onConfirm={handleKillAll} onCancel={() => setKillAllConfirm(false)}/>
     </div>
   )
@@ -215,9 +233,18 @@ function ScannerPanel() {
 function ProcessRow({ proc, expanded, onToggle, onKill }: {
   proc: JavaProcessInfo; expanded: boolean; onToggle: () => void; onKill: () => void
 }) {
+  const isProtected = proc.protected
+
   return (
-    <div className={['rounded-lg border transition-colors overflow-hidden',
-      proc.isJava ? 'border-accent/20 bg-accent/5' : 'border-surface-border bg-base-900/40'].join(' ')}>
+    <div className={[
+      'rounded-lg border transition-colors overflow-hidden',
+      isProtected
+        ? 'border-surface-border/50 bg-base-900/20 opacity-50'
+        : proc.isJava
+          ? 'border-accent/20 bg-accent/5'
+          : 'border-surface-border bg-base-900/40',
+    ].join(' ')}>
+
       <div className="flex items-center gap-2 px-3 py-2">
         <button onClick={onToggle} className="text-text-muted hover:text-text-primary transition-colors shrink-0">
           <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
@@ -225,28 +252,44 @@ function ProcessRow({ proc, expanded, onToggle, onKill }: {
             <polyline points="3,2 7,5 3,8"/>
           </svg>
         </button>
+
         <div className="flex items-center gap-1 shrink-0">
-          {proc.managed && <span className="px-1.5 py-0.5 rounded text-xs font-mono bg-accent/15 text-accent border border-accent/30">Managed</span>}
+          {isProtected && (
+            <span className="px-1.5 py-0.5 rounded text-xs font-mono bg-surface-raised text-text-muted border border-surface-border">Protected</span>
+          )}
+          {proc.managed && (
+            <span className="px-1.5 py-0.5 rounded text-xs font-mono bg-accent/15 text-accent border border-accent/30">Managed</span>
+          )}
           {proc.isJava
             ? <span className="px-1.5 py-0.5 rounded text-xs font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">Java</span>
             : <span className="px-1.5 py-0.5 rounded text-xs font-mono bg-surface-raised text-text-muted border border-surface-border">Non-Java</span>
           }
         </div>
-        <code className={['text-xs font-mono shrink-0 w-14', proc.isJava ? 'text-accent' : 'text-text-muted'].join(' ')}>{proc.pid}</code>
+
+        <code className={['text-xs font-mono shrink-0 w-14', proc.isJava && !isProtected ? 'text-accent' : 'text-text-muted'].join(' ')}>
+          {proc.pid}
+        </code>
+
         <span className="text-xs font-mono text-text-secondary truncate flex-1 min-w-0" title={proc.command}>
           {proc.jarName ?? proc.name ?? proc.command.slice(0, 60)}
         </span>
-        {proc.memoryMB !== undefined && <span className="text-xs font-mono text-text-muted shrink-0">{proc.memoryMB} MB</span>}
+
+        {proc.memoryMB !== undefined && (
+          <span className="text-xs font-mono text-text-muted shrink-0">{proc.memoryMB} MB</span>
+        )}
+
         <Button variant="danger" size="sm" onClick={onKill}>Kill</Button>
       </div>
+
       {expanded && (
         <div className="px-10 pb-3 pt-1 border-t border-surface-border/50 space-y-1.5 animate-fade-in">
           <DetailRow label="Full command" value={proc.command} mono wrap/>
-          {proc.jarName   && <DetailRow label="JAR"       value={proc.jarName}/>}
-          {proc.memoryMB  !== undefined && <DetailRow label="Memory"  value={`${proc.memoryMB} MB`}/>}
-          {proc.threads   !== undefined && <DetailRow label="Threads" value={String(proc.threads)}/>}
-          {proc.startTime && <DetailRow label="Started"   value={proc.startTime}/>}
-          <DetailRow label="Managed by JRC" value={proc.managed ? 'Yes' : 'No'}/>
+          {proc.jarName   && <DetailRow label="JAR"             value={proc.jarName}/>}
+          {proc.memoryMB  !== undefined && <DetailRow label="Memory"   value={`${proc.memoryMB} MB`}/>}
+          {proc.threads   !== undefined && <DetailRow label="Threads"  value={String(proc.threads)}/>}
+          {proc.startTime && <DetailRow label="Started"         value={proc.startTime}/>}
+          <DetailRow label="Managed by JRC" value={proc.managed   ? 'Yes' : 'No'}/>
+          <DetailRow label="Protected"      value={proc.protected ? 'Yes - excluded from Kill All Java' : 'No'}/>
         </div>
       )}
     </div>
@@ -257,7 +300,9 @@ function DetailRow({ label, value, mono, wrap }: { label: string; value: string;
   return (
     <div className="flex gap-3 text-xs">
       <span className="text-text-muted font-mono w-28 shrink-0">{label}</span>
-      <span className={[mono ? 'font-mono' : '', wrap ? 'break-all' : 'truncate', 'text-text-secondary flex-1'].join(' ')}>{value}</span>
+      <span className={[mono ? 'font-mono' : '', wrap ? 'break-all' : 'truncate', 'text-text-secondary flex-1'].join(' ')}>
+        {value}
+      </span>
     </div>
   )
 }

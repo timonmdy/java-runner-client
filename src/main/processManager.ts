@@ -4,24 +4,25 @@ import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
 import type { Profile, ProcessState, ConsoleLine, ProcessLogEntry, JavaProcessInfo } from './shared/types'
 import { IPC } from './shared/types'
+import { PROTECTED_PROCESS_NAMES } from './shared/config/Scanner.config'
 
 const SELF_PROCESS_NAME = 'Java Client Runner'
 
 type SystemMessageType = 'start' | 'stopping' | 'stopped' | 'restart' | 'error-starting' | 'error-runtime' | 'info-pid' | 'info-workdir' | 'info-restart'
 
 interface ManagedProcess {
-  process:              ChildProcess
-  profileId:            string
-  profileName:          string
-  jarPath:              string
-  startedAt:            number
+  process:     ChildProcess
+  profileId:   string
+  profileName: string
+  jarPath:     string
+  startedAt:   number
   intentionallyStopped: boolean
 }
 
 class ProcessManager {
-  private processes        = new Map<string, ManagedProcess>()
-  private activityLog:       ProcessLogEntry[] = []
-  private window:            BrowserWindow | null = null
+  private processes    = new Map<string, ManagedProcess>()
+  private activityLog: ProcessLogEntry[] = []
+  private window:      BrowserWindow | null = null
   private restartTimers    = new Map<string, ReturnType<typeof setTimeout>>()
   private profileSnapshots = new Map<string, Profile>()
   private lineCounters     = new Map<string, number>()
@@ -53,7 +54,7 @@ class ProcessManager {
     const { cmd, args } = this.buildArgs(profile)
     const cwd = profile.workingDir || path.dirname(profile.jarPath)
 
-    this.pushSystem('start',       profile.id, 'pending', `Starting: ${cmd} ${args.join(' ')}`)
+    this.pushSystem('start', profile.id, 'pending', `Starting: ${cmd} ${args.join(' ')}`)
     this.pushSystem('info-workdir', profile.id, 'pending', `Working dir: ${cwd}`)
 
     let proc: ChildProcess
@@ -141,10 +142,11 @@ class ProcessManager {
   }
 
   updateProfileSnapshot(profile: Profile): void {
-    if (this.profileSnapshots.has(profile.id)) this.profileSnapshots.set(profile.id, profile)
+    if (this.profileSnapshots.has(profile.id)) {
+      this.profileSnapshots.set(profile.id, profile)
+    }
   }
 
-  // Called from REST API and IPC to signal the renderer to clear its console state
   clearConsoleForProfile(profileId: string): void {
     this.window?.webContents.send(IPC.CONSOLE_CLEAR, profileId)
   }
@@ -173,12 +175,12 @@ class ProcessManager {
   getActivityLog():   ProcessLogEntry[] { return this.activityLog }
   clearActivityLog(): void              { this.activityLog = [] }
 
-  scanAllProcesses(): JavaProcessInfo[] {
-    const managedPids = new Set(
-      Array.from(this.processes.values()).map(m => m.process.pid).filter((p): p is number => p != null)
+  // ── Process Scanner ──────────────────────────────────────────────────────────
+
+  private isProtected(name: string, cmd: string): boolean {
+    return PROTECTED_PROCESS_NAMES.some(
+      n => name.toLowerCase().includes(n.toLowerCase()) || cmd.toLowerCase().includes(n.toLowerCase())
     )
-    if (process.platform === 'win32') return this.scanAllWindows(managedPids)
-    return this.scanAllUnix(managedPids)
   }
 
   private isSelf(name: string, cmd: string): boolean {
@@ -189,6 +191,14 @@ class ProcessManager {
     const m = cmd.match(/-jar\s+([^\s]+)/i)
     if (!m) return undefined
     return m[1].split(/[/\\]/).pop()
+  }
+
+  scanAllProcesses(): JavaProcessInfo[] {
+    const managedPids = new Set(
+      Array.from(this.processes.values()).map(m => m.process.pid).filter((p): p is number => p != null)
+    )
+    if (process.platform === 'win32') return this.scanAllWindows(managedPids)
+    return this.scanAllUnix(managedPids)
   }
 
   private scanAllWindows(managedPids: Set<number>): JavaProcessInfo[] {
@@ -226,7 +236,8 @@ class ProcessManager {
           return {
             pid, name, command: (cmd.length > 2 ? cmd : name).slice(0, 400),
             isJava, managed: managedPids.has(pid),
-            memoryMB:  typeof p.MemMB   === 'number' ? p.MemMB   : undefined,
+            protected: this.isProtected(name, cmd),
+            memoryMB:  typeof p.MemMB  === 'number' ? p.MemMB : undefined,
             threads:   typeof p.Threads === 'number' ? p.Threads : undefined,
             startTime: p.Start ? String(p.Start) : undefined,
             jarName:   this.parseJarName(cmd),
@@ -253,7 +264,7 @@ class ProcessManager {
         if (isNaN(pid) || pid <= 0) continue
         if (this.isSelf(name, name)) continue
         const isJava = /java/i.test(name)
-        results.push({ pid, name, command: name, isJava, managed: managedPids.has(pid) })
+        results.push({ pid, name, command: name, isJava, managed: managedPids.has(pid), protected: this.isProtected(name, name) })
       }
       return results.sort((a, b) => (b.isJava ? 1 : 0) - (a.isJava ? 1 : 0))
     } catch { return [] }
@@ -271,7 +282,7 @@ class ProcessManager {
           if (isNaN(pid)) return null
           if (this.isSelf(name, cmd)) return null
           const isJava = /java/i.test(name) || /java/i.test(cmd)
-          return { pid, name, command: cmd || name, isJava, managed: managedPids.has(pid), jarName: this.parseJarName(cmd) } as JavaProcessInfo
+          return { pid, name, command: cmd || name, isJava, managed: managedPids.has(pid), protected: this.isProtected(name, cmd), jarName: this.parseJarName(cmd) } as JavaProcessInfo
         })
         .filter((x): x is JavaProcessInfo => x !== null)
         .sort((a, b) => (b.isJava ? 1 : 0) - (a.isJava ? 1 : 0))
@@ -292,32 +303,34 @@ class ProcessManager {
     }
   }
 
+  // Only kills non-protected java processes
   killAllJava(): { ok: boolean; killed: number } {
-    const procs = this.scanAllProcesses().filter(p => p.isJava)
+    const procs = this.scanAllProcesses().filter(p => p.isJava && !p.protected)
     let killed  = 0
     for (const p of procs) if (this.killPid(p.pid).ok) killed++
     return { ok: true, killed }
   }
 
-  private pushOutput(profileId: string, chunk: string, type: 'stdout' | 'stderr', _m: ManagedProcess) {
-    const lines = chunk.split(/\r?\n/)
-    for (let i = 0; i < lines.length; i++) {
-      if (i === lines.length - 1 && lines[i] === '') continue
+  private pushOutput(profileId: string, chunk: string, type: 'stdout' | 'stderr', m: ManagedProcess) {
+    for (const [i, text] of chunk.split(/\r?\n/).entries()) {
+      if (i === chunk.split(/\r?\n/).length - 1 && text === '') continue
       const counter = (this.lineCounters.get(profileId) ?? 0) + 1
       this.lineCounters.set(profileId, counter)
-      this.pushLine(profileId, lines[i], type, counter)
+      this.pushLine(profileId, text, type, counter)
     }
   }
 
   private pushLine(profileId: string, text: string, type: ConsoleLine['type'], id: number | string) {
     const seenIds = this.seenLineIds.get(profileId)
-    if (seenIds?.has(id)) return // silently skip duplicates
-
+    if (seenIds?.has(id)) {
+      throw new Error(`Duplicate line ID detected for profile ${profileId}: ${id}`)
+    }
     if (seenIds) {
       seenIds.add(id)
-      if (seenIds.size > 10000) this.seenLineIds.set(profileId, new Set([id]))
+      if (seenIds.size > 10000) {
+        this.seenLineIds.set(profileId, new Set([id]))
+      }
     }
-
     this.window?.webContents.send(IPC.CONSOLE_LINE, profileId, { id, text, type, timestamp: Date.now() })
   }
 

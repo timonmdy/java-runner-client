@@ -38,7 +38,6 @@ export function SettingsTab() {
       )}
       <div className="flex-1 overflow-y-auto">
         <div className="px-5 py-5 max-w-2xl space-y-8">
-
           <Section title="Startup">
             <Row label="Launch on Windows startup" hint="Java Runner Client starts automatically when you log in">
               <Toggle checked={draft.launchOnStartup} onChange={v => set({ launchOnStartup: v })}/>
@@ -50,9 +49,7 @@ export function SettingsTab() {
               <Toggle checked={draft.minimizeToTray} onChange={v => set({ minimizeToTray: v })}/>
             </Row>
           </Section>
-
           <Divider/>
-
           <Section title="Console">
             <Row label="Font size" hint="Console output font size in pixels">
               <div className="flex items-center gap-2.5">
@@ -99,13 +96,11 @@ export function SettingsTab() {
           </Section>
 
           <Divider/>
-
           <Section title="About">
             <VersionChecker currentVersion={version} />
             <Row label="Stack"><span className="font-mono text-xs text-text-secondary">Electron · React · TypeScript</span></Row>
             <Row label="Config"><span className="font-mono text-xs text-text-muted">%APPDATA%\java-runner-client</span></Row>
           </Section>
-
         </div>
       </div>
     </div>
