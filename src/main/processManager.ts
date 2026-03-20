@@ -27,6 +27,7 @@ class ProcessManager {
   private profileSnapshots = new Map<string, Profile>()
   private lineCounters     = new Map<string, number>()
   private seenLineIds      = new Map<string, Set<string | number>>()
+  private onTrayUpdate?: () => void
 
   setWindow(win: BrowserWindow): void { this.window = win }
 
@@ -99,6 +100,7 @@ class ProcessManager {
       const entry = this.activityLog.find(e => e.profileId === profile.id && !e.stoppedAt)
       if (entry) { entry.stoppedAt = Date.now(); entry.exitCode = code ?? undefined; entry.signal = signal ?? undefined }
       this.broadcastStates()
+      this.updateTray()
 
       if (!managed.intentionallyStopped && code !== 0) {
         const snapshot = this.profileSnapshots.get(profile.id)
@@ -116,6 +118,7 @@ class ProcessManager {
     })
 
     this.broadcastStates()
+    this.updateTray();
     return { ok: true }
   }
 
@@ -138,6 +141,8 @@ class ProcessManager {
         if (this.processes.has(profileId)) try { m.process.kill('SIGKILL') } catch { /* ignore */ }
       }, 5000)
     }
+
+    this.updateTray();
     return { ok: true }
   }
 
@@ -297,6 +302,7 @@ class ProcessManager {
         if (m.process.pid === pid) { this.processes.delete(id); break }
       }
       this.broadcastStates()
+      this.updateTray();
       return { ok: true }
     } catch (err: unknown) {
       return { ok: false, error: err instanceof Error ? err.message : String(err) }
@@ -342,6 +348,14 @@ class ProcessManager {
 
   private broadcastStates() {
     this.window?.webContents.send('process:statesUpdate', this.getStates())
+  }
+
+  setTrayUpdater(fn: () => void) {
+    this.onTrayUpdate = fn
+  }
+
+  private updateTray() {
+    this.onTrayUpdate?.()
   }
 }
 
