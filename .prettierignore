@@ -1,0 +1,8 @@
+dist
+node_modules
+.github
+profile-templates
+
+README.md
+package.json
+package-lock.json

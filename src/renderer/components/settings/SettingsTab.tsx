@@ -5,6 +5,7 @@ import { Toggle }          from '../common/Toggle'
 import { VersionChecker }  from './version/VersionChecker'
 import type { AppSettings } from '../../types'
 import { REST_API_CONFIG } from '../../../main/shared/config/RestApi.config'
+import { version } from '../../../../package.json'
 
 export function SettingsTab() {
   const { state, saveSettings } = useApp()
@@ -23,8 +24,6 @@ export function SettingsTab() {
   const set = (patch: Partial<AppSettings>) => { setSaved(false); setDraft(prev => prev ? { ...prev, ...patch } : prev) }
 
   const handleSave = async () => { await saveSettings(draft); setSaved(true); setTimeout(() => setSaved(false), 2000) }
-
-  const version = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '0.0.0'
 
   return (
     <div className="flex flex-col h-full">
