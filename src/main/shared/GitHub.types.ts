@@ -49,3 +49,12 @@ export interface ProfileTemplate {
     color: string
   }
 }
+
+export interface DownloadProgress {
+  filename: string
+  bytesWritten: number
+  totalBytes: number
+  percent: number
+  status: 'downloading' | 'paused' | 'done' | 'error' | 'cancelled'
+  error?: string
+}
