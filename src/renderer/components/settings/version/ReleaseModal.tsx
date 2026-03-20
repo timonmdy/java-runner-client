@@ -61,25 +61,33 @@ function DownloadProgressBar({ progress }: { progress: DownloadProgress }) {
   const isCancelled = status === 'cancelled'
 
   const barColor =
-    isError || isCancelled ? 'bg-red-500' :
-    isDone               ? 'bg-green-500' :
-    isPaused             ? 'bg-yellow-400' :
-                           'bg-accent'
+    isError || isCancelled
+      ? 'bg-red-500'
+      : isDone
+        ? 'bg-green-500'
+        : isPaused
+          ? 'bg-yellow-400'
+          : 'bg-accent'
 
-  const label =
-    isError     ? error ?? 'Error' :
-    isCancelled ? 'Cancelled' :
-    isDone      ? 'Complete' :
-    isPaused    ? 'Paused' :
-    `${formatBytes(bytesWritten)}${totalBytes > 0 ? ` / ${formatBytes(totalBytes)}` : ''}`
+  const label = isError
+    ? (error ?? 'Error')
+    : isCancelled
+      ? 'Cancelled'
+      : isDone
+        ? 'Complete'
+        : isPaused
+          ? 'Paused'
+          : `${formatBytes(bytesWritten)}${totalBytes > 0 ? ` / ${formatBytes(totalBytes)}` : ''}`
 
   const percentLabel = isDone ? '100%' : `${percent}%`
 
-  const percentColor =
-    isDone               ? 'text-green-400' :
-    isError || isCancelled ? 'text-red-400' :
-    isPaused             ? 'text-yellow-400' :
-                           'text-accent'
+  const percentColor = isDone
+    ? 'text-green-400'
+    : isError || isCancelled
+      ? 'text-red-400'
+      : isPaused
+        ? 'text-yellow-400'
+        : 'text-accent'
 
   return (
     <div className="mt-2 space-y-1">
@@ -164,9 +172,11 @@ export function ReleaseModal({ release, open, onClose }: Props) {
               className="p-1 rounded text-text-muted hover:text-accent transition-colors"
               title={dl?.status === 'paused' ? 'Resume' : 'Pause'}
             >
-              {dl?.status === 'paused'
-                ? <VscDebugContinue size={14} />
-                : <VscDebugPause size={14} />}
+              {dl?.status === 'paused' ? (
+                <VscDebugContinue size={14} />
+              ) : (
+                <VscDebugPause size={14} />
+              )}
             </button>
             <button
               onClick={() => handleCancel(asset.name)}
@@ -350,14 +360,13 @@ export function ReleaseModal({ release, open, onClose }: Props) {
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-mono text-text-primary truncate">{asset.name}</p>
                       <p className="text-xs text-text-muted font-mono">
-                        {formatBytes(asset.size)} · {asset.download_count.toLocaleString()} downloads
+                        {formatBytes(asset.size)} · {asset.download_count.toLocaleString()}{' '}
+                        downloads
                       </p>
                     </div>
                     {renderControls(asset, 'ghost')}
                   </div>
-                  {getDl(asset.name) && (
-                    <DownloadProgressBar progress={getDl(asset.name)!} />
-                  )}
+                  {getDl(asset.name) && <DownloadProgressBar progress={getDl(asset.name)!} />}
                 </div>
               ))}
             </div>

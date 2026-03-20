@@ -14,7 +14,9 @@ function httpsGet(url: string): Promise<unknown> {
         return
       }
       let data = ''
-      res.on('data', (c) => { data += c })
+      res.on('data', (c) => {
+        data += c
+      })
       res.on('end', () => {
         try {
           resolve(JSON.parse(data))
@@ -49,7 +51,7 @@ export const GitHubIPC = {
     channel: 'github:latestRelease',
     handler: async () => {
       try {
-        return { ok: true, data: await httpsGet(latestReleaseUrl()) as GitHubRelease }
+        return { ok: true, data: (await httpsGet(latestReleaseUrl())) as GitHubRelease }
       } catch (e) {
         return { ok: false, error: String(e) }
       }
@@ -96,7 +98,7 @@ export const GitHubIPC = {
       const sendProgress = (
         dl: Pick<ActiveDownload, 'bytesWritten' | 'totalBytes'>,
         status: 'downloading' | 'paused' | 'done' | 'error' | 'cancelled',
-        error?: string,
+        error?: string
       ) => {
         if (sender.isDestroyed()) return
         const { bytesWritten, totalBytes } = dl
@@ -161,14 +163,14 @@ export const GitHubIPC = {
 
             req.on('error', (err) => {
               activeDownloads.delete(filename)
-              fs.unlink(filePath, () => { })
+              fs.unlink(filePath, () => {})
               sendProgress(dl, 'error', err.message)
               resolve({ ok: false, error: err.message })
             })
 
             file.on('error', (err) => {
               activeDownloads.delete(filename)
-              fs.unlink(filePath, () => { })
+              fs.unlink(filePath, () => {})
               sendProgress(dl, 'error', err.message)
               resolve({ ok: false, error: err.message })
             })
@@ -230,7 +232,7 @@ export const GitHubIPC = {
       if (!dl) return { ok: false, error: 'No active download' }
       dl.res.destroy()
       dl.fileStream.close()
-      fs.unlink(dl.filePath, () => { })
+      fs.unlink(dl.filePath, () => {})
       activeDownloads.delete(filename)
       if (!e.sender.isDestroyed()) {
         e.sender.send('github:downloadProgress', {
