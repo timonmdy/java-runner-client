@@ -45,11 +45,14 @@ export function ConfigTab() {
   }, [draft, activeProfile])
 
   const handleSave = useCallback(async () => {
-    if (!draft) return
-    await saveProfile(draft)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1800)
-  }, [draft, saveProfile])
+  if (!draft) return
+  await saveProfile(draft)
+  
+  activeProfile && Object.assign(activeProfile, draft)
+
+  setSaved(true)
+  setTimeout(() => setSaved(false), 1800)
+}, [draft, saveProfile, activeProfile])
 
   const requestSectionChange = useCallback((next: Section) => {
     if (pendingArg && next !== section) {
