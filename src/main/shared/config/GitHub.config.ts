@@ -1,9 +1,9 @@
 export const GITHUB_CONFIG = {
-  owner:             'timonmdy',
-  repo:              'java-runner-client',
-  templatesPath:     'profile-templates',
+  owner: 'timonmdy',
+  repo: 'java-runner-client',
+  templatesPath: 'profile-templates',
   templateMinVersion: 1,
-  apiBase:           'https://api.github.com',
+  apiBase: 'https://api.github.com',
 } as const
 
 export function releasesUrl(): string {

@@ -2,11 +2,11 @@ import React, { useEffect, useRef } from 'react'
 import { VscClose } from 'react-icons/vsc'
 
 interface Props {
-  open:      boolean
-  title:     string
-  onClose:   () => void
-  width?:    'sm' | 'md' | 'lg' | 'xl'
-  children:  React.ReactNode
+  open: boolean
+  title: string
+  onClose: () => void
+  width?: 'sm' | 'md' | 'lg' | 'xl'
+  children: React.ReactNode
 }
 
 const WIDTHS = {
@@ -21,7 +21,9 @@ export function Modal({ open, title, onClose, width = 'md', children }: Props) {
 
   useEffect(() => {
     if (!open) return
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose()
+    }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
   }, [open, onClose])
@@ -31,11 +33,16 @@ export function Modal({ open, title, onClose, width = 'md', children }: Props) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-fade-in px-4"
-      onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) onClose()
+      }}
     >
       <div
         ref={ref}
-        className={['bg-base-900 border border-surface-border rounded-xl shadow-2xl w-full flex flex-col max-h-[85vh]', WIDTHS[width]].join(' ')}
+        className={[
+          'bg-base-900 border border-surface-border rounded-xl shadow-2xl w-full flex flex-col max-h-[85vh]',
+          WIDTHS[width],
+        ].join(' ')}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-surface-border shrink-0">
@@ -49,9 +56,7 @@ export function Modal({ open, title, onClose, width = 'md', children }: Props) {
         </div>
 
         {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto">
-          {children}
-        </div>
+        <div className="flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>
   )

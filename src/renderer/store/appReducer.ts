@@ -2,12 +2,12 @@ import type { Profile, AppSettings, ProcessState, ConsoleLine } from '../types'
 import { saveLogs, clearLogs } from './sessionLogs'
 
 export interface AppState {
-  profiles:        Profile[]
+  profiles: Profile[]
   activeProfileId: string
-  processStates:   ProcessState[]
-  settings:        AppSettings | null
-  consoleLogs:     Record<string, ConsoleLine[]>
-  loading:         boolean
+  processStates: ProcessState[]
+  settings: AppSettings | null
+  consoleLogs: Record<string, ConsoleLine[]>
+  loading: boolean
 }
 
 export const INITIAL_STATE: AppState = {
@@ -20,14 +20,14 @@ export const INITIAL_STATE: AppState = {
 }
 
 export type Action =
-  | { type: 'INIT';         profiles: Profile[]; settings: AppSettings; states: ProcessState[] }
+  | { type: 'INIT'; profiles: Profile[]; settings: AppSettings; states: ProcessState[] }
   | { type: 'SET_PROFILES'; profiles: Profile[] }
-  | { type: 'SET_ACTIVE';   id: string }
-  | { type: 'SET_STATES';   states: ProcessState[] }
+  | { type: 'SET_ACTIVE'; id: string }
+  | { type: 'SET_STATES'; states: ProcessState[] }
   | { type: 'SET_SETTINGS'; settings: AppSettings }
-  | { type: 'LOAD_LOG';     profileId: string; lines: ConsoleLine[] }
-  | { type: 'APPEND_LOG';   profileId: string; line: ConsoleLine; maxLines: number }
-  | { type: 'CLEAR_LOG';    profileId: string }
+  | { type: 'LOAD_LOG'; profileId: string; lines: ConsoleLine[] }
+  | { type: 'APPEND_LOG'; profileId: string; line: ConsoleLine; maxLines: number }
+  | { type: 'CLEAR_LOG'; profileId: string }
 
 export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -57,9 +57,10 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, consoleLogs: { ...state.consoleLogs, [action.profileId]: action.lines } }
 
     case 'APPEND_LOG': {
-      const prev    = state.consoleLogs[action.profileId] ?? []
-      const next    = [...prev, action.line]
-      const trimmed = next.length > action.maxLines ? next.slice(next.length - action.maxLines) : next
+      const prev = state.consoleLogs[action.profileId] ?? []
+      const next = [...prev, action.line]
+      const trimmed =
+        next.length > action.maxLines ? next.slice(next.length - action.maxLines) : next
       saveLogs(action.profileId, trimmed)
       return { ...state, consoleLogs: { ...state.consoleLogs, [action.profileId]: trimmed } }
     }
