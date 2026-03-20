@@ -28,7 +28,12 @@ export default function App() {
 
   return (
     <AppProvider>
-      <HashRouter>
+      <HashRouter
+        future={{
+          v7_startTransition: false,
+          v7_relativeSplatPath: false,
+        }}
+      >
         <div className="flex flex-col h-screen bg-base-900 text-text-primary overflow-hidden select-none">
           <TitleBar />
           <Routes>

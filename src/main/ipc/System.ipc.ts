@@ -1,7 +1,7 @@
 import { dialog, shell } from 'electron'
 import type { RouteMap } from '../shared/IPCController'
-import { getSettings, saveSettings } from '../store'
-import { restApiServer } from '../restApiServer'
+import { getSettings, saveSettings } from '../Store'
+import { restApiServer } from '../RestAPI'
 import type { AppSettings } from '../shared/types'
 
 // mainWindow is needed for dialogs — set via initSystemIPC() called from main.ts

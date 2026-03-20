@@ -1,9 +1,9 @@
 import { app, BrowserWindow, Tray, Menu, nativeImage } from 'electron'
 import path from 'path'
 import fs from 'fs'
-import { getAllProfiles, getSettings } from './store'
-import { processManager } from './processManager'
-import { restApiServer } from './restApiServer'
+import { getAllProfiles, getSettings } from './Store'
+import { processManager } from './ProcessManager'
+import { restApiServer } from './RestAPI'
 import { registerIPC } from './shared/IPCController'
 import { allRoutes, initSystemIPC, initWindowIPC } from './ipc/_index'
 

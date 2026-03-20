@@ -1,5 +1,5 @@
 import type { RouteMap } from '../shared/IPCController'
-import { processManager } from '../processManager'
+import { processManager } from '../ProcessManager'
 import type { Profile, ProcessState, ConsoleLine } from '../shared/types'
 
 export const ProcessIPC = {

@@ -3,7 +3,7 @@ import https from 'https'
 import { dialog, shell } from 'electron'
 import type { RouteMap } from '../shared/IPCController'
 import { latestReleaseUrl, templateListUrl, rawTemplateUrl } from '../shared/config/GitHub.config'
-import type { ProfileTemplate } from '../shared/GitHub.types'
+import type { GitHubRelease, ProfileTemplate } from '../shared/GitHub.types'
 
 function httpsGet(url: string): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -39,7 +39,7 @@ export const GitHubIPC = {
     channel: 'github:latestRelease',
     handler: async () => {
       try {
-        return { ok: true, data: await httpsGet(latestReleaseUrl()) }
+        return { ok: true, data: (await httpsGet(latestReleaseUrl())) as GitHubRelease }
       } catch (e) {
         return { ok: false, error: String(e) }
       }
