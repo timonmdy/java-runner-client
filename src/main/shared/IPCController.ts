@@ -18,25 +18,25 @@ import { ipcMain, ipcRenderer, IpcMainInvokeEvent, IpcMainEvent, IpcRendererEven
 // ─── Route descriptors ────────────────────────────────────────────────────────
 
 type InvokeRoute = {
-  type:    'invoke'
+  type: 'invoke'
   channel: string
   handler: (event: IpcMainInvokeEvent, ...args: any[]) => any
 }
 
 type SendRoute = {
-  type:    'send'
+  type: 'send'
   channel: string
   handler: (event: IpcMainEvent, ...args: any[]) => void
 }
 
 /** No handler — main pushes via webContents.send(channel, ...) */
 type OnRoute = {
-  type:     'on'
-  channel:  string
+  type: 'on'
+  channel: string
   /** Cast a function signature here to type the callback args on window.api.onFoo.
    *  e.g. `args: {} as (profileId: string, line: ConsoleLine) => void`
    *  Never called at runtime — purely a compile-time phantom. */
-  args?:    (...args: any[]) => void
+  args?: (...args: any[]) => void
 }
 
 type Route = InvokeRoute | SendRoute | OnRoute
@@ -45,28 +45,28 @@ export type RouteMap = Record<string, Route>
 
 // ─── Type inference: RouteMap → window.api shape ──────────────────────────────
 
-type InvokeAPI<R extends InvokeRoute> =
-  R['handler'] extends (_e: any, ...args: infer A) => infer Ret
-    ? (...args: A) => Promise<Awaited<Ret>>
-    : never
+type InvokeAPI<R extends InvokeRoute> = R['handler'] extends (
+  _e: any,
+  ...args: infer A
+) => infer Ret
+  ? (...args: A) => Promise<Awaited<Ret>>
+  : never
 
-type SendAPI<R extends SendRoute> =
-  R['handler'] extends (_e: any, ...args: infer A) => any
-    ? (...args: A) => void
-    : never
+type SendAPI<R extends SendRoute> = R['handler'] extends (_e: any, ...args: infer A) => any
+  ? (...args: A) => void
+  : never
 
-type OnAPI<K extends string, R extends OnRoute> =
-  R extends { args: (...args: infer A) => void }
-    ? { [key in `on${Capitalize<K>}`]: (cb: (...args: A) => void) => () => void }
-    : { [key in `on${Capitalize<K>}`]: (cb: (...args: any[]) => void) => () => void }
+type OnAPI<K extends string, R extends OnRoute> = R extends { args: (...args: infer A) => void }
+  ? { [key in `on${Capitalize<K>}`]: (cb: (...args: A) => void) => () => void }
+  : { [key in `on${Capitalize<K>}`]: (cb: (...args: any[]) => void) => () => void }
 
 /** Derives the full window.api type from a RouteMap. */
 export type InferAPI<M extends RouteMap> = {
   [K in keyof M as M[K]['type'] extends 'on' ? never : K]: M[K] extends InvokeRoute
     ? InvokeAPI<M[K]>
     : M[K] extends SendRoute
-    ? SendAPI<M[K]>
-    : never
+      ? SendAPI<M[K]>
+      : never
 } & {
   [K in keyof M as M[K]['type'] extends 'on'
     ? `on${Capitalize<string & K>}`
@@ -83,7 +83,7 @@ export function registerIPC(routes: RouteMap[]): void {
   for (const map of routes) {
     for (const route of Object.values(map)) {
       if (route.type === 'invoke') ipcMain.handle(route.channel, route.handler)
-      if (route.type === 'send')   ipcMain.on(route.channel, route.handler)
+      if (route.type === 'send') ipcMain.on(route.channel, route.handler)
       // 'on' routes are push-only from main — no listener to register
     }
   }

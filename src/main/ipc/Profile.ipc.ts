@@ -5,8 +5,16 @@ import type { Profile } from '../shared/types'
 
 export const ProfileIPC = {
   getProfiles: { type: 'invoke', channel: 'profiles:getAll', handler: () => getAllProfiles() },
-  deleteProfile: { type: 'invoke', channel: 'profiles:delete', handler: (_e: any, id: string) => deleteProfile(id) },
-  reorderProfiles: { type: 'invoke', channel: 'profiles:reorder', handler: (_e: any, ids: string[]) => reorderProfiles(ids) },
+  deleteProfile: {
+    type: 'invoke',
+    channel: 'profiles:delete',
+    handler: (_e: any, id: string) => deleteProfile(id),
+  },
+  reorderProfiles: {
+    type: 'invoke',
+    channel: 'profiles:reorder',
+    handler: (_e: any, ids: string[]) => reorderProfiles(ids),
+  },
 
   saveProfile: {
     type: 'invoke',

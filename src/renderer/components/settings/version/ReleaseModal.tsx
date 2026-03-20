@@ -3,8 +3,13 @@ import { Modal } from '../../common/Modal'
 import { Button } from '../../common/Button'
 import type { GitHubRelease, GitHubAsset } from '../../../types'
 import {
-  VscPackage, VscGithub, VscCalendar, VscCloudDownload,
-  VscTag, VscVerified, VscBeaker,
+  VscPackage,
+  VscGithub,
+  VscCalendar,
+  VscCloudDownload,
+  VscTag,
+  VscVerified,
+  VscBeaker,
 } from 'react-icons/vsc'
 import { LuDownload, LuExternalLink } from 'react-icons/lu'
 
@@ -21,7 +26,11 @@ function formatBytes(bytes: number): string {
 }
 
 function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  })
 }
 
 // Detect best installer asset by trying common extensions in priority order
@@ -30,9 +39,9 @@ function getPlatformAsset(assets?: GitHubAsset[]): GitHubAsset | undefined {
   if (!assets || !Array.isArray(assets)) return undefined
   // Windows first (most likely for this app), then macOS, then Linux
   return (
-    assets.find(a => a.name.endsWith('.exe') || a.name.endsWith('.msi')) ??
-    assets.find(a => a.name.endsWith('.dmg') || a.name.endsWith('.pkg')) ??
-    assets.find(a => a.name.endsWith('.AppImage') || a.name.endsWith('.deb'))
+    assets.find((a) => a.name.endsWith('.exe') || a.name.endsWith('.msi')) ??
+    assets.find((a) => a.name.endsWith('.dmg') || a.name.endsWith('.pkg')) ??
+    assets.find((a) => a.name.endsWith('.AppImage') || a.name.endsWith('.deb'))
   )
 }
 
@@ -59,7 +68,6 @@ export function ReleaseModal({ release, open, onClose }: Props) {
   return (
     <Modal open={open} onClose={onClose} title="Release Details" width="xl">
       <div className="px-5 py-4 space-y-5">
-
         {/* Header */}
         <div className="flex items-start gap-4">
           {release.author && (
@@ -71,7 +79,9 @@ export function ReleaseModal({ release, open, onClose }: Props) {
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-base font-semibold text-text-primary">{release.name ?? release.tag_name}</h3>
+              <h3 className="text-base font-semibold text-text-primary">
+                {release.name ?? release.tag_name}
+              </h3>
               <span className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-mono bg-accent/10 border-accent/30 text-accent">
                 <VscTag size={10} />
                 {release.tag_name}
@@ -114,7 +124,8 @@ export function ReleaseModal({ release, open, onClose }: Props) {
               <div>
                 <p className="text-xs font-medium text-text-primary">{platformAsset.name}</p>
                 <p className="text-xs text-text-muted font-mono">
-                  {formatBytes(platformAsset.size)} · {platformAsset.download_count.toLocaleString()} downloads
+                  {formatBytes(platformAsset.size)} ·{' '}
+                  {platformAsset.download_count.toLocaleString()} downloads
                 </p>
               </div>
             </div>
@@ -144,22 +155,39 @@ export function ReleaseModal({ release, open, onClose }: Props) {
         {/* Release notes */}
         {release.body && (
           <div>
-            <p className="text-xs font-mono text-text-muted uppercase tracking-widest mb-2">Release Notes</p>
+            <p className="text-xs font-mono text-text-muted uppercase tracking-widest mb-2">
+              Release Notes
+            </p>
             <div className="rounded-lg border border-surface-border bg-base-950 px-4 py-3 space-y-1 max-h-48 overflow-y-auto">
               {bodyLines.map((line, i) => {
                 const h2 = line.startsWith('## ')
                 const h3 = line.startsWith('### ')
                 const li = line.startsWith('- ') || line.startsWith('* ')
                 if (!line.trim()) return <div key={i} className="h-1" />
-                if (h2) return <p key={i} className="text-xs font-semibold text-text-primary pt-1">{line.slice(3)}</p>
-                if (h3) return <p key={i} className="text-xs font-medium text-text-secondary">{line.slice(4)}</p>
-                if (li) return (
-                  <div key={i} className="flex gap-2 text-xs text-text-secondary font-mono">
-                    <span className="text-accent shrink-0">·</span>
-                    <span>{line.slice(2)}</span>
-                  </div>
+                if (h2)
+                  return (
+                    <p key={i} className="text-xs font-semibold text-text-primary pt-1">
+                      {line.slice(3)}
+                    </p>
+                  )
+                if (h3)
+                  return (
+                    <p key={i} className="text-xs font-medium text-text-secondary">
+                      {line.slice(4)}
+                    </p>
+                  )
+                if (li)
+                  return (
+                    <div key={i} className="flex gap-2 text-xs text-text-secondary font-mono">
+                      <span className="text-accent shrink-0">·</span>
+                      <span>{line.slice(2)}</span>
+                    </div>
+                  )
+                return (
+                  <p key={i} className="text-xs text-text-muted font-mono">
+                    {line}
+                  </p>
                 )
-                return <p key={i} className="text-xs text-text-muted font-mono">{line}</p>
               })}
             </div>
           </div>
@@ -168,9 +196,11 @@ export function ReleaseModal({ release, open, onClose }: Props) {
         {/* All assets */}
         {(release.assets ?? []).length > 0 && (
           <div>
-            <p className="text-xs font-mono text-text-muted uppercase tracking-widest mb-2">All Assets</p>
+            <p className="text-xs font-mono text-text-muted uppercase tracking-widest mb-2">
+              All Assets
+            </p>
             <div className="space-y-1.5">
-              {(release.assets ?? []).map(asset => (
+              {(release.assets ?? []).map((asset) => (
                 <div
                   key={asset.id}
                   className="flex items-center gap-3 px-3 py-2 rounded-lg border border-surface-border bg-base-900/50 hover:border-surface-border/80 transition-colors"
@@ -208,7 +238,9 @@ export function ReleaseModal({ release, open, onClose }: Props) {
             </button>
           )}
           {!release.html_url && <div />}
-          <Button variant="ghost" size="sm" onClick={onClose}>Close</Button>
+          <Button variant="ghost" size="sm" onClick={onClose}>
+            Close
+          </Button>
         </div>
       </div>
     </Modal>

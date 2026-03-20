@@ -20,19 +20,9 @@ import { SystemIPC } from './System.ipc'
 import { WindowIPC } from './Window.ipc'
 import type { InferAPI } from '../shared/IPCController'
 
-export const allRoutes = [
-  GitHubIPC,
-  ProcessIPC,
-  ProfileIPC,
-  SystemIPC,
-  WindowIPC,
-] as const
+export const allRoutes = [GitHubIPC, ProcessIPC, ProfileIPC, SystemIPC, WindowIPC] as const
 
 // The full inferred window.api type — used in global.d.ts
 export type API = InferAPI<
-  typeof GitHubIPC &
-  typeof ProcessIPC &
-  typeof ProfileIPC &
-  typeof SystemIPC &
-  typeof WindowIPC
+  typeof GitHubIPC & typeof ProcessIPC & typeof ProfileIPC & typeof SystemIPC & typeof WindowIPC
 >

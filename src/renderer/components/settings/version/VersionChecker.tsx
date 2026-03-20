@@ -1,11 +1,13 @@
 import React, { useState, useCallback } from 'react'
-import { Button }       from '../../common/Button'
-import { Tooltip }      from '../../common/Tooltip'
+import { Button } from '../../common/Button'
+import { Tooltip } from '../../common/Tooltip'
 import { ReleaseModal } from './ReleaseModal'
 import type { GitHubRelease } from '../../../types'
 import { VscCheck, VscWarning, VscSync, VscCircleSlash } from 'react-icons/vsc'
 
-interface Props { currentVersion: string }
+interface Props {
+  currentVersion: string
+}
 
 type CheckState = 'idle' | 'checking' | 'up-to-date' | 'update-available' | 'error'
 
@@ -19,10 +21,10 @@ function semverGt(a: string, b: string): boolean {
 }
 
 export function VersionChecker({ currentVersion }: Props) {
-  const [checkState,  setCheckState]  = useState<CheckState>('idle')
-  const [release,     setRelease]     = useState<GitHubRelease | null>(null)
-  const [modalOpen,   setModalOpen]   = useState(false)
-  const [errorMsg,    setErrorMsg]    = useState<string | null>(null)
+  const [checkState, setCheckState] = useState<CheckState>('idle')
+  const [release, setRelease] = useState<GitHubRelease | null>(null)
+  const [modalOpen, setModalOpen] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const check = useCallback(async () => {
     setCheckState('checking')
@@ -39,32 +41,38 @@ export function VersionChecker({ currentVersion }: Props) {
   }, [currentVersion])
 
   const Icon = {
-    idle:             VscSync,
-    checking:         VscSync,
-    'up-to-date':     VscCheck,
+    idle: VscSync,
+    checking: VscSync,
+    'up-to-date': VscCheck,
     'update-available': VscWarning,
-    error:            VscCircleSlash,
+    error: VscCircleSlash,
   }[checkState]
 
   const iconColor = {
-    idle:             'text-text-muted',
-    checking:         'text-text-muted animate-spin',
-    'up-to-date':     'text-accent',
+    idle: 'text-text-muted',
+    checking: 'text-text-muted animate-spin',
+    'up-to-date': 'text-accent',
     'update-available': 'text-yellow-400',
-    error:            'text-red-400',
+    error: 'text-red-400',
   }[checkState]
 
   const tooltipContent = {
-    idle:             'Click to check for updates',
-    checking:         'Checking...',
-    'up-to-date':     `You are on the latest version (${currentVersion})`,
-    'update-available': release ? `${release.tag_name} is available — click for details` : 'Update available',
-    error:            errorMsg ?? 'Check failed',
+    idle: 'Click to check for updates',
+    checking: 'Checking...',
+    'up-to-date': `You are on the latest version (${currentVersion})`,
+    'update-available': release
+      ? `${release.tag_name} is available — click for details`
+      : 'Update available',
+    error: errorMsg ?? 'Check failed',
   }[checkState]
 
   const handleClick = () => {
-    if (checkState === 'idle' || checkState === 'error') { check(); return }
-    if ((checkState === 'up-to-date' || checkState === 'update-available') && release) setModalOpen(true)
+    if (checkState === 'idle' || checkState === 'error') {
+      check()
+      return
+    }
+    if ((checkState === 'up-to-date' || checkState === 'update-available') && release)
+      setModalOpen(true)
   }
 
   return (
@@ -85,11 +93,11 @@ export function VersionChecker({ currentVersion }: Props) {
             className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-surface-border text-xs font-mono text-text-secondary hover:text-text-primary hover:border-text-muted transition-colors"
           >
             <Icon size={12} className={iconColor} />
-            {checkState === 'idle'             && 'Check for updates'}
-            {checkState === 'checking'         && 'Checking...'}
-            {checkState === 'up-to-date'       && 'Up to date'}
+            {checkState === 'idle' && 'Check for updates'}
+            {checkState === 'checking' && 'Checking...'}
+            {checkState === 'up-to-date' && 'Up to date'}
             {checkState === 'update-available' && 'View update'}
-            {checkState === 'error'            && 'Retry'}
+            {checkState === 'error' && 'Retry'}
           </button>
         </Tooltip>
       </div>

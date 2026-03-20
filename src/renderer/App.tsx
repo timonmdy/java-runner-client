@@ -10,7 +10,8 @@ function JavaRunnerFallback() {
       <div className="mb-6 text-6xl">⚠️</div>
       <h1 className="text-3xl font-bold mb-4">App cannot run</h1>
       <p className="mb-4 text-lg">
-        The preload script failed to load, or you are trying to open this app in an incompatible browser.
+        The preload script failed to load, or you are trying to open this app in an incompatible
+        browser.
       </p>
       <p className="text-gray-400">
         Make sure you launch the app in the official Java Runner Client environment.

@@ -1,5 +1,10 @@
 export type {
-  Profile, AppSettings, ConsoleLine, ProcessState, ProcessLogEntry, JavaProcessInfo,
+  Profile,
+  AppSettings,
+  ConsoleLine,
+  ProcessState,
+  ProcessLogEntry,
+  JavaProcessInfo,
 } from '../../main/shared/types'
 
 export type { GitHubRelease, GitHubAsset, ProfileTemplate } from '../../main/shared/GitHub.types'
