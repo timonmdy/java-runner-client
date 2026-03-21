@@ -3,7 +3,6 @@ import { JRCEnvironment } from './shared/types/App.types'
 import { getSettings } from './Store'
 import { EnvironmentIPC } from './ipc/Environment.ipc'
 
-
 let env: JRCEnvironment = {
   isReady: false,
   devMode: null as unknown as JRCEnvironment['devMode'],
@@ -19,7 +18,7 @@ export function loadEnvironment() {
     startUpSource: detectStartupSource(),
   }
 
-  broadcast();
+  broadcast()
 }
 
 export function getEnvironment() {
@@ -27,9 +26,7 @@ export function getEnvironment() {
 }
 
 function broadcast(channel: string = EnvironmentIPC.change.channel) {
-  BrowserWindow.getAllWindows().forEach((w) =>
-    w.webContents.send(channel, env)
-  )
+  BrowserWindow.getAllWindows().forEach((w) => w.webContents.send(channel, env))
 }
 
 function detectStartupSource(): JRCEnvironment['startUpSource'] {

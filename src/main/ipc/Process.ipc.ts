@@ -1,4 +1,4 @@
-import type { RouteMap } from '../shared/IPCController'
+import type { RouteMap } from '../IPCController'
 import { processManager } from '../ProcessManager'
 import { Profile } from '../shared/types/Profile.types'
 import { ConsoleLine, ProcessState } from '../shared/types/Process.types'

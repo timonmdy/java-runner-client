@@ -65,10 +65,9 @@ export function SettingsTab() {
 
   if (!draft) return null
 
-
   const handleSave = async () => {
     await saveSettings(draft)
-    window.env.reload();
+    window.env.reload()
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -177,10 +176,7 @@ export function SettingsTab() {
               label="Toggle Developer Mode (Right-Shift + 7)"
               hint="Enables the Developer tab and DevTools. Warning: may expose sensitive information and powerful features. Use with caution."
             >
-              <Toggle
-                checked={draft.devModeEnabled}
-                onChange={(v) => set({ devModeEnabled: v })}
-              />
+              <Toggle checked={draft.devModeEnabled} onChange={(v) => set({ devModeEnabled: v })} />
             </Row>
             <Row
               label="Enable REST API"
@@ -203,7 +199,9 @@ export function SettingsTab() {
               <div className="rounded-lg border border-surface-border bg-base-900/50 px-3 py-2.5 pl-5">
                 <p className="text-xs text-text-muted font-mono">
                   Listening on{' '}
-                  <span className="text-accent">http://{REST_API_CONFIG.host}:{draft.restApiPort}/api</span>
+                  <span className="text-accent">
+                    http://{REST_API_CONFIG.host}:{draft.restApiPort}/api
+                  </span>
                 </p>
                 <p className="text-xs text-text-muted font-mono mt-0.5">
                   Endpoints: /status · /profiles · /processes · /settings

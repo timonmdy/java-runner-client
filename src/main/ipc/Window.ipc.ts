@@ -1,5 +1,5 @@
 import { app } from 'electron'
-import type { RouteMap } from '../shared/IPCController'
+import type { RouteMap } from '../IPCController'
 import { getSettings } from '../Store'
 
 // Injected from main.ts — avoids a circular import on mainWindow/forceQuit

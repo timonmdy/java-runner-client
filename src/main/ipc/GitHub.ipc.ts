@@ -1,7 +1,7 @@
 import fs from 'fs'
 import https from 'https'
 import { dialog, shell, BrowserWindow } from 'electron'
-import type { RouteMap } from '../shared/IPCController'
+import type { RouteMap } from '../IPCController'
 import { latestReleaseUrl, templateListUrl, rawTemplateUrl } from '../shared/config/GitHub.config'
 import type { GitHubRelease, ProfileTemplate } from '../shared/types/GitHub.types'
 

@@ -1,6 +1,6 @@
 import { dialog, shell } from 'electron'
 import { restApiServer } from '../RestAPI'
-import type { RouteMap } from '../shared/IPCController'
+import type { RouteMap } from '../IPCController'
 import type { AppSettings, JRCEnvironment } from '../shared/types/App.types'
 import { getSettings, saveSettings } from '../Store'
 import { getEnvironment } from './../JRCEnvironment'

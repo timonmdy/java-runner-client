@@ -6,14 +6,15 @@ import { EnvironmentIPC } from './ipc/Environment.ipc'
 import { getEnvironment, loadEnvironment } from './JRCEnvironment'
 import { processManager } from './ProcessManager'
 import { restApiServer } from './RestAPI'
-import { registerIPC } from './shared/IPCController'
+import { registerIPC } from './IPCController'
 import { getAllProfiles, getSettings } from './Store'
 
-loadEnvironment();
+loadEnvironment()
 
-const RESOURCES = getEnvironment().type === 'dev'
-  ? path.join(__dirname, '../../resources')
-  : path.join(app.getAppPath(), 'resources')
+const RESOURCES =
+  getEnvironment().type === 'dev'
+    ? path.join(__dirname, '../../resources')
+    : path.join(app.getAppPath(), 'resources')
 
 function getIconImage(): Electron.NativeImage {
   const candidates =
@@ -43,7 +44,7 @@ function createWindow(): void {
     frame: false,
     backgroundColor: '#08090d',
     icon: getIconImage(),
-    show: getEnvironment().startUpSource != "withSystem",
+    show: getEnvironment().startUpSource != 'withSystem',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -57,7 +58,8 @@ function createWindow(): void {
   else mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
 
   mainWindow.once('ready-to-show', () => {
-    const shouldStartHidden = getSettings().startMinimized && getEnvironment().startUpSource === 'withSystem'
+    const shouldStartHidden =
+      getSettings().startMinimized && getEnvironment().startUpSource === 'withSystem'
     if (shouldStartHidden) mainWindow?.hide()
     else mainWindow?.show()
   })
@@ -132,7 +134,7 @@ if (!gotLock) {
   })
 
   app.whenReady().then(() => {
-    if(getEnvironment().startUpSource === 'withSystem' && !getSettings().launchOnStartup) return;
+    if (getEnvironment().startUpSource === 'withSystem' && !getSettings().launchOnStartup) return
 
     createWindow()
     createTray()

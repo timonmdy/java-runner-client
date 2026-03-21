@@ -21,7 +21,7 @@ import { ProfileIPC } from './Profile.ipc'
 import { SystemIPC } from './System.ipc'
 import { WindowIPC } from './Window.ipc'
 import { DevIPC } from './Dev.ipc'
-import type { InferAPI } from '../shared/IPCController'
+import type { InferAPI } from '../IPCController'
 
 export const allRoutes = [GitHubIPC, ProcessIPC, ProfileIPC, SystemIPC, WindowIPC, DevIPC] as const
 

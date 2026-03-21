@@ -14,8 +14,8 @@ export interface AppSettings {
 }
 
 export interface JRCEnvironment {
-  isReady: boolean;
-  devMode: boolean;
-  type: "dev" | "prod";
-  startUpSource: 'userRequest' | 'withSystem' | 'development';
+  isReady: boolean
+  devMode: boolean
+  type: 'dev' | 'prod'
+  startUpSource: 'userRequest' | 'withSystem' | 'development'
 }
