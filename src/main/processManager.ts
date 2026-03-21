@@ -2,15 +2,15 @@ import { spawn, execSync, ChildProcess } from 'child_process'
 import { BrowserWindow } from 'electron'
 import path from 'path'
 import { v4 as uuidv4 } from 'uuid'
-import type {
-  Profile,
-  ProcessState,
-  ConsoleLine,
-  ProcessLogEntry,
-  JavaProcessInfo,
-} from './shared/types'
-import { IPC } from './shared/types'
 import { PROTECTED_PROCESS_NAMES } from './shared/config/Scanner.config'
+import {
+  ConsoleLine,
+  JavaProcessInfo,
+  ProcessLogEntry,
+  ProcessState,
+} from './shared/types/Process.types'
+import { Profile } from './shared/types/Profile.types'
+import { ProcessIPC } from './ipc/Process.ipc'
 
 const SELF_PROCESS_NAME = 'Java Client Runner'
 
@@ -216,7 +216,7 @@ class ProcessManager {
   }
 
   clearConsoleForProfile(profileId: string): void {
-    this.window?.webContents.send(IPC.CONSOLE_CLEAR, profileId)
+    this.window?.webContents.send(ProcessIPC.consoleClear.channel, profileId)
   }
 
   private cancelRestartTimer(profileId: string): void {
@@ -454,7 +454,7 @@ class ProcessManager {
         this.seenLineIds.set(profileId, new Set([id]))
       }
     }
-    this.window?.webContents.send(IPC.CONSOLE_LINE, profileId, {
+    this.window?.webContents.send(ProcessIPC.consoleLine.channel, profileId, {
       id,
       text,
       type,

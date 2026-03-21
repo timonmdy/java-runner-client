@@ -3,7 +3,7 @@ import { useApp, PROFILE_COLORS } from '../../store/AppStore'
 import { Button } from '../common/Button'
 import { Input } from '../common/Input'
 import { Dialog } from '../common/Dialog'
-import type { Profile } from '../../types'
+import { Profile } from '../../../main/shared/types/Profile.types'
 
 export function ProfileTab() {
   const { activeProfile, saveProfile, deleteProfile } = useApp()

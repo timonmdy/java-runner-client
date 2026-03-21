@@ -2,7 +2,7 @@ import React, { useState, useCallback } from 'react'
 import { Button } from '../common/Button'
 import { Dialog } from '../common/Dialog'
 import { VscListUnordered } from 'react-icons/vsc'
-import type { ProcessLogEntry } from '../../types'
+import { ProcessLogEntry } from '../../../main/shared/types/Process.types'
 
 export function ActivityLogPanel() {
   const [entries, setEntries] = useState<ProcessLogEntry[] | null>(null)

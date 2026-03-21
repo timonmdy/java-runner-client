@@ -1,13 +1,13 @@
-import React from 'react'
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom'
-import { AppProvider } from './store/AppStore'
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { TitleBar } from './components/common/TitleBar'
+import { DevModeGate } from './components/developer/DevModeGate'
 import { MainLayout } from './components/MainLayout'
+import { AppProvider } from './store/AppStore'
 
 function JavaRunnerFallback() {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-gray-100 p-8 text-center select-none">
-      <div className="mb-6 text-6xl">⚠️</div>
+      <div className="mb-6 text-6xl">!</div>
       <h1 className="text-3xl font-bold mb-4">App cannot run</h1>
       <p className="mb-4 text-lg">
         The preload script failed to load, or you are trying to open this app in an incompatible
@@ -41,6 +41,7 @@ export default function App() {
             <Route path="/*" element={<MainLayout />} />
           </Routes>
         </div>
+        <DevModeGate />
       </HashRouter>
     </AppProvider>
   )

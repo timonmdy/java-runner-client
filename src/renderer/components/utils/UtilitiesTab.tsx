@@ -1,14 +1,9 @@
-/**
- * UtilitiesTab — Activity Log + Process Scanner.
- * Process Scanner: expandable rows, protected processes grayed out,
- * excluded from "Kill All Java".
- */
 import React, { useState, useCallback } from 'react'
 import { Dialog } from '../common/Dialog'
 import { Button } from '../common/Button'
 import { VscCheck, VscListUnordered } from 'react-icons/vsc'
 import { LuScanLine } from 'react-icons/lu'
-import type { ProcessLogEntry, JavaProcessInfo } from '../../types'
+import { JavaProcessInfo, ProcessLogEntry } from '../../../main/shared/types/Process.types'
 
 type Panel = 'log' | 'scanner'
 

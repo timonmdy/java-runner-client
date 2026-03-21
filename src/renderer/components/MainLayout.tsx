@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { ProfileSidebar } from './profiles/ProfileSidebar'
 import { ConsoleTab } from './console/ConsoleTab'
@@ -7,9 +7,12 @@ import { ProfileTab } from './profiles/ProfileTab'
 import { SettingsTab } from './settings/SettingsTab'
 import { UtilitiesTab } from './utils/UtilitiesTab'
 import { FaqPanel } from './faq/FaqPanel'
+import { DeveloperTab } from './developer/DeveloperTab'
 import { useApp } from '../store/AppStore'
+import { useDevMode } from '../hooks/useDevMode'
 import { VscTerminal, VscAccount } from 'react-icons/vsc'
 import { LuList } from 'react-icons/lu'
+import { JRCEnvironment } from 'src/main/shared/types/App.types'
 
 const MAIN_TABS = [
   { path: 'console', label: 'Console', Icon: VscTerminal },
@@ -17,15 +20,23 @@ const MAIN_TABS = [
   { path: 'profile', label: 'Profile', Icon: VscAccount },
 ] as const
 
-const SIDE_PANELS = ['settings', 'faq', 'utilities'] as const
+const SIDE_PANELS = ['settings', 'faq', 'utilities', 'developer'] as const
 type SidePanel = (typeof SIDE_PANELS)[number]
 
 function isSidePanel(seg: string): seg is SidePanel {
   return (SIDE_PANELS as readonly string[]).includes(seg)
 }
 
+const PANEL_LABELS: Record<SidePanel, string> = {
+  settings: 'Application Settings',
+  faq: 'FAQ',
+  utilities: 'Utilities',
+  developer: 'Developer',
+}
+
 export function MainLayout() {
   const { state, activeProfile, isRunning, setActiveProfile } = useApp()
+  const devMode = useDevMode()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -36,6 +47,13 @@ export function MainLayout() {
 
   const color = activeProfile?.color ?? '#4ade80'
   const running = activeProfile ? isRunning(activeProfile.id) : false
+
+  // Redirect away from developer panel if dev mode is turned off
+  useEffect(() => {
+    if (!devMode && activePanel === 'developer') {
+      navigate('console', { replace: true })
+    }
+  }, [devMode, activePanel, navigate])
 
   // When profile changes, go to console
   const prevIdRef = React.useRef(state.activeProfileId)
@@ -60,6 +78,7 @@ export function MainLayout() {
         onOpenSettings={() => openPanel('settings')}
         onOpenFaq={() => openPanel('faq')}
         onOpenUtilities={() => openPanel('utilities')}
+        onOpenDeveloper={() => openPanel('developer')}
         onProfileClick={handleProfileClick}
         activeSidePanel={activePanel}
       />
@@ -67,7 +86,6 @@ export function MainLayout() {
       <div className="flex flex-col flex-1 overflow-hidden">
         {activePanel ? (
           <>
-            {/* Panel header with back navigation */}
             <div className="shrink-0">
               <div className="flex items-center gap-3 px-4 h-10 bg-base-900">
                 <button
@@ -89,11 +107,7 @@ export function MainLayout() {
                 </button>
                 <div className="w-px h-4 bg-surface-border" />
                 <span className="text-xs font-medium text-text-secondary capitalize">
-                  {
-                    { settings: 'Application Settings', faq: 'FAQ', utilities: 'Utilities' }[
-                      activePanel
-                    ]
-                  }
+                  {PANEL_LABELS[activePanel]}
                 </span>
               </div>
               <div className="border-b border-surface-border" />
@@ -104,12 +118,12 @@ export function MainLayout() {
                 <Route path="settings" element={<SettingsTab />} />
                 <Route path="faq" element={<FaqPanel />} />
                 <Route path="utilities" element={<UtilitiesTab />} />
+                <Route path="developer" element={<DeveloperTab />} />
               </Routes>
             </div>
           </>
         ) : (
           <>
-            {/* Main tab bar */}
             <div className="flex items-center px-4 pt-2 border-b border-surface-border bg-base-900 shrink-0">
               {MAIN_TABS.map((tab) => {
                 const isActive = activeTab === tab.path

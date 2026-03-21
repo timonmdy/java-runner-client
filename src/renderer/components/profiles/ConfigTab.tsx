@@ -1,7 +1,3 @@
-/**
- * ConfigTab — per-profile configuration.
- * Sub-tabs: General | Files & Paths | JVM Args | Properties (-D) | Program Args
- */
 import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import { useApp } from '../../store/AppStore'
 import { Button } from '../common/Button'
@@ -10,7 +6,7 @@ import { Toggle } from '../common/Toggle'
 import { ArgList } from '../common/ArgList'
 import { PropList } from '../common/PropList'
 import { Dialog } from '../common/Dialog'
-import type { Profile } from '../../types'
+import { Profile } from 'src/main/shared/types/Profile.types'
 
 type Section = 'general' | 'files' | 'jvm' | 'props' | 'args'
 

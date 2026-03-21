@@ -6,8 +6,10 @@ import React, {
   useCallback,
   type ReactNode,
 } from 'react'
+import { AppSettings } from '../../main/shared/types/App.types'
+import { ConsoleLine, ProcessState } from '../../main/shared/types/Process.types'
+import { Profile } from '../../main/shared/types/Profile.types'
 import { v4 as uuidv4 } from 'uuid'
-import type { Profile, AppSettings, ProcessState, ConsoleLine } from '../types'
 
 const SS_KEY = (id: string) => `jrc:console:${id}`
 function loadLogs(id: string, max: number): ConsoleLine[] {
@@ -104,7 +106,7 @@ interface AppContextValue {
   setActiveProfile: (id: string) => void
   saveProfile: (p: Profile) => Promise<void>
   deleteProfile: (id: string) => Promise<void>
-  createProfile: () => void
+  createProfile: (overrides?: Partial<Profile>) => void
   reorderProfiles: (profiles: Profile[]) => Promise<void>
   startProcess: (p: Profile) => Promise<{ ok: boolean; error?: string }>
   stopProcess: (id: string) => Promise<{ ok: boolean; error?: string }>
@@ -176,7 +178,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   )
 
   const createProfile = useCallback(
-    (overrides: Partial<Profile> = {}) => {
+    async (overrides: Partial<Profile> = {}) => {
       const p: Profile = {
         id: uuidv4(),
         name: overrides.name ?? 'New Profile',
@@ -208,10 +210,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const startProcess = useCallback((p: Profile) => window.api.startProcess(p), [])
   const stopProcess = useCallback((id: string) => window.api.stopProcess(id), [])
-  const sendInput = useCallback(
-    (profileId: string, input: string) => window.api.sendInput(profileId, input),
-    []
-  )
+  const sendInput = useCallback(async (profileId: string, input: string) => {
+    await window.api.sendInput(profileId, input)
+  }, [])
   const clearConsole = useCallback(
     (profileId: string) => dispatch({ type: 'CLEAR_LOG', profileId }),
     []

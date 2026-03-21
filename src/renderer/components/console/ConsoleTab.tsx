@@ -1,11 +1,8 @@
-/**
- * ConsoleTab — live output, stdin, history, Ctrl+L clear, Ctrl+F search.
- */
 import React, { useRef, useEffect, useState, useCallback, useMemo, KeyboardEvent } from 'react'
 import { useApp } from '../../store/AppStore'
 import { Button } from '../common/Button'
 import { VscSearch, VscChevronUp, VscChevronDown, VscClose } from 'react-icons/vsc'
-import type { ConsoleLine } from '../../types'
+import { ConsoleLine } from '../../../main/shared/types/Process.types'
 
 export function ConsoleTab() {
   const { state, activeProfile, startProcess, stopProcess, sendInput, clearConsole, isRunning } =

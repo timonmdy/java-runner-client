@@ -3,7 +3,7 @@ import { Button } from '../common/Button'
 import { Dialog } from '../common/Dialog'
 import { VscCheck } from 'react-icons/vsc'
 import { LuScanLine } from 'react-icons/lu'
-import type { JavaProcessInfo } from '../../types'
+import { JavaProcessInfo } from '../../../main/shared/types/Process.types'
 
 interface KillIntent {
   proc: JavaProcessInfo

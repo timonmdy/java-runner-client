@@ -3,18 +3,60 @@ import { useApp } from '../../store/AppStore'
 import { Button } from '../common/Button'
 import { Toggle } from '../common/Toggle'
 import { VersionChecker } from './version/VersionChecker'
-import type { AppSettings } from '../../types'
 import { REST_API_CONFIG } from '../../../main/shared/config/RestApi.config'
 import { version } from '../../../../package.json'
+import { AppSettings, JRCEnvironment } from '../../../main/shared/types/App.types'
 
 export function SettingsTab() {
   const { state, saveSettings } = useApp()
   const [draft, setDraft] = useState<AppSettings | null>(null)
   const [saved, setSaved] = useState(false)
 
+  const set = (patch: Partial<AppSettings>) => {
+    setSaved(false)
+    setDraft((prev) => (prev ? { ...prev, ...patch } : prev))
+  }
+
   useEffect(() => {
-    if (state.settings) setDraft({ ...state.settings })
+    if (!state.settings) return
+
+    setDraft((prev) => {
+      if (!prev) return state.settings
+
+      // keep user changes, but refresh from store
+      return {
+        ...state.settings,
+        ...prev,
+        devModeEnabled: prev.devModeEnabled, // external wins
+      }
+    })
   }, [state.settings])
+
+  useEffect(() => {
+    const listener = async (e: JRCEnvironment) => {
+      setSaved(false)
+
+      setDraft((prev) => {
+        if (!prev) return prev
+        if (prev.devModeEnabled === e.devMode) return prev
+
+        return {
+          ...prev,
+          devModeEnabled: e.devMode,
+        }
+      })
+
+      // 🔥 sync to store so isDirty stays correct
+      if (state.settings && state.settings.devModeEnabled !== e.devMode) {
+        await saveSettings({
+          ...state.settings,
+          devModeEnabled: e.devMode,
+        })
+      }
+    }
+
+    window.env.onChange(listener)
+  }, [state.settings, saveSettings])
 
   const isDirty = useMemo(() => {
     if (!draft || !state.settings) return false
@@ -23,13 +65,10 @@ export function SettingsTab() {
 
   if (!draft) return null
 
-  const set = (patch: Partial<AppSettings>) => {
-    setSaved(false)
-    setDraft((prev) => (prev ? { ...prev, ...patch } : prev))
-  }
 
   const handleSave = async () => {
     await saveSettings(draft)
+    window.env.reload();
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
@@ -133,7 +172,16 @@ export function SettingsTab() {
 
           <Divider />
 
-          <Section title="REST API">
+          <Section title="Developer Options">
+            <Row
+              label="Toggle Developer Mode (Right-Shift + 7)"
+              hint="Enables the Developer tab and DevTools. Warning: may expose sensitive information and powerful features. Use with caution."
+            >
+              <Toggle
+                checked={draft.devModeEnabled}
+                onChange={(v) => set({ devModeEnabled: v })}
+              />
+            </Row>
             <Row
               label="Enable REST API"
               hint={`Exposes a local HTTP API for automation (default port ${REST_API_CONFIG.defaultPort})`}
@@ -155,7 +203,7 @@ export function SettingsTab() {
               <div className="rounded-lg border border-surface-border bg-base-900/50 px-3 py-2.5 pl-5">
                 <p className="text-xs text-text-muted font-mono">
                   Listening on{' '}
-                  <span className="text-accent">http://127.0.0.1:{draft.restApiPort}/api</span>
+                  <span className="text-accent">http://{REST_API_CONFIG.host}:{draft.restApiPort}/api</span>
                 </p>
                 <p className="text-xs text-text-muted font-mono mt-0.5">
                   Endpoints: /status · /profiles · /processes · /settings

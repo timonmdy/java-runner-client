@@ -1,5 +1,7 @@
-import type { Profile, AppSettings, ProcessState, ConsoleLine } from '../types'
+import { Profile } from '../../main/shared/types/Profile.types'
 import { saveLogs, clearLogs } from './sessionLogs'
+import { ConsoleLine, ProcessState } from '../../main/shared/types/Process.types'
+import { AppSettings } from '../../main/shared/types/App.types'
 
 export interface AppState {
   profiles: Profile[]

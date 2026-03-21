@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { Modal } from '../../common/Modal'
 import { Button } from '../../common/Button'
-import type { GitHubRelease, GitHubAsset } from '../../../types'
 import {
   VscPackage,
   VscGithub,
@@ -14,6 +13,7 @@ import {
   VscClose,
 } from 'react-icons/vsc'
 import { LuDownload, LuExternalLink, LuCheck, LuRotateCcw } from 'react-icons/lu'
+import { GitHubAsset, GitHubRelease } from '../../../../main/shared/types/GitHub.types'
 
 interface Props {
   release: GitHubRelease

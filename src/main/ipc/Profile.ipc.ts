@@ -1,7 +1,7 @@
 import type { RouteMap } from '../shared/IPCController'
 import { getAllProfiles, saveProfile, deleteProfile, reorderProfiles } from '../Store'
 import { processManager } from '../ProcessManager'
-import type { Profile } from '../shared/types'
+import type { Profile } from '../shared/types/Profile.types'
 
 export const ProfileIPC = {
   getProfiles: { type: 'invoke', channel: 'profiles:getAll', handler: () => getAllProfiles() },

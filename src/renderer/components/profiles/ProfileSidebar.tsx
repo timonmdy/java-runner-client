@@ -4,8 +4,8 @@ import { useApp, PROFILE_COLORS } from '../../store/AppStore'
 import { Dialog } from '../common/Dialog'
 import { ContextMenu } from '../common/ContextMenu'
 import { TemplateModal } from './TemplateModal'
+import { useDevMode } from '../../hooks/useDevMode'
 import type { ContextMenuItem } from '../common/ContextMenu'
-import type { Profile } from '../../types'
 import {
   VscPlay,
   VscDebugStop,
@@ -17,14 +17,17 @@ import {
   VscTools,
   VscAdd,
   VscLayout,
+  VscCode,
 } from 'react-icons/vsc'
+import { Profile } from '../../../main/shared/types/Profile.types'
 
 interface Props {
   onOpenSettings: () => void
   onOpenFaq: () => void
   onOpenUtilities: () => void
+  onOpenDeveloper: () => void
   onProfileClick?: () => void
-  activeSidePanel: 'settings' | 'faq' | 'utilities' | null
+  activeSidePanel: 'settings' | 'faq' | 'utilities' | 'developer' | null
 }
 
 interface CtxState {
@@ -37,6 +40,7 @@ export function ProfileSidebar({
   onOpenSettings,
   onOpenFaq,
   onOpenUtilities,
+  onOpenDeveloper,
   onProfileClick,
   activeSidePanel,
 }: Props) {
@@ -53,6 +57,7 @@ export function ProfileSidebar({
     reorderProfiles,
   } = useApp()
 
+  const devMode = useDevMode()
   const [ctxMenu, setCtxMenu] = useState<CtxState | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -126,12 +131,8 @@ export function ProfileSidebar({
           disabled: !canDelete,
           onClick: (e?: React.MouseEvent) => {
             if (!canDelete) return
-
-            if (e?.shiftKey) {
-              deleteProfile(ctxProfile.id)
-            } else {
-              setDeleteTarget(ctxProfile)
-            }
+            if (e?.shiftKey) deleteProfile(ctxProfile.id)
+            else setDeleteTarget(ctxProfile)
           },
         },
       ]
@@ -142,7 +143,7 @@ export function ProfileSidebar({
       <aside className="w-52 shrink-0 flex flex-col bg-base-950 border-r border-surface-border">
         <div className="px-2 pt-2 pb-1 shrink-0">
           <button
-            onClick={createProfile}
+            onClick={async () => createProfile()}
             className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono
               text-text-muted hover:text-accent hover:bg-surface-raised transition-colors border border-dashed border-surface-border hover:border-accent/40"
           >
@@ -213,6 +214,15 @@ export function ProfileSidebar({
             onClick={onOpenSettings}
             icon={<VscSettings size={13} />}
           />
+          {devMode && (
+            <FooterButton
+              label="Developer"
+              active={activeSidePanel === 'developer'}
+              onClick={onOpenDeveloper}
+              icon={<VscCode size={13} />}
+              accent
+            />
+          )}
         </div>
       </aside>
 
@@ -275,7 +285,7 @@ function ProfileItem({
       onClick={onClick}
       onContextMenu={onContextMenu}
       onMouseDown={(e) => {
-        if (e.detail !== 0) e.preventDefault() // ignore keyboard-triggered clicks
+        if (e.detail !== 0) e.preventDefault()
       }}
       className={[
         'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors',
@@ -317,11 +327,13 @@ function FooterButton({
   active,
   onClick,
   icon,
+  accent,
 }: {
   label: string
   active: boolean
   onClick: () => void
   icon: React.ReactNode
+  accent?: boolean
 }) {
   return (
     <button
@@ -329,8 +341,12 @@ function FooterButton({
       className={[
         'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors',
         active
-          ? 'bg-surface-raised text-text-primary'
-          : 'text-text-muted hover:text-text-primary hover:bg-surface-raised/50',
+          ? accent
+            ? 'bg-accent/10 text-accent'
+            : 'bg-surface-raised text-text-primary'
+          : accent
+            ? 'text-accent/70 hover:text-accent hover:bg-accent/10'
+            : 'text-text-muted hover:text-text-primary hover:bg-surface-raised/50',
       ].join(' ')}
     >
       {icon}

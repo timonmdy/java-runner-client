@@ -1,23 +1,19 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage } from 'electron'
-import path from 'path'
+import { app, BrowserWindow, Menu, nativeImage, Tray } from 'electron'
 import fs from 'fs'
-import { getAllProfiles, getSettings } from './Store'
+import path from 'path'
+import { allRoutes, initDevIPC, initSystemIPC, initWindowIPC } from './ipc/_index'
+import { EnvironmentIPC } from './ipc/Environment.ipc'
+import { getEnvironment, loadEnvironment } from './JRCEnvironment'
 import { processManager } from './ProcessManager'
 import { restApiServer } from './RestAPI'
 import { registerIPC } from './shared/IPCController'
-import { allRoutes, initSystemIPC, initWindowIPC } from './ipc/_index'
+import { getAllProfiles, getSettings } from './Store'
 
-const IS_DEV = !app.isPackaged
-const RESOURCES = IS_DEV
+loadEnvironment();
+
+const RESOURCES = getEnvironment().type === 'dev'
   ? path.join(__dirname, '../../resources')
   : path.join(app.getAppPath(), 'resources')
-const isActiveLaunch =
-  !process.argv.includes('--hidden') && !process.argv.includes('--squirrel-firstrun')
-const DEBUG = true
-
-const actualLog = console.log
-console.log =
-  IS_DEV && DEBUG ? (...args) => actualLog(`[${new Date().toISOString()}]`, ...args) : () => {}
 
 function getIconImage(): Electron.NativeImage {
   const candidates =
@@ -47,27 +43,28 @@ function createWindow(): void {
     frame: false,
     backgroundColor: '#08090d',
     icon: getIconImage(),
-    show: IS_DEV ? true : false,
+    show: getEnvironment().startUpSource != "withSystem",
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false,
+      devTools: true,
     },
   })
 
-  if (IS_DEV) mainWindow.loadURL('http://localhost:5173')
+  if (getEnvironment().type === 'dev') mainWindow.loadURL('http://localhost:5173')
   else mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
 
   mainWindow.once('ready-to-show', () => {
-    const shouldStartHidden = getSettings().startMinimized && !IS_DEV && !isActiveLaunch
+    const shouldStartHidden = getSettings().startMinimized && getEnvironment().startUpSource === 'withSystem'
     if (shouldStartHidden) mainWindow?.hide()
     else mainWindow?.show()
   })
 
   mainWindow.on('close', (e) => {
     if (forceQuit) return
-    if (getSettings().minimizeToTray && !isActiveLaunch) {
+    if (getSettings().minimizeToTray) {
       e.preventDefault()
       mainWindow?.hide()
     }
@@ -118,6 +115,9 @@ function updateTrayMenu(): void {
   )
 }
 
+let devToolsPressCount = 0
+let devToolsTimer: NodeJS.Timeout | null = null
+
 const gotLock = app.requestSingleInstanceLock()
 
 if (!gotLock) {
@@ -132,8 +132,39 @@ if (!gotLock) {
   })
 
   app.whenReady().then(() => {
+    if(getEnvironment().startUpSource === 'withSystem' && !getSettings().launchOnStartup) return;
+
     createWindow()
     createTray()
+    mainWindow?.webContents.on('before-input-event', (event, input) => {
+      const isDevToolsShortcut =
+        input.key === 'F12' ||
+        (input.control && input.shift && input.key === 'I') ||
+        (input.meta && input.alt && input.key === 'I')
+
+      if (!isDevToolsShortcut) return
+
+      event.preventDefault()
+
+      devToolsPressCount++
+
+      // reset counter after 1 second of inactivity
+      if (devToolsTimer) clearTimeout(devToolsTimer)
+      devToolsTimer = setTimeout(() => {
+        devToolsPressCount = 0
+      }, 1000)
+
+      if (devToolsPressCount >= 7) {
+        devToolsPressCount = 0
+        mainWindow?.webContents.openDevTools({ mode: 'detach' })
+        return
+      }
+
+      // normal single-press behavior only if devModeEnabled
+      if (getEnvironment().devMode) {
+        mainWindow?.webContents.openDevTools()
+      }
+    })
 
     // ── IPC ────────────────────────────────────────────────────────────────────
     initSystemIPC(() => mainWindow)
@@ -143,7 +174,9 @@ if (!gotLock) {
         forceQuit = true
       }
     )
+    initDevIPC(() => mainWindow)
     registerIPC([...allRoutes])
+    registerIPC([EnvironmentIPC])
     // ──────────────────────────────────────────────────────────────────────────
 
     const settings = getSettings()

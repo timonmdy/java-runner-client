@@ -1,6 +1,6 @@
-import React, { useState, useMemo } from 'react'
-import { FAQ_TOPICS } from '../../../main/shared/config/FAQ.config'
+import { useMemo, useState } from 'react'
 import type { FaqItem, FaqTopic } from '../../../main/shared/config/FAQ.config'
+import { FAQ_TOPICS } from '../../../main/shared/config/FAQ.config'
 
 export function FaqPanel() {
   const [search, setSearch] = useState('')

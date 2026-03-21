@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { Modal } from '../common/Modal'
 import { Button } from '../common/Button'
 import { useApp } from '../../store/AppStore'
-import type { ProfileTemplate } from '../../types'
 import { VscPackage, VscTag, VscRefresh, VscAdd } from 'react-icons/vsc'
 import { LuShield } from 'react-icons/lu'
+import { ProfileTemplate } from '../../../main/shared/types/GitHub.types'
 
 const APP_TEMPLATE_VERSION = 1
 

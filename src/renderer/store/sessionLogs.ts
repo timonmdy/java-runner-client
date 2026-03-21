@@ -1,4 +1,4 @@
-import type { ConsoleLine } from '../types'
+import { ConsoleLine } from '../../main/shared/types/Process.types'
 
 const key = (id: string) => `jrc:console:${id}`
 

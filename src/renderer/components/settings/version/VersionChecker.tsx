@@ -2,8 +2,8 @@ import React, { useState, useCallback } from 'react'
 import { Button } from '../../common/Button'
 import { Tooltip } from '../../common/Tooltip'
 import { ReleaseModal } from './ReleaseModal'
-import type { GitHubRelease } from '../../../types'
 import { VscCheck, VscWarning, VscSync, VscCircleSlash } from 'react-icons/vsc'
+import { GitHubRelease } from '../../../../main/shared/types/GitHub.types'
 
 interface Props {
   currentVersion: string
