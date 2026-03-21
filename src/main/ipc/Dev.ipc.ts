@@ -1,12 +1,12 @@
-import { BrowserWindow } from 'electron'
-import { DEFAULT_SETTINGS } from '../shared/config/App.config'
-import type { RouteMap } from '../IPCController'
-import { getAllProfiles, getSettings, toggleDevMode } from '../Store'
+import { BrowserWindow } from 'electron';
+import { DEFAULT_SETTINGS } from '../shared/config/App.config';
+import type { RouteMap } from '../IPCController';
+import { getAllProfiles, getSettings, toggleDevMode } from '../Store';
 
-let getWindow: () => BrowserWindow | null = () => null
+let getWindow: () => BrowserWindow | null = () => null;
 
 export function initDevIPC(windowGetter: () => BrowserWindow | null) {
-  getWindow = windowGetter
+  getWindow = windowGetter;
 }
 
 export const DevIPC = {
@@ -29,11 +29,11 @@ export const DevIPC = {
     channel: 'dev:resetStore',
     handler: async () => {
       // Remove all profiles and reset settings to defaults
-      const profiles = getAllProfiles()
-      const Store = (await import('electron-store')).default
-      const store = new Store({ name: 'java-runner-config' })
-      store.set('profiles', [])
-      store.set('settings', DEFAULT_SETTINGS)
+      const profiles = getAllProfiles();
+      const Store = (await import('electron-store')).default;
+      const store = new Store({ name: 'java-runner-config' });
+      store.set('profiles', []);
+      store.set('settings', DEFAULT_SETTINGS);
     },
   },
-} satisfies RouteMap
+} satisfies RouteMap;

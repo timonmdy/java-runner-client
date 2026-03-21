@@ -1,7 +1,7 @@
 export const REST_API_CONFIG = {
   defaultPort: 4444,
   host: '127.0.0.1',
-} as const
+} as const;
 
 export const REST_ROUTES = {
   // Info
@@ -20,4 +20,4 @@ export const REST_ROUTES = {
   processStop: '/api/processes/:id/stop',
   consoleClear: '/api/processes/:id/console/clear',
   settingsUpdate: '/api/settings',
-} as const
+} as const;

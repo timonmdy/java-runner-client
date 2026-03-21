@@ -1,39 +1,39 @@
-import React, { useState } from 'react'
-import { Button } from './Button'
+import React, { useState } from 'react';
+import { Button } from './Button';
 
 export interface ArgItem {
-  value: string
-  enabled: boolean
+  value: string;
+  enabled: boolean;
 }
 
 interface Props {
-  items: ArgItem[]
-  onChange: (items: ArgItem[]) => void
-  onPendingChange?: (hasPending: boolean) => void
-  placeholder?: string
+  items: ArgItem[];
+  onChange: (items: ArgItem[]) => void;
+  onPendingChange?: (hasPending: boolean) => void;
+  placeholder?: string;
 }
 
 export function ArgList({ items, onChange, onPendingChange, placeholder = '--arg' }: Props) {
-  const [draft, setDraft] = useState('')
+  const [draft, setDraft] = useState('');
 
   const setDraftAndNotify = (v: string) => {
-    setDraft(v)
-    onPendingChange?.(v.trim().length > 0)
-  }
+    setDraft(v);
+    onPendingChange?.(v.trim().length > 0);
+  };
 
   const add = () => {
-    const v = draft.trim()
-    if (!v) return
-    onChange([...items, { value: v, enabled: true }])
-    setDraft('')
-    onPendingChange?.(false)
-  }
+    const v = draft.trim();
+    if (!v) return;
+    onChange([...items, { value: v, enabled: true }]);
+    setDraft('');
+    onPendingChange?.(false);
+  };
 
-  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
   const toggle = (i: number) =>
-    onChange(items.map((it, idx) => (idx === i ? { ...it, enabled: !it.enabled } : it)))
+    onChange(items.map((it, idx) => (idx === i ? { ...it, enabled: !it.enabled } : it)));
   const edit = (i: number, value: string) =>
-    onChange(items.map((it, idx) => (idx === i ? { ...it, value } : it)))
+    onChange(items.map((it, idx) => (idx === i ? { ...it, value } : it)));
 
   return (
     <div className="space-y-1.5">
@@ -104,5 +104,5 @@ export function ArgList({ items, onChange, onPendingChange, placeholder = '--arg
         </Button>
       </div>
     </div>
-  )
+  );
 }

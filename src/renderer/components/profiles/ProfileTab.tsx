@@ -1,40 +1,40 @@
-import React, { useState, useEffect } from 'react'
-import { useApp, PROFILE_COLORS } from '../../store/AppStore'
-import { Button } from '../common/Button'
-import { Input } from '../common/Input'
-import { Dialog } from '../common/Dialog'
-import { Profile } from '../../../main/shared/types/Profile.types'
+import React, { useState, useEffect } from 'react';
+import { useApp, PROFILE_COLORS } from '../../store/AppStore';
+import { Button } from '../common/Button';
+import { Input } from '../common/Input';
+import { Dialog } from '../common/Dialog';
+import { Profile } from '../../../main/shared/types/Profile.types';
 
 export function ProfileTab() {
-  const { activeProfile, saveProfile, deleteProfile } = useApp()
-  const [draft, setDraft] = useState<Profile | null>(null)
-  const [saved, setSaved] = useState(false)
-  const [showDelete, setShowDelete] = useState(false)
+  const { activeProfile, saveProfile, deleteProfile } = useApp();
+  const [draft, setDraft] = useState<Profile | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   useEffect(() => {
-    if (activeProfile) setDraft({ ...activeProfile })
-  }, [activeProfile?.id])
+    if (activeProfile) setDraft({ ...activeProfile });
+  }, [activeProfile?.id]);
 
   if (!draft || !activeProfile)
     return (
       <div className="flex items-center justify-center h-full text-sm text-text-muted">
         No profile selected
       </div>
-    )
+    );
 
   const update = (patch: Partial<Profile>) =>
-    setDraft((prev) => (prev ? { ...prev, ...patch } : prev))
-  const color = draft.color || PROFILE_COLORS[0]
+    setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
+  const color = draft.color || PROFILE_COLORS[0];
 
   const handleSave = async () => {
-    await saveProfile(draft)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1800)
-  }
+    await saveProfile(draft);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1800);
+  };
   const handleDelete = async () => {
-    await deleteProfile(draft.id)
-    setShowDelete(false)
-  }
+    await deleteProfile(draft.id);
+    setShowDelete(false);
+  };
 
   return (
     <>
@@ -108,7 +108,7 @@ export function ProfileTab() {
         onCancel={() => setShowDelete(false)}
       />
     </>
-  )
+  );
 }
 
 function Section({
@@ -116,9 +116,9 @@ function Section({
   hint,
   children,
 }: {
-  title: string
-  hint?: string
-  children: React.ReactNode
+  title: string;
+  hint?: string;
+  children: React.ReactNode;
 }) {
   return (
     <div className="space-y-2">
@@ -128,5 +128,5 @@ function Section({
       </div>
       {children}
     </div>
-  )
+  );
 }

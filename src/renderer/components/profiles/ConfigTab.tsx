@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react'
-import { useApp } from '../../store/AppStore'
-import { Button } from '../common/Button'
-import { Input } from '../common/Input'
-import { Toggle } from '../common/Toggle'
-import { ArgList } from '../common/ArgList'
-import { PropList } from '../common/PropList'
-import { Dialog } from '../common/Dialog'
-import { Profile } from 'src/main/shared/types/Profile.types'
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useApp } from '../../store/AppStore';
+import { Button } from '../common/Button';
+import { Input } from '../common/Input';
+import { Toggle } from '../common/Toggle';
+import { ArgList } from '../common/ArgList';
+import { PropList } from '../common/PropList';
+import { Dialog } from '../common/Dialog';
+import { Profile } from 'src/main/shared/types/Profile.types';
 
-type Section = 'general' | 'files' | 'jvm' | 'props' | 'args'
+type Section = 'general' | 'files' | 'jvm' | 'props' | 'args';
 
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'general', label: 'General' },
@@ -16,72 +16,72 @@ const SECTIONS: { id: Section; label: string }[] = [
   { id: 'jvm', label: 'JVM Args' },
   { id: 'props', label: 'Properties (-D)' },
   { id: 'args', label: 'Program Args' },
-]
+];
 
 export function ConfigTab() {
-  const { activeProfile, saveProfile, isRunning, startProcess, stopProcess } = useApp()
+  const { activeProfile, saveProfile, isRunning, startProcess, stopProcess } = useApp();
 
-  const [draft, setDraft] = useState<Profile | null>(null)
-  const [saved, setSaved] = useState(false)
-  const [section, setSection] = useState<Section>('general')
-  const [pendingArg, setPendingArg] = useState(false)
-  const [pendingChange, setPendingChange] = useState<Section | null>(null)
+  const [draft, setDraft] = useState<Profile | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [section, setSection] = useState<Section>('general');
+  const [pendingArg, setPendingArg] = useState(false);
+  const [pendingChange, setPendingChange] = useState<Section | null>(null);
 
   useEffect(() => {
     if (activeProfile) {
-      setDraft({ ...activeProfile })
-      setSaved(false)
-      setPendingArg(false)
+      setDraft({ ...activeProfile });
+      setSaved(false);
+      setPendingArg(false);
     }
-  }, [activeProfile?.id])
+  }, [activeProfile?.id]);
 
   const isDirty = useMemo(() => {
-    if (!draft || !activeProfile) return false
-    return JSON.stringify(draft) !== JSON.stringify(activeProfile)
-  }, [draft, activeProfile])
+    if (!draft || !activeProfile) return false;
+    return JSON.stringify(draft) !== JSON.stringify(activeProfile);
+  }, [draft, activeProfile]);
 
   const handleSave = useCallback(async () => {
-    if (!draft) return
-    await saveProfile(draft)
+    if (!draft) return;
+    await saveProfile(draft);
 
-    activeProfile && Object.assign(activeProfile, draft)
+    activeProfile && Object.assign(activeProfile, draft);
 
-    setSaved(true)
-    setTimeout(() => setSaved(false), 1800)
-  }, [draft, saveProfile, activeProfile])
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1800);
+  }, [draft, saveProfile, activeProfile]);
 
   const requestSectionChange = useCallback(
     (next: Section) => {
       if (pendingArg && next !== section) {
-        setPendingChange(next)
-        return
+        setPendingChange(next);
+        return;
       }
-      setPendingArg(false)
-      setSection(next)
+      setPendingArg(false);
+      setSection(next);
     },
     [pendingArg, section]
-  )
+  );
 
   const handleRestart = useCallback(async () => {
-    if (!draft) return
-    await stopProcess(draft.id)
-    setTimeout(() => startProcess(draft), 800)
-  }, [draft, stopProcess, startProcess])
+    if (!draft) return;
+    await stopProcess(draft.id);
+    setTimeout(() => startProcess(draft), 800);
+  }, [draft, stopProcess, startProcess]);
 
   if (!draft || !activeProfile) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-text-muted">
         No profile selected
       </div>
-    )
+    );
   }
 
-  const running = isRunning(draft.id)
-  const color = draft.color || '#4ade80'
+  const running = isRunning(draft.id);
+  const color = draft.color || '#4ade80';
   const update = (patch: Partial<Profile>) => {
-    setSaved(false)
-    setDraft((prev) => (prev ? { ...prev, ...patch } : prev))
-  }
+    setSaved(false);
+    setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
+  };
 
   return (
     <>
@@ -196,15 +196,15 @@ export function ConfigTab() {
         cancelLabel="Stay"
         onConfirm={() => {
           if (pendingChange) {
-            setPendingArg(false)
-            setSection(pendingChange)
+            setPendingArg(false);
+            setSection(pendingChange);
           }
-          setPendingChange(null)
+          setPendingChange(null);
         }}
         onCancel={() => setPendingChange(null)}
       />
     </>
-  )
+  );
 }
 
 function GeneralSection({
@@ -214,11 +214,11 @@ function GeneralSection({
   color,
   onRestart,
 }: {
-  draft: Profile
-  update: (p: Partial<Profile>) => void
-  running: boolean
-  color: string
-  onRestart: () => void
+  draft: Profile;
+  update: (p: Partial<Profile>) => void;
+  running: boolean;
+  color: string;
+  onRestart: () => void;
 }) {
   return (
     <div className="space-y-6">
@@ -289,28 +289,28 @@ function GeneralSection({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function FilesSection({
   draft,
   update,
 }: {
-  draft: Profile
-  update: (p: Partial<Profile>) => void
+  draft: Profile;
+  update: (p: Partial<Profile>) => void;
 }) {
   const handlePickJar = async () => {
-    const p = await window.api.pickJar()
-    if (p) update({ jarPath: p })
-  }
+    const p = await window.api.pickJar();
+    if (p) update({ jarPath: p });
+  };
   const handlePickDir = async () => {
-    const p = await window.api.pickDir()
-    if (p) update({ workingDir: p })
-  }
+    const p = await window.api.pickDir();
+    if (p) update({ workingDir: p });
+  };
   const handlePickJava = async () => {
-    const p = await window.api.pickJava()
-    if (p) update({ javaPath: p })
-  }
+    const p = await window.api.pickJava();
+    if (p) update({ javaPath: p });
+  };
 
   return (
     <div className="space-y-4">
@@ -339,7 +339,7 @@ function FilesSection({
         rightElement={<FolderBtn onClick={handlePickJava} />}
       />
     </div>
-  )
+  );
 }
 
 function ArgSection({
@@ -347,9 +347,9 @@ function ArgSection({
   hint,
   children,
 }: {
-  title: string
-  hint: string
-  children: React.ReactNode
+  title: string;
+  hint: string;
+  children: React.ReactNode;
 }) {
   return (
     <div className="space-y-3">
@@ -359,7 +359,7 @@ function ArgSection({
       </div>
       {children}
     </div>
-  )
+  );
 }
 
 function FolderBtn({ onClick }: { onClick: () => void }) {
@@ -377,16 +377,16 @@ function FolderBtn({ onClick }: { onClick: () => void }) {
         <path d="M1 3.5h4l1.5 2H13v7H1V3.5z" />
       </svg>
     </button>
-  )
+  );
 }
 
 function buildCmdPreview(p: Profile): string {
-  const parts: string[] = [p.javaPath || 'java']
-  p.jvmArgs.filter((a) => a.enabled && a.value).forEach((a) => parts.push(a.value))
+  const parts: string[] = [p.javaPath || 'java'];
+  p.jvmArgs.filter((a) => a.enabled && a.value).forEach((a) => parts.push(a.value));
   p.systemProperties
     .filter((a) => a.enabled && a.key)
-    .forEach((a) => parts.push(a.value ? `-D${a.key}=${a.value}` : `-D${a.key}`))
-  parts.push('-jar', p.jarPath || '<no jar>')
-  p.programArgs.filter((a) => a.enabled && a.value).forEach((a) => parts.push(a.value))
-  return parts.join(' ')
+    .forEach((a) => parts.push(a.value ? `-D${a.key}=${a.value}` : `-D${a.key}`));
+  parts.push('-jar', p.jarPath || '<no jar>');
+  p.programArgs.filter((a) => a.enabled && a.value).forEach((a) => parts.push(a.value));
+  return parts.join(' ');
 }

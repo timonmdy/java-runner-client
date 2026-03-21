@@ -1,41 +1,41 @@
-import React, { useEffect, useState } from 'react'
-import { useDevMode } from '../../hooks/useDevMode'
-import { Button } from '../common/Button'
-import { VscCode } from 'react-icons/vsc'
+import React, { useEffect, useState } from 'react';
+import { useDevMode } from '../../hooks/useDevMode';
+import { Button } from '../common/Button';
+import { VscCode } from 'react-icons/vsc';
 
 export function DevModeGate() {
-  const devEnabled = useDevMode()
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const devEnabled = useDevMode();
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
-    const keysPressed = new Set<string>()
+    const keysPressed = new Set<string>();
 
     const keydownHandler = (e: KeyboardEvent) => {
-      keysPressed.add(e.code)
+      keysPressed.add(e.code);
 
       // right shift + 7
       if (keysPressed.has('ShiftRight') && keysPressed.has('Digit7')) {
-        e.preventDefault()
-        setDialogOpen(true)
+        e.preventDefault();
+        setDialogOpen(true);
       }
-    }
+    };
 
     const keyupHandler = (e: KeyboardEvent) => {
-      keysPressed.delete(e.code)
-    }
+      keysPressed.delete(e.code);
+    };
 
-    window.addEventListener('keydown', keydownHandler)
-    window.addEventListener('keyup', keyupHandler)
+    window.addEventListener('keydown', keydownHandler);
+    window.addEventListener('keyup', keyupHandler);
 
     return () => {
-      window.removeEventListener('keydown', keydownHandler)
-      window.removeEventListener('keyup', keyupHandler)
-    }
-  }, [])
+      window.removeEventListener('keydown', keydownHandler);
+      window.removeEventListener('keyup', keyupHandler);
+    };
+  }, []);
 
-  if (!dialogOpen) return null
+  if (!dialogOpen) return null;
 
-  const isOn = devEnabled
+  const isOn = devEnabled;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-fade-in">
@@ -66,8 +66,8 @@ export function DevModeGate() {
             variant="primary"
             size="sm"
             onClick={() => {
-              window.env.toggleDevMode(!isOn)
-              setDialogOpen(false)
+              window.env.toggleDevMode(!isOn);
+              setDialogOpen(false);
             }}
           >
             {isOn ? 'Disable' : 'Enable'}
@@ -75,5 +75,5 @@ export function DevModeGate() {
         </div>
       </div>
     </div>
-  )
+  );
 }

@@ -1,48 +1,48 @@
-import React, { useState } from 'react'
-import { Button } from './Button'
+import React, { useState } from 'react';
+import { Button } from './Button';
 
 export interface PropItem {
-  key: string
-  value: string
-  enabled: boolean
+  key: string;
+  value: string;
+  enabled: boolean;
 }
 
 interface Props {
-  items: PropItem[]
-  onChange: (items: PropItem[]) => void
-  onPendingChange?: (hasPending: boolean) => void
+  items: PropItem[];
+  onChange: (items: PropItem[]) => void;
+  onPendingChange?: (hasPending: boolean) => void;
 }
 
 export function PropList({ items, onChange, onPendingChange }: Props) {
-  const [draftKey, setDraftKey] = useState('')
-  const [draftValue, setDraftValue] = useState('')
+  const [draftKey, setDraftKey] = useState('');
+  const [draftValue, setDraftValue] = useState('');
 
   const notify = (k: string, v: string) =>
-    onPendingChange?.(k.trim().length > 0 || v.trim().length > 0)
+    onPendingChange?.(k.trim().length > 0 || v.trim().length > 0);
   const setKey = (v: string) => {
-    setDraftKey(v)
-    notify(v, draftValue)
-  }
+    setDraftKey(v);
+    notify(v, draftValue);
+  };
   const setVal = (v: string) => {
-    setDraftValue(v)
-    notify(draftKey, v)
-  }
+    setDraftValue(v);
+    notify(draftKey, v);
+  };
 
   const add = () => {
-    if (!draftKey.trim()) return
-    onChange([...items, { key: draftKey.trim(), value: draftValue.trim(), enabled: true }])
-    setDraftKey('')
-    setDraftValue('')
-    onPendingChange?.(false)
-  }
+    if (!draftKey.trim()) return;
+    onChange([...items, { key: draftKey.trim(), value: draftValue.trim(), enabled: true }]);
+    setDraftKey('');
+    setDraftValue('');
+    onPendingChange?.(false);
+  };
 
-  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i))
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
   const toggle = (i: number) =>
-    onChange(items.map((it, idx) => (idx === i ? { ...it, enabled: !it.enabled } : it)))
+    onChange(items.map((it, idx) => (idx === i ? { ...it, enabled: !it.enabled } : it)));
   const editKey = (i: number, key: string) =>
-    onChange(items.map((it, idx) => (idx === i ? { ...it, key } : it)))
+    onChange(items.map((it, idx) => (idx === i ? { ...it, key } : it)));
   const editValue = (i: number, value: string) =>
-    onChange(items.map((it, idx) => (idx === i ? { ...it, value } : it)))
+    onChange(items.map((it, idx) => (idx === i ? { ...it, value } : it)));
 
   return (
     <div className="space-y-1.5">
@@ -146,5 +146,5 @@ export function PropList({ items, onChange, onPendingChange }: Props) {
         </Button>
       </div>
     </div>
-  )
+  );
 }

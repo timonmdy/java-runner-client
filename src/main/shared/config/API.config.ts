@@ -1,11 +1,11 @@
 // ─── Base types ───────────────────────────────────────────────────────────────
 
 export type RouteDefinition = {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE'
-  path: string
-  description: string
-  bodyTemplate?: string
-}
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
+  path: string;
+  description: string;
+  bodyTemplate?: string;
+};
 
 // ─── Strongly typed route map ─────────────────────────────────────────────────
 
@@ -80,6 +80,6 @@ export const routeConfig = {
     description: 'Update settings',
     bodyTemplate: '{ "consoleFontSize": 13 }',
   },
-} as const satisfies Record<string, RouteDefinition>
+} as const satisfies Record<string, RouteDefinition>;
 
-export type RouteKey = keyof typeof routeConfig
+export type RouteKey = keyof typeof routeConfig;

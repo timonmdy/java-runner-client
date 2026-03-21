@@ -1,7 +1,7 @@
-import type { RouteMap } from '../IPCController'
-import { processManager } from '../ProcessManager'
-import { Profile } from '../shared/types/Profile.types'
-import { ConsoleLine, ProcessState } from '../shared/types/Process.types'
+import type { RouteMap } from '../IPCController';
+import { processManager } from '../ProcessManager';
+import { Profile } from '../shared/types/Profile.types';
+import { ConsoleLine, ProcessState } from '../shared/types/Process.types';
 
 export const ProcessIPC = {
   startProcess: {
@@ -63,4 +63,4 @@ export const ProcessIPC = {
     channel: 'process:statesUpdate',
     args: {} as (states: ProcessState[]) => void,
   },
-} satisfies RouteMap
+} satisfies RouteMap;

@@ -1,14 +1,14 @@
-import { dialog, shell } from 'electron'
-import { restApiServer } from '../RestAPI'
-import type { RouteMap } from '../IPCController'
-import type { AppSettings, JRCEnvironment } from '../shared/types/App.types'
-import { getSettings, saveSettings } from '../Store'
-import { getEnvironment } from './../JRCEnvironment'
+import { dialog, shell } from 'electron';
+import { restApiServer } from '../RestAPI';
+import type { RouteMap } from '../IPCController';
+import type { AppSettings, JRCEnvironment } from '../shared/types/App.types';
+import { getSettings, saveSettings } from '../Store';
+import { getEnvironment } from './../JRCEnvironment';
 
 // mainWindow is needed for dialogs — set via initSystemIPC() called from main.ts
-let getWindow: () => Electron.BrowserWindow | null = () => null
+let getWindow: () => Electron.BrowserWindow | null = () => null;
 export function initSystemIPC(windowGetter: () => Electron.BrowserWindow | null) {
-  getWindow = windowGetter
+  getWindow = windowGetter;
 }
 
 export const SystemIPC = {
@@ -18,13 +18,13 @@ export const SystemIPC = {
     type: 'invoke',
     channel: 'settings:save',
     handler: (_e: any, next: AppSettings) => {
-      const prev = getSettings()
-      saveSettings(next)
-      if (!next.restApiEnabled && prev.restApiEnabled) restApiServer.stop()
-      else if (next.restApiEnabled && !prev.restApiEnabled) restApiServer.start(next.restApiPort)
+      const prev = getSettings();
+      saveSettings(next);
+      if (!next.restApiEnabled && prev.restApiEnabled) restApiServer.stop();
+      else if (next.restApiEnabled && !prev.restApiEnabled) restApiServer.start(next.restApiPort);
       else if (next.restApiEnabled && next.restApiPort !== prev.restApiPort) {
-        restApiServer.stop()
-        restApiServer.start(next.restApiPort)
+        restApiServer.stop();
+        restApiServer.start(next.restApiPort);
       }
     },
   },
@@ -36,16 +36,16 @@ export const SystemIPC = {
       const r = await dialog.showOpenDialog(getWindow()!, {
         filters: [{ name: 'JAR', extensions: ['jar'] }],
         properties: ['openFile'],
-      })
-      return r.canceled ? null : r.filePaths[0]
+      });
+      return r.canceled ? null : r.filePaths[0];
     },
   },
   pickDir: {
     type: 'invoke',
     channel: 'dialog:pickDir',
     handler: async () => {
-      const r = await dialog.showOpenDialog(getWindow()!, { properties: ['openDirectory'] })
-      return r.canceled ? null : r.filePaths[0]
+      const r = await dialog.showOpenDialog(getWindow()!, { properties: ['openDirectory'] });
+      return r.canceled ? null : r.filePaths[0];
     },
   },
   pickJava: {
@@ -55,8 +55,8 @@ export const SystemIPC = {
       const r = await dialog.showOpenDialog(getWindow()!, {
         filters: [{ name: 'Executable', extensions: ['exe', '*'] }],
         properties: ['openFile'],
-      })
-      return r.canceled ? null : r.filePaths[0]
+      });
+      return r.canceled ? null : r.filePaths[0];
     },
   },
 
@@ -65,4 +65,4 @@ export const SystemIPC = {
     channel: 'shell:openExternal',
     handler: (_e: any, url: string) => shell.openExternal(url),
   },
-} satisfies RouteMap
+} satisfies RouteMap;

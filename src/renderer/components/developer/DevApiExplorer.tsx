@@ -1,86 +1,86 @@
-import { useState } from 'react'
-import { VscCheck, VscCopy, VscPlay } from 'react-icons/vsc'
-import { routeConfig, RouteDefinition } from '../../../main/shared/config/API.config'
-import { useApp } from '../../store/AppStore'
-import { Button } from '../common/Button'
-import { REST_API_CONFIG } from '../../../main/shared/config/RestApi.config'
+import { useState } from 'react';
+import { VscCheck, VscCopy, VscPlay } from 'react-icons/vsc';
+import { routeConfig, RouteDefinition } from '../../../main/shared/config/API.config';
+import { useApp } from '../../store/AppStore';
+import { Button } from '../common/Button';
+import { REST_API_CONFIG } from '../../../main/shared/config/RestApi.config';
 
 const METHOD_COLORS: Record<string, string> = {
   GET: 'text-accent border-accent/30 bg-accent/10',
   POST: 'text-blue-400 border-blue-400/30 bg-blue-400/10',
   PUT: 'text-yellow-400 border-yellow-400/30 bg-yellow-400/10',
   DELETE: 'text-red-400 border-red-400/30 bg-red-400/10',
-}
+};
 
-const routes = Object.values(routeConfig)
+const routes = Object.values(routeConfig);
 
 export function DevApiExplorer() {
-  const { state } = useApp()
+  const { state } = useApp();
 
-  const [selected, setSelected] = useState<RouteDefinition | null>(null)
-  const [pathParams, setPathParams] = useState<Record<string, string>>({})
-  const [body, setBody] = useState('')
-  const [response, setResponse] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [copied, setCopied] = useState(false)
+  const [selected, setSelected] = useState<RouteDefinition | null>(null);
+  const [pathParams, setPathParams] = useState<Record<string, string>>({});
+  const [body, setBody] = useState('');
+  const [response, setResponse] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  const port = state.settings?.restApiPort ?? 4444
-  const restEnabled = state.settings?.restApiEnabled ?? false
+  const port = state.settings?.restApiPort ?? 4444;
+  const restEnabled = state.settings?.restApiEnabled ?? false;
 
   const handleSelect = (route: RouteDefinition) => {
-    setSelected(route)
-    setResponse(null)
-    setBody(route.bodyTemplate ?? '')
+    setSelected(route);
+    setResponse(null);
+    setBody(route.bodyTemplate ?? '');
 
-    const params: Record<string, string> = {}
-    const matches = route.path.matchAll(/:([a-zA-Z]+)/g)
-    for (const m of matches) params[m[1]] = ''
-    setPathParams(params)
-  }
+    const params: Record<string, string> = {};
+    const matches = route.path.matchAll(/:([a-zA-Z]+)/g);
+    for (const m of matches) params[m[1]] = '';
+    setPathParams(params);
+  };
 
   const buildUrl = () => {
-    if (!selected) return ''
-    let path = selected.path
+    if (!selected) return '';
+    let path = selected.path;
     for (const [k, v] of Object.entries(pathParams)) {
-      path = path.replace(`:${k}`, v || `:${k}`)
+      path = path.replace(`:${k}`, v || `:${k}`);
     }
-    return `http://${REST_API_CONFIG.host}:${port}${path}`
-  }
+    return `http://${REST_API_CONFIG.host}:${port}${path}`;
+  };
 
   const handleCall = async () => {
-    if (!selected) return
-    setLoading(true)
-    setResponse(null)
+    if (!selected) return;
+    setLoading(true);
+    setResponse(null);
 
     try {
-      const url = buildUrl()
-      const opts: RequestInit = { method: selected.method }
+      const url = buildUrl();
+      const opts: RequestInit = { method: selected.method };
 
       if (body.trim() && ['POST', 'PUT', 'PATCH'].includes(selected.method)) {
-        opts.headers = { 'Content-Type': 'application/json' }
-        opts.body = body
+        opts.headers = { 'Content-Type': 'application/json' };
+        opts.body = body;
       }
 
-      const res = await fetch(url, opts)
-      const text = await res.text()
+      const res = await fetch(url, opts);
+      const text = await res.text();
 
       try {
-        setResponse(JSON.stringify(JSON.parse(text), null, 2))
+        setResponse(JSON.stringify(JSON.parse(text), null, 2));
       } catch {
-        setResponse(text)
+        setResponse(text);
       }
     } catch (err) {
-      setResponse(`Error: ${err instanceof Error ? err.message : String(err)}`)
+      setResponse(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }
 
-    setLoading(false)
-  }
+    setLoading(false);
+  };
 
   const copyUrl = () => {
-    navigator.clipboard.writeText(buildUrl())
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
+    navigator.clipboard.writeText(buildUrl());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   return (
     <div className="flex h-full overflow-hidden">
@@ -212,5 +212,5 @@ export function DevApiExplorer() {
         )}
       </div>
     </div>
-  )
+  );
 }

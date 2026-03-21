@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from 'react'
-import { Reorder } from 'framer-motion'
-import { useApp, PROFILE_COLORS } from '../../store/AppStore'
-import { Dialog } from '../common/Dialog'
-import { ContextMenu } from '../common/ContextMenu'
-import { TemplateModal } from './TemplateModal'
-import { useDevMode } from '../../hooks/useDevMode'
-import type { ContextMenuItem } from '../common/ContextMenu'
+import React, { useState, useCallback } from 'react';
+import { Reorder } from 'framer-motion';
+import { useApp, PROFILE_COLORS } from '../../store/AppStore';
+import { Dialog } from '../common/Dialog';
+import { ContextMenu } from '../common/ContextMenu';
+import { TemplateModal } from './TemplateModal';
+import { useDevMode } from '../../hooks/useDevMode';
+import type { ContextMenuItem } from '../common/ContextMenu';
 import {
   VscPlay,
   VscDebugStop,
@@ -18,22 +18,22 @@ import {
   VscAdd,
   VscLayout,
   VscCode,
-} from 'react-icons/vsc'
-import { Profile } from '../../../main/shared/types/Profile.types'
+} from 'react-icons/vsc';
+import { Profile } from '../../../main/shared/types/Profile.types';
 
 interface Props {
-  onOpenSettings: () => void
-  onOpenFaq: () => void
-  onOpenUtilities: () => void
-  onOpenDeveloper: () => void
-  onProfileClick?: () => void
-  activeSidePanel: 'settings' | 'faq' | 'utilities' | 'developer' | null
+  onOpenSettings: () => void;
+  onOpenFaq: () => void;
+  onOpenUtilities: () => void;
+  onOpenDeveloper: () => void;
+  onProfileClick?: () => void;
+  activeSidePanel: 'settings' | 'faq' | 'utilities' | 'developer' | null;
 }
 
 interface CtxState {
-  profileId: string
-  x: number
-  y: number
+  profileId: string;
+  x: number;
+  y: number;
 }
 
 export function ProfileSidebar({
@@ -55,44 +55,44 @@ export function ProfileSidebar({
     clearConsole,
     isRunning,
     reorderProfiles,
-  } = useApp()
+  } = useApp();
 
-  const devMode = useDevMode()
-  const [ctxMenu, setCtxMenu] = useState<CtxState | null>(null)
-  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null)
-  const [actionError, setActionError] = useState<string | null>(null)
-  const [templateOpen, setTemplateOpen] = useState(false)
-  const [draggingId, setDraggingId] = useState<string | null>(null)
+  const devMode = useDevMode();
+  const [ctxMenu, setCtxMenu] = useState<CtxState | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [templateOpen, setTemplateOpen] = useState(false);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
-  const canDelete = state.profiles.length > 1
+  const canDelete = state.profiles.length > 1;
 
   const handleContextMenu = useCallback((e: React.MouseEvent, profile: Profile) => {
-    e.preventDefault()
-    setCtxMenu({ profileId: profile.id, x: e.clientX, y: e.clientY })
-  }, [])
+    e.preventDefault();
+    setCtxMenu({ profileId: profile.id, x: e.clientX, y: e.clientY });
+  }, []);
 
-  const ctxProfile = ctxMenu ? state.profiles.find((p) => p.id === ctxMenu.profileId) : null
-  const ctxRunning = ctxProfile ? isRunning(ctxProfile.id) : false
+  const ctxProfile = ctxMenu ? state.profiles.find((p) => p.id === ctxMenu.profileId) : null;
+  const ctxRunning = ctxProfile ? isRunning(ctxProfile.id) : false;
 
   const handleStart = useCallback(
     async (profile: Profile) => {
       if (!profile.jarPath) {
-        setActionError(`"${profile.name}" has no JAR configured.`)
-        return
+        setActionError(`"${profile.name}" has no JAR configured.`);
+        return;
       }
-      const res = await startProcess(profile)
-      if (!res.ok) setActionError(res.error ?? 'Failed to start')
+      const res = await startProcess(profile);
+      if (!res.ok) setActionError(res.error ?? 'Failed to start');
     },
     [startProcess]
-  )
+  );
 
   const handleStop = useCallback(
     async (profile: Profile) => {
-      const res = await stopProcess(profile.id)
-      if (!res.ok) setActionError(res.error ?? 'Failed to stop')
+      const res = await stopProcess(profile.id);
+      if (!res.ok) setActionError(res.error ?? 'Failed to stop');
     },
     [stopProcess]
-  )
+  );
 
   const ctxItems: ContextMenuItem[] = ctxProfile
     ? [
@@ -114,8 +114,8 @@ export function ProfileSidebar({
           label: 'Select',
           icon: <VscCheck size={12} />,
           onClick: () => {
-            setActiveProfile(ctxProfile.id)
-            onProfileClick?.()
+            setActiveProfile(ctxProfile.id);
+            onProfileClick?.();
           },
         },
         {
@@ -130,13 +130,13 @@ export function ProfileSidebar({
           danger: true,
           disabled: !canDelete,
           onClick: (e?: React.MouseEvent) => {
-            if (!canDelete) return
-            if (e?.shiftKey) deleteProfile(ctxProfile.id)
-            else setDeleteTarget(ctxProfile)
+            if (!canDelete) return;
+            if (e?.shiftKey) deleteProfile(ctxProfile.id);
+            else setDeleteTarget(ctxProfile);
           },
         },
       ]
-    : []
+    : [];
 
   return (
     <>
@@ -186,8 +186,8 @@ export function ProfileSidebar({
                 running={isRunning(profile.id)}
                 isDragging={draggingId === profile.id}
                 onClick={() => {
-                  setActiveProfile(profile.id)
-                  onProfileClick?.()
+                  setActiveProfile(profile.id);
+                  onProfileClick?.();
                 }}
                 onContextMenu={(e) => handleContextMenu(e, profile)}
               />
@@ -253,13 +253,13 @@ export function ProfileSidebar({
         confirmLabel="Delete"
         danger
         onConfirm={async () => {
-          if (deleteTarget) await deleteProfile(deleteTarget.id)
-          setDeleteTarget(null)
+          if (deleteTarget) await deleteProfile(deleteTarget.id);
+          setDeleteTarget(null);
         }}
         onCancel={() => setDeleteTarget(null)}
       />
     </>
-  )
+  );
 }
 
 function ProfileItem({
@@ -270,22 +270,22 @@ function ProfileItem({
   onClick,
   onContextMenu,
 }: {
-  profile: Profile
-  active: boolean
-  running: boolean
-  isDragging: boolean
-  onClick: () => void
-  onContextMenu: (e: React.MouseEvent) => void
+  profile: Profile;
+  active: boolean;
+  running: boolean;
+  isDragging: boolean;
+  onClick: () => void;
+  onContextMenu: (e: React.MouseEvent) => void;
 }) {
-  const color = profile.color || PROFILE_COLORS[0]
-  const jarName = profile.jarPath?.split(/[/\\]/).pop() ?? ''
+  const color = profile.color || PROFILE_COLORS[0];
+  const jarName = profile.jarPath?.split(/[/\\]/).pop() ?? '';
 
   return (
     <button
       onClick={onClick}
       onContextMenu={onContextMenu}
       onMouseDown={(e) => {
-        if (e.detail !== 0) e.preventDefault()
+        if (e.detail !== 0) e.preventDefault();
       }}
       className={[
         'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors',
@@ -319,7 +319,7 @@ function ProfileItem({
 
       {running && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />}
     </button>
-  )
+  );
 }
 
 function FooterButton({
@@ -329,11 +329,11 @@ function FooterButton({
   icon,
   accent,
 }: {
-  label: string
-  active: boolean
-  onClick: () => void
-  icon: React.ReactNode
-  accent?: boolean
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  accent?: boolean;
 }) {
   return (
     <button
@@ -352,5 +352,5 @@ function FooterButton({
       {icon}
       {label}
     </button>
-  )
+  );
 }

@@ -1,9 +1,9 @@
-import React from 'react'
+import React from 'react';
 
 interface Props extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  hint?: string
-  rightElement?: React.ReactNode
+  label?: string;
+  hint?: string;
+  rightElement?: React.ReactNode;
 }
 
 export function Input({ label, hint, rightElement, className = '', ...rest }: Props) {
@@ -26,5 +26,5 @@ export function Input({ label, hint, rightElement, className = '', ...rest }: Pr
       </div>
       {hint && <p className="text-xs text-text-muted/70">{hint}</p>}
     </div>
-  )
+  );
 }

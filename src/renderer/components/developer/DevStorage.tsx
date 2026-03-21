@@ -1,46 +1,46 @@
-import React, { useState, useEffect } from 'react'
-import { Button } from '../common/Button'
-import { Dialog } from '../common/Dialog'
-import { useApp } from '../../store/AppStore'
-import { VscRefresh, VscTrash } from 'react-icons/vsc'
+import React, { useState, useEffect } from 'react';
+import { Button } from '../common/Button';
+import { Dialog } from '../common/Dialog';
+import { useApp } from '../../store/AppStore';
+import { VscRefresh, VscTrash } from 'react-icons/vsc';
 
 interface SessionEntry {
-  key: string
-  sizeBytes: number
-  preview: string
+  key: string;
+  sizeBytes: number;
+  preview: string;
 }
 
 function getSessionEntries(): SessionEntry[] {
-  const entries: SessionEntry[] = []
+  const entries: SessionEntry[] = [];
   for (let i = 0; i < sessionStorage.length; i++) {
-    const key = sessionStorage.key(i)!
-    const raw = sessionStorage.getItem(key) ?? ''
+    const key = sessionStorage.key(i)!;
+    const raw = sessionStorage.getItem(key) ?? '';
     entries.push({
       key,
       sizeBytes: new Blob([raw]).size,
       preview: raw.slice(0, 80) + (raw.length > 80 ? '…' : ''),
-    })
+    });
   }
-  return entries.sort((a, b) => b.sizeBytes - a.sizeBytes)
+  return entries.sort((a, b) => b.sizeBytes - a.sizeBytes);
 }
 
 function formatBytes(n: number): string {
-  if (n < 1024) return `${n} B`
-  return `${(n / 1024).toFixed(1)} KB`
+  if (n < 1024) return `${n} B`;
+  return `${(n / 1024).toFixed(1)} KB`;
 }
 
 export function DevStorage() {
-  const { state } = useApp()
-  const [sessionEntries, setSessionEntries] = useState<SessionEntry[]>([])
-  const [confirmReset, setConfirmReset] = useState<'electron-store' | 'session' | null>(null)
+  const { state } = useApp();
+  const [sessionEntries, setSessionEntries] = useState<SessionEntry[]>([]);
+  const [confirmReset, setConfirmReset] = useState<'electron-store' | 'session' | null>(null);
 
-  const refresh = () => setSessionEntries(getSessionEntries())
+  const refresh = () => setSessionEntries(getSessionEntries());
 
   useEffect(() => {
-    refresh()
-  }, [])
+    refresh();
+  }, []);
 
-  const totalSessionBytes = sessionEntries.reduce((a, b) => a + b.sizeBytes, 0)
+  const totalSessionBytes = sessionEntries.reduce((a, b) => a + b.sizeBytes, 0);
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
@@ -95,8 +95,8 @@ export function DevStorage() {
                   </span>
                   <button
                     onClick={() => {
-                      sessionStorage.removeItem(e.key)
-                      refresh()
+                      sessionStorage.removeItem(e.key);
+                      refresh();
                     }}
                     className="text-text-muted hover:text-red-400 transition-colors"
                   >
@@ -125,8 +125,8 @@ export function DevStorage() {
         confirmLabel="Reset"
         danger
         onConfirm={async () => {
-          await window.api.resetStore()
-          setConfirmReset(null)
+          await window.api.resetStore();
+          setConfirmReset(null);
         }}
         onCancel={() => setConfirmReset(null)}
       />
@@ -138,14 +138,14 @@ export function DevStorage() {
         confirmLabel="Clear"
         danger
         onConfirm={() => {
-          sessionStorage.clear()
-          refresh()
-          setConfirmReset(null)
+          sessionStorage.clear();
+          refresh();
+          setConfirmReset(null);
         }}
         onCancel={() => setConfirmReset(null)}
       />
     </div>
-  )
+  );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -154,7 +154,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <p className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</p>
       {children}
     </div>
-  )
+  );
 }
 
 function StoreRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
@@ -170,5 +170,5 @@ function StoreRow({ label, value, mono }: { label: string; value: string; mono?:
         {value}
       </span>
     </div>
-  )
+  );
 }

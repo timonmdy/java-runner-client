@@ -1,44 +1,44 @@
-import React, { useState, useCallback } from 'react'
-import { Button } from '../../common/Button'
-import { Tooltip } from '../../common/Tooltip'
-import { ReleaseModal } from './ReleaseModal'
-import { VscCheck, VscWarning, VscSync, VscCircleSlash } from 'react-icons/vsc'
-import { GitHubRelease } from '../../../../main/shared/types/GitHub.types'
+import React, { useState, useCallback } from 'react';
+import { Button } from '../../common/Button';
+import { Tooltip } from '../../common/Tooltip';
+import { ReleaseModal } from './ReleaseModal';
+import { VscCheck, VscWarning, VscSync, VscCircleSlash } from 'react-icons/vsc';
+import { GitHubRelease } from '../../../../main/shared/types/GitHub.types';
 
 interface Props {
-  currentVersion: string
+  currentVersion: string;
 }
 
-type CheckState = 'idle' | 'checking' | 'up-to-date' | 'update-available' | 'error'
+type CheckState = 'idle' | 'checking' | 'up-to-date' | 'update-available' | 'error';
 
 function semverGt(a: string, b: string): boolean {
-  const parse = (v: string) => v.replace(/^v/, '').split('.').map(Number)
-  const [am, an, ap] = parse(a)
-  const [bm, bn, bp] = parse(b)
-  if (am !== bm) return am > bm
-  if (an !== bn) return an > bn
-  return ap > bp
+  const parse = (v: string) => v.replace(/^v/, '').split('.').map(Number);
+  const [am, an, ap] = parse(a);
+  const [bm, bn, bp] = parse(b);
+  if (am !== bm) return am > bm;
+  if (an !== bn) return an > bn;
+  return ap > bp;
 }
 
 export function VersionChecker({ currentVersion }: Props) {
-  const [checkState, setCheckState] = useState<CheckState>('idle')
-  const [release, setRelease] = useState<GitHubRelease | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+  const [checkState, setCheckState] = useState<CheckState>('idle');
+  const [release, setRelease] = useState<GitHubRelease | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const check = useCallback(async () => {
-    setCheckState('checking')
-    setErrorMsg(null)
-    const res = await window.api.fetchLatestRelease()
+    setCheckState('checking');
+    setErrorMsg(null);
+    const res = await window.api.fetchLatestRelease();
     if (!res.ok || !res.data) {
-      setCheckState('error')
-      setErrorMsg(res.error ?? 'Could not reach GitHub')
-      return
+      setCheckState('error');
+      setErrorMsg(res.error ?? 'Could not reach GitHub');
+      return;
     }
-    setRelease(res.data)
-    const remoteVersion = (res.data.tag_name ?? '').replace(/^v/, '')
-    setCheckState(semverGt(remoteVersion, currentVersion) ? 'update-available' : 'up-to-date')
-  }, [currentVersion])
+    setRelease(res.data);
+    const remoteVersion = (res.data.tag_name ?? '').replace(/^v/, '');
+    setCheckState(semverGt(remoteVersion, currentVersion) ? 'update-available' : 'up-to-date');
+  }, [currentVersion]);
 
   const Icon = {
     idle: VscSync,
@@ -46,7 +46,7 @@ export function VersionChecker({ currentVersion }: Props) {
     'up-to-date': VscCheck,
     'update-available': VscWarning,
     error: VscCircleSlash,
-  }[checkState]
+  }[checkState];
 
   const iconColor = {
     idle: 'text-text-muted',
@@ -54,7 +54,7 @@ export function VersionChecker({ currentVersion }: Props) {
     'up-to-date': 'text-accent',
     'update-available': 'text-yellow-400',
     error: 'text-red-400',
-  }[checkState]
+  }[checkState];
 
   const tooltipContent = {
     idle: 'Click to check for updates',
@@ -64,16 +64,16 @@ export function VersionChecker({ currentVersion }: Props) {
       ? `${release.tag_name} is available — click for details`
       : 'Update available',
     error: errorMsg ?? 'Check failed',
-  }[checkState]
+  }[checkState];
 
   const handleClick = () => {
     if (checkState === 'idle' || checkState === 'error') {
-      check()
-      return
+      check();
+      return;
     }
     if ((checkState === 'up-to-date' || checkState === 'update-available') && release)
-      setModalOpen(true)
-  }
+      setModalOpen(true);
+  };
 
   return (
     <>
@@ -106,5 +106,5 @@ export function VersionChecker({ currentVersion }: Props) {
         <ReleaseModal release={release} open={modalOpen} onClose={() => setModalOpen(false)} />
       )}
     </>
-  )
+  );
 }

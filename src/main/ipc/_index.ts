@@ -1,4 +1,4 @@
-import { EnvironmentIPC } from './Environment.ipc'
+import { EnvironmentIPC } from './Environment.ipc';
 /**
  * Central IPC registry.
  *
@@ -8,22 +8,22 @@ import { EnvironmentIPC } from './Environment.ipc'
  *   3. That's it — main, preload, and types all update automatically
  */
 
-export { GitHubIPC } from './GitHub.ipc'
-export { ProcessIPC } from './Process.ipc'
-export { ProfileIPC } from './Profile.ipc'
-export { SystemIPC, initSystemIPC } from './System.ipc'
-export { WindowIPC, initWindowIPC } from './Window.ipc'
-export { DevIPC, initDevIPC } from './Dev.ipc'
+export { GitHubIPC } from './GitHub.ipc';
+export { ProcessIPC } from './Process.ipc';
+export { ProfileIPC } from './Profile.ipc';
+export { SystemIPC, initSystemIPC } from './System.ipc';
+export { WindowIPC, initWindowIPC } from './Window.ipc';
+export { DevIPC, initDevIPC } from './Dev.ipc';
 
-import { GitHubIPC } from './GitHub.ipc'
-import { ProcessIPC } from './Process.ipc'
-import { ProfileIPC } from './Profile.ipc'
-import { SystemIPC } from './System.ipc'
-import { WindowIPC } from './Window.ipc'
-import { DevIPC } from './Dev.ipc'
-import type { InferAPI } from '../IPCController'
+import { GitHubIPC } from './GitHub.ipc';
+import { ProcessIPC } from './Process.ipc';
+import { ProfileIPC } from './Profile.ipc';
+import { SystemIPC } from './System.ipc';
+import { WindowIPC } from './Window.ipc';
+import { DevIPC } from './Dev.ipc';
+import type { InferAPI } from '../IPCController';
 
-export const allRoutes = [GitHubIPC, ProcessIPC, ProfileIPC, SystemIPC, WindowIPC, DevIPC] as const
+export const allRoutes = [GitHubIPC, ProcessIPC, ProfileIPC, SystemIPC, WindowIPC, DevIPC] as const;
 
 export type API = InferAPI<
   typeof GitHubIPC &
@@ -32,6 +32,6 @@ export type API = InferAPI<
     typeof SystemIPC &
     typeof WindowIPC &
     typeof DevIPC
->
+>;
 
-export type Environment = InferAPI<typeof EnvironmentIPC>
+export type Environment = InferAPI<typeof EnvironmentIPC>;

@@ -1,54 +1,54 @@
-import React, { useState, useEffect } from 'react'
-import { Modal } from '../common/Modal'
-import { Button } from '../common/Button'
-import { useApp } from '../../store/AppStore'
-import { VscPackage, VscTag, VscRefresh, VscAdd } from 'react-icons/vsc'
-import { LuShield } from 'react-icons/lu'
-import { ProfileTemplate } from '../../../main/shared/types/GitHub.types'
+import React, { useState, useEffect } from 'react';
+import { Modal } from '../common/Modal';
+import { Button } from '../common/Button';
+import { useApp } from '../../store/AppStore';
+import { VscPackage, VscTag, VscRefresh, VscAdd } from 'react-icons/vsc';
+import { LuShield } from 'react-icons/lu';
+import { ProfileTemplate } from '../../../main/shared/types/GitHub.types';
 
-const APP_TEMPLATE_VERSION = 1
+const APP_TEMPLATE_VERSION = 1;
 
 interface TemplateEntry {
-  filename: string
-  template: ProfileTemplate
+  filename: string;
+  template: ProfileTemplate;
 }
 
 interface Props {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
 }
 
 function isCompatible(t: ProfileTemplate): boolean {
-  return t.templateVersion <= APP_TEMPLATE_VERSION
+  return t.templateVersion <= APP_TEMPLATE_VERSION;
 }
 
 export function TemplateModal({ open, onClose }: Props) {
-  const { createProfile } = useApp()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [templates, setTemplates] = useState<TemplateEntry[] | null>(null)
-  const [selected, setSelected] = useState<TemplateEntry | null>(null)
-  const [filter, setFilter] = useState('')
+  const { createProfile } = useApp();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [templates, setTemplates] = useState<TemplateEntry[] | null>(null);
+  const [selected, setSelected] = useState<TemplateEntry | null>(null);
+  const [filter, setFilter] = useState('');
 
   const load = async () => {
-    setLoading(true)
-    setError(null)
-    const res = await window.api.fetchTemplates()
-    setLoading(false)
+    setLoading(true);
+    setError(null);
+    const res = await window.api.fetchTemplates();
+    setLoading(false);
     if (!res.ok || !res.data) {
-      setError(res.error ?? 'Failed to load templates')
-      return
+      setError(res.error ?? 'Failed to load templates');
+      return;
     }
-    setTemplates(res.data)
-  }
+    setTemplates(res.data);
+  };
 
   useEffect(() => {
-    if (open && templates === null) load()
-  }, [open])
+    if (open && templates === null) load();
+  }, [open]);
 
   const handleCreate = () => {
-    if (!selected) return
-    const tpl = selected.template
+    if (!selected) return;
+    const tpl = selected.template;
     createProfile({
       name: tpl.name,
       jvmArgs: tpl.defaults.jvmArgs,
@@ -59,9 +59,9 @@ export function TemplateModal({ open, onClose }: Props) {
       autoRestart: tpl.defaults.autoRestart,
       autoRestartInterval: tpl.defaults.autoRestartInterval,
       color: tpl.defaults.color,
-    })
-    onClose()
-  }
+    });
+    onClose();
+  };
 
   const filtered =
     templates?.filter(
@@ -70,15 +70,15 @@ export function TemplateModal({ open, onClose }: Props) {
         e.template.name.toLowerCase().includes(filter.toLowerCase()) ||
         e.template.category.toLowerCase().includes(filter.toLowerCase()) ||
         e.template.tags.some((t) => t.toLowerCase().includes(filter.toLowerCase()))
-    ) ?? []
+    ) ?? [];
 
   // Group by category
   const grouped = filtered.reduce<Record<string, TemplateEntry[]>>((acc, e) => {
-    const cat = e.template.category || 'Other'
-    if (!acc[cat]) acc[cat] = []
-    acc[cat].push(e)
-    return acc
-  }, {})
+    const cat = e.template.category || 'Other';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(e);
+    return acc;
+  }, {});
 
   return (
     <Modal open={open} onClose={onClose} title="Profile Templates" width="lg">
@@ -124,7 +124,7 @@ export function TemplateModal({ open, onClose }: Props) {
                   {cat}
                 </p>
                 {entries.map((entry) => {
-                  const compat = isCompatible(entry.template)
+                  const compat = isCompatible(entry.template);
                   return (
                     <button
                       key={entry.filename}
@@ -146,7 +146,7 @@ export function TemplateModal({ open, onClose }: Props) {
                         </span>
                       )}
                     </button>
-                  )
+                  );
                 })}
               </div>
             ))}
@@ -241,7 +241,7 @@ export function TemplateModal({ open, onClose }: Props) {
         </div>
       </div>
     </Modal>
-  )
+  );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -250,7 +250,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <p className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</p>
       <div className="flex flex-wrap gap-1.5">{children}</div>
     </div>
-  )
+  );
 }
 
 function Pill({ value, enabled }: { value: string; enabled: boolean }) {
@@ -265,12 +265,12 @@ function Pill({ value, enabled }: { value: string; enabled: boolean }) {
     >
       {value}
     </span>
-  )
+  );
 }
 
 function Divider() {
-  return <div className="border-t border-surface-border" />
+  return <div className="border-t border-surface-border" />;
 }
 function Empty() {
-  return <span className="text-xs text-text-muted font-mono italic">none</span>
+  return <span className="text-xs text-text-muted font-mono italic">none</span>;
 }

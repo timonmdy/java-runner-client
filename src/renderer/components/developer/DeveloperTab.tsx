@@ -1,21 +1,21 @@
-import React, { useState } from 'react'
-import { VscDashboard, VscPlug, VscDatabase, VscBeaker } from 'react-icons/vsc'
-import { DevDashboard } from './DevDashboard'
-import { DevApiExplorer } from './DevApiExplorer'
-import { DevStorage } from './DevStorage'
-import { DevDiagnostics } from './DevDiagnostics'
+import React, { useState } from 'react';
+import { VscDashboard, VscPlug, VscDatabase, VscBeaker } from 'react-icons/vsc';
+import { DevDashboard } from './DevDashboard';
+import { DevApiExplorer } from './DevApiExplorer';
+import { DevStorage } from './DevStorage';
+import { DevDiagnostics } from './DevDiagnostics';
 
-type Panel = 'dashboard' | 'api' | 'storage' | 'diagnostics'
+type Panel = 'dashboard' | 'api' | 'storage' | 'diagnostics';
 
 const PANELS: { id: Panel; label: string; Icon: React.ElementType }[] = [
   { id: 'dashboard', label: 'Dashboard', Icon: VscDashboard },
   { id: 'api', label: 'API Explorer', Icon: VscPlug },
   { id: 'storage', label: 'Storage', Icon: VscDatabase },
   { id: 'diagnostics', label: 'Diagnostics', Icon: VscBeaker },
-]
+];
 
 export function DeveloperTab() {
-  const [panel, setPanel] = useState<Panel>('dashboard')
+  const [panel, setPanel] = useState<Panel>('dashboard');
 
   return (
     <div className="flex flex-col h-full bg-base-800">
@@ -53,5 +53,5 @@ export function DeveloperTab() {
         {panel === 'diagnostics' && <DevDiagnostics />}
       </div>
     </div>
-  )
+  );
 }

@@ -1,8 +1,8 @@
-import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
-import { TitleBar } from './components/common/TitleBar'
-import { DevModeGate } from './components/developer/DevModeGate'
-import { MainLayout } from './components/MainLayout'
-import { AppProvider } from './store/AppStore'
+import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { TitleBar } from './components/common/TitleBar';
+import { DevModeGate } from './components/developer/DevModeGate';
+import { MainLayout } from './components/MainLayout';
+import { AppProvider } from './store/AppStore';
 
 function JavaRunnerFallback() {
   return (
@@ -20,11 +20,11 @@ function JavaRunnerFallback() {
         window.api is undefined
       </div>
     </div>
-  )
+  );
 }
 
 export default function App() {
-  if (!window.api) return <JavaRunnerFallback />
+  if (!window.api) return <JavaRunnerFallback />;
 
   return (
     <AppProvider>
@@ -44,5 +44,5 @@ export default function App() {
         <DevModeGate />
       </HashRouter>
     </AppProvider>
-  )
+  );
 }

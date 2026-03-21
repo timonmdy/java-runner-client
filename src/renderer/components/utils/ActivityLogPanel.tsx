@@ -1,23 +1,23 @@
-import React, { useState, useCallback } from 'react'
-import { Button } from '../common/Button'
-import { Dialog } from '../common/Dialog'
-import { VscListUnordered } from 'react-icons/vsc'
-import { ProcessLogEntry } from '../../../main/shared/types/Process.types'
+import React, { useState, useCallback } from 'react';
+import { Button } from '../common/Button';
+import { Dialog } from '../common/Dialog';
+import { VscListUnordered } from 'react-icons/vsc';
+import { ProcessLogEntry } from '../../../main/shared/types/Process.types';
 
 export function ActivityLogPanel() {
-  const [entries, setEntries] = useState<ProcessLogEntry[] | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [confirmClear, setConfirmClear] = useState(false)
+  const [entries, setEntries] = useState<ProcessLogEntry[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const load = useCallback(async () => {
-    setLoading(true)
-    setEntries(await window.api.getProcessLog())
-    setLoading(false)
-  }, [])
+    setLoading(true);
+    setEntries(await window.api.getProcessLog());
+    setLoading(false);
+  }, []);
 
   React.useEffect(() => {
-    load()
-  }, [load])
+    load();
+  }, [load]);
 
   return (
     <>
@@ -66,19 +66,19 @@ export function ActivityLogPanel() {
         confirmLabel="Clear"
         danger
         onConfirm={async () => {
-          await window.api.clearProcessLog()
-          setEntries([])
-          setConfirmClear(false)
+          await window.api.clearProcessLog();
+          setEntries([]);
+          setConfirmClear(false);
         }}
         onCancel={() => setConfirmClear(false)}
       />
     </>
-  )
+  );
 }
 
 function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
-  const duration = entry.stoppedAt ? formatDuration(entry.stoppedAt - entry.startedAt) : null
-  const jarName = entry.jarPath.split(/[/\\]/).pop() ?? entry.jarPath
+  const duration = entry.stoppedAt ? formatDuration(entry.stoppedAt - entry.startedAt) : null;
+  const jarName = entry.jarPath.split(/[/\\]/).pop() ?? entry.jarPath;
 
   return (
     <div className="rounded-lg border border-surface-border bg-base-900 px-3 py-2.5">
@@ -118,7 +118,7 @@ function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
@@ -127,7 +127,7 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
       {icon}
       <p className="text-xs font-mono text-center max-w-xs leading-relaxed">{text}</p>
     </div>
-  )
+  );
 }
 
 function formatTime(ts: number): string {
@@ -135,12 +135,12 @@ function formatTime(ts: number): string {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-  })
+  });
 }
 
 function formatDuration(ms: number): string {
-  const s = Math.floor(ms / 1000)
-  if (s < 60) return `${s}s`
-  if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`
-  return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`;
+  return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
 }

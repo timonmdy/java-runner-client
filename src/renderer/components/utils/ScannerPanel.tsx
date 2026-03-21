@@ -1,66 +1,66 @@
-import React, { useState, useCallback } from 'react'
-import { Button } from '../common/Button'
-import { Dialog } from '../common/Dialog'
-import { VscCheck } from 'react-icons/vsc'
-import { LuScanLine } from 'react-icons/lu'
-import { JavaProcessInfo } from '../../../main/shared/types/Process.types'
+import React, { useState, useCallback } from 'react';
+import { Button } from '../common/Button';
+import { Dialog } from '../common/Dialog';
+import { VscCheck } from 'react-icons/vsc';
+import { LuScanLine } from 'react-icons/lu';
+import { JavaProcessInfo } from '../../../main/shared/types/Process.types';
 
 interface KillIntent {
-  proc: JavaProcessInfo
-  nonJava: boolean
+  proc: JavaProcessInfo;
+  nonJava: boolean;
 }
 
-type Filter = 'java' | 'all'
+type Filter = 'java' | 'all';
 
 export function ScannerPanel() {
-  const [results, setResults] = useState<JavaProcessInfo[] | null>(null)
-  const [scanning, setScanning] = useState(false)
-  const [killIntent, setKillIntent] = useState<KillIntent | null>(null)
-  const [killAllConfirm, setKillAllConfirm] = useState(false)
-  const [statusMsg, setStatusMsg] = useState<{ text: string; ok: boolean } | null>(null)
-  const [killedPids, setKilledPids] = useState<Set<number>>(new Set())
-  const [filter, setFilter] = useState<Filter>('java')
-  const [search, setSearch] = useState('')
-  const [expandedPid, setExpandedPid] = useState<number | null>(null)
+  const [results, setResults] = useState<JavaProcessInfo[] | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [killIntent, setKillIntent] = useState<KillIntent | null>(null);
+  const [killAllConfirm, setKillAllConfirm] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [killedPids, setKilledPids] = useState<Set<number>>(new Set());
+  const [filter, setFilter] = useState<Filter>('java');
+  const [search, setSearch] = useState('');
+  const [expandedPid, setExpandedPid] = useState<number | null>(null);
 
   const scan = useCallback(async () => {
-    setScanning(true)
-    setStatusMsg(null)
-    setKilledPids(new Set())
-    setSearch('')
-    setExpandedPid(null)
+    setScanning(true);
+    setStatusMsg(null);
+    setKilledPids(new Set());
+    setSearch('');
+    setExpandedPid(null);
 
-    const found = await window.api.scanAllProcesses()
-    setResults(found)
-    setScanning(false)
+    const found = await window.api.scanAllProcesses();
+    setResults(found);
+    setScanning(false);
 
-    const javaCount = found.filter((p) => p.isJava).length
-    setStatusMsg({ text: `Found ${found.length} processes — ${javaCount} java`, ok: true })
-  }, [])
+    const javaCount = found.filter((p) => p.isJava).length;
+    setStatusMsg({ text: `Found ${found.length} processes — ${javaCount} java`, ok: true });
+  }, []);
 
   const handleKill = async () => {
-    if (!killIntent) return
-    const res = await window.api.killPid(killIntent.proc.pid)
+    if (!killIntent) return;
+    const res = await window.api.killPid(killIntent.proc.pid);
     if (res.ok) {
-      setKilledPids((prev) => new Set([...prev, killIntent.proc.pid]))
-      setStatusMsg({ text: `Killed PID ${killIntent.proc.pid}`, ok: true })
+      setKilledPids((prev) => new Set([...prev, killIntent.proc.pid]));
+      setStatusMsg({ text: `Killed PID ${killIntent.proc.pid}`, ok: true });
     } else {
-      setStatusMsg({ text: `Failed to kill PID ${killIntent.proc.pid}: ${res.error}`, ok: false })
+      setStatusMsg({ text: `Failed to kill PID ${killIntent.proc.pid}: ${res.error}`, ok: false });
     }
-    setKillIntent(null)
-  }
+    setKillIntent(null);
+  };
 
   const handleKillAll = async () => {
-    const res = await window.api.killAllJava()
+    const res = await window.api.killAllJava();
     setStatusMsg({
       text: `Killed ${res.killed} java process${res.killed === 1 ? '' : 'es'}`,
       ok: true,
-    })
-    setKillAllConfirm(false)
-    setTimeout(scan, 800)
-  }
+    });
+    setKillAllConfirm(false);
+    setTimeout(scan, 800);
+  };
 
-  const searchLower = search.trim().toLowerCase()
+  const searchLower = search.trim().toLowerCase();
   const visible = results
     ? (filter === 'java' ? results.filter((r) => r.isJava) : results)
         .filter((r) => !killedPids.has(r.pid))
@@ -70,9 +70,9 @@ export function ScannerPanel() {
             r.command.toLowerCase().includes(searchLower) ||
             String(r.pid).includes(searchLower)
         )
-    : null
+    : null;
 
-  const javaVisible = visible?.some((r) => r.isJava) ?? false
+  const javaVisible = visible?.some((r) => r.isJava) ?? false;
 
   return (
     <div className="flex flex-col h-full">
@@ -170,7 +170,7 @@ export function ScannerPanel() {
         onCancel={() => setKillAllConfirm(false)}
       />
     </div>
-  )
+  );
 }
 
 function FilterToggle({ value, onChange }: { value: Filter; onChange: (f: Filter) => void }) {
@@ -191,7 +191,7 @@ function FilterToggle({ value, onChange }: { value: Filter; onChange: (f: Filter
         </button>
       ))}
     </div>
-  )
+  );
 }
 
 function ProcessRow({
@@ -200,10 +200,10 @@ function ProcessRow({
   onToggle,
   onKill,
 }: {
-  proc: JavaProcessInfo
-  expanded: boolean
-  onToggle: () => void
-  onKill: () => void
+  proc: JavaProcessInfo;
+  expanded: boolean;
+  onToggle: () => void;
+  onKill: () => void;
 }) {
   return (
     <div
@@ -270,7 +270,7 @@ function ProcessRow({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function ExpandChevron({ expanded, onClick }: { expanded: boolean; onClick: () => void }) {
@@ -292,7 +292,7 @@ function ExpandChevron({ expanded, onClick }: { expanded: boolean; onClick: () =
         <polyline points="3,2 7,5 3,8" />
       </svg>
     </button>
-  )
+  );
 }
 
 function DetailRow({
@@ -301,10 +301,10 @@ function DetailRow({
   mono,
   wrap,
 }: {
-  label: string
-  value: string
-  mono?: boolean
-  wrap?: boolean
+  label: string;
+  value: string;
+  mono?: boolean;
+  wrap?: boolean;
 }) {
   return (
     <div className="flex gap-3 text-xs">
@@ -319,7 +319,7 @@ function DetailRow({
         {value}
       </span>
     </div>
-  )
+  );
 }
 
 function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
@@ -328,5 +328,5 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
       {icon}
       <p className="text-xs font-mono text-center max-w-xs leading-relaxed">{text}</p>
     </div>
-  )
+  );
 }

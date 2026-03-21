@@ -1,9 +1,9 @@
-import React from 'react'
+import React from 'react';
 
 interface Props {
-  checked: boolean
-  onChange: (v: boolean) => void
-  disabled?: boolean
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
 }
 
 export function Toggle({ checked, onChange, disabled }: Props) {
@@ -25,5 +25,5 @@ export function Toggle({ checked, onChange, disabled }: Props) {
         ].join(' ')}
       />
     </button>
-  )
+  );
 }

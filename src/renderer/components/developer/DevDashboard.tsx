@@ -1,17 +1,17 @@
-import React, { useEffect, useState } from 'react'
-import { useApp } from '../../store/AppStore'
-import { VscCircleFilled, VscCircle } from 'react-icons/vsc'
+import React, { useEffect, useState } from 'react';
+import { useApp } from '../../store/AppStore';
+import { VscCircleFilled, VscCircle } from 'react-icons/vsc';
 
-declare const __APP_VERSION__: string
+declare const __APP_VERSION__: string;
 
 interface SysInfo {
-  platform: string
-  arch: string
-  nodeVersion: string
-  electronVersion: string
-  chromeVersion: string
-  uptime: number
-  memoryUsageMB: number
+  platform: string;
+  arch: string;
+  nodeVersion: string;
+  electronVersion: string;
+  chromeVersion: string;
+  uptime: number;
+  memoryUsageMB: number;
 }
 
 function StatCard({
@@ -20,10 +20,10 @@ function StatCard({
   accent,
   sub,
 }: {
-  label: string
-  value: string | number
-  accent?: boolean
-  sub?: string
+  label: string;
+  value: string | number;
+  accent?: boolean;
+  sub?: string;
 }) {
   return (
     <div className="rounded-lg border border-surface-border bg-base-900 px-4 py-3 space-y-1">
@@ -38,7 +38,7 @@ function StatCard({
       </p>
       {sub && <p className="text-xs font-mono text-text-muted">{sub}</p>}
     </div>
-  )
+  );
 }
 
 function Badge({ ok, label }: { ok: boolean; label: string }) {
@@ -54,26 +54,26 @@ function Badge({ ok, label }: { ok: boolean; label: string }) {
       {ok ? <VscCircleFilled size={8} /> : <VscCircle size={8} />}
       {label}
     </span>
-  )
+  );
 }
 
 export function DevDashboard() {
-  const { state } = useApp()
-  const [sysInfo, setSysInfo] = useState<SysInfo | null>(null)
-  const [tick, setTick] = useState(0)
+  const { state } = useApp();
+  const [sysInfo, setSysInfo] = useState<SysInfo | null>(null);
+  const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    window.api.getSysInfo().then(setSysInfo)
+    window.api.getSysInfo().then(setSysInfo);
     const id = setInterval(() => {
-      window.api.getSysInfo().then(setSysInfo)
-      setTick((t) => t + 1)
-    }, 3000)
-    return () => clearInterval(id)
-  }, [])
+      window.api.getSysInfo().then(setSysInfo);
+      setTick((t) => t + 1);
+    }, 3000);
+    return () => clearInterval(id);
+  }, []);
 
-  const runningProfiles = state.processStates.filter((s) => s.running)
-  const totalConsoleLines = Object.values(state.consoleLogs).reduce((a, b) => a + b.length, 0)
-  const restEnabled = state.settings?.restApiEnabled ?? false
+  const runningProfiles = state.processStates.filter((s) => s.running);
+  const totalConsoleLines = Object.values(state.consoleLogs).reduce((a, b) => a + b.length, 0);
+  const restEnabled = state.settings?.restApiEnabled ?? false;
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
@@ -117,8 +117,8 @@ export function DevDashboard() {
         ) : (
           <div className="space-y-1.5">
             {runningProfiles.map((s) => {
-              const profile = state.profiles.find((p) => p.id === s.profileId)
-              const uptimeSec = s.startedAt ? Math.floor((Date.now() - s.startedAt) / 1000) : 0
+              const profile = state.profiles.find((p) => p.id === s.profileId);
+              const uptimeSec = s.startedAt ? Math.floor((Date.now() - s.startedAt) / 1000) : 0;
               return (
                 <div
                   key={s.profileId}
@@ -131,7 +131,7 @@ export function DevDashboard() {
                   <span className="text-xs font-mono text-text-muted">PID {s.pid}</span>
                   <span className="text-xs font-mono text-text-muted">{uptimeSec}s</span>
                 </div>
-              )
+              );
             })}
           </div>
         )}
@@ -151,7 +151,7 @@ export function DevDashboard() {
         )}
       </Section>
     </div>
-  )
+  );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -160,5 +160,5 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <p className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</p>
       {children}
     </div>
-  )
+  );
 }

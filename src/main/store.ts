@@ -1,61 +1,61 @@
-import Store from 'electron-store'
-import { DEFAULT_SETTINGS } from './shared/config/App.config'
-import { Profile } from './shared/types/Profile.types'
-import { AppSettings } from './shared/types/App.types'
+import Store from 'electron-store';
+import { DEFAULT_SETTINGS } from './shared/config/App.config';
+import { Profile } from './shared/types/Profile.types';
+import { AppSettings } from './shared/types/App.types';
 
 interface StoreSchema {
-  profiles: Profile[]
-  settings: AppSettings
+  profiles: Profile[];
+  settings: AppSettings;
 }
 
 const store = new Store<StoreSchema>({
   name: 'java-runner-config',
   defaults: { profiles: [], settings: DEFAULT_SETTINGS },
-})
+});
 
 export function getAllProfiles(): Profile[] {
-  const profiles = store.get('profiles', [])
-  return [...profiles].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  const profiles = store.get('profiles', []);
+  return [...profiles].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 }
 
 export function saveProfile(profile: Profile): void {
-  const profiles = getAllProfiles()
-  const idx = profiles.findIndex((p) => p.id === profile.id)
-  profile.updatedAt = Date.now()
-  if (idx >= 0) profiles[idx] = profile
+  const profiles = getAllProfiles();
+  const idx = profiles.findIndex((p) => p.id === profile.id);
+  profile.updatedAt = Date.now();
+  if (idx >= 0) profiles[idx] = profile;
   else {
-    profile.order = profiles.length
-    profiles.push(profile)
+    profile.order = profiles.length;
+    profiles.push(profile);
   }
-  store.set('profiles', profiles)
+  store.set('profiles', profiles);
 }
 
 export function deleteProfile(id: string): void {
   store.set(
     'profiles',
     getAllProfiles().filter((p) => p.id !== id)
-  )
+  );
 }
 
 export function reorderProfiles(orderedIds: string[]): void {
-  const profiles = getAllProfiles()
+  const profiles = getAllProfiles();
   const updated = profiles.map((p) => ({
     ...p,
     order: orderedIds.indexOf(p.id),
-  }))
-  store.set('profiles', updated)
+  }));
+  store.set('profiles', updated);
 }
 
 export function toggleDevMode(enabled: boolean): void {
-  const settings = getSettings()
-  settings.devModeEnabled = enabled
-  saveSettings(settings)
+  const settings = getSettings();
+  settings.devModeEnabled = enabled;
+  saveSettings(settings);
 }
 
 export function getSettings(): AppSettings {
-  return { ...DEFAULT_SETTINGS, ...store.get('settings', DEFAULT_SETTINGS) }
+  return { ...DEFAULT_SETTINGS, ...store.get('settings', DEFAULT_SETTINGS) };
 }
 
 export function saveSettings(settings: AppSettings): void {
-  store.set('settings', settings)
+  store.set('settings', settings);
 }

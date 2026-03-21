@@ -1,5 +1,5 @@
-import type { AppSettings } from '../types/App.types'
-import { REST_API_CONFIG } from './RestApi.config'
+import type { AppSettings } from '../types/App.types';
+import { REST_API_CONFIG } from './RestApi.config';
 
 export const DEFAULT_SETTINGS: AppSettings = {
   launchOnStartup: false,
@@ -14,4 +14,4 @@ export const DEFAULT_SETTINGS: AppSettings = {
   restApiEnabled: false,
   restApiPort: REST_API_CONFIG.defaultPort,
   devModeEnabled: false,
-}
+};
