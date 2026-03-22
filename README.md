@@ -4,6 +4,8 @@ A fast, minimal Electron + React + TypeScript desktop app for running and managi
 
 ---
 
+
+
 ## Features
 
 - **Manage running JARs** — get rid of .bat-Files to run yours JARs and manage all of them at a central place. 
@@ -14,6 +16,35 @@ A fast, minimal Electron + React + TypeScript desktop app for running and managi
 - **Settings** — launch on Windows startup, start minimised, minimize-to-tray, console font size, word wrap, buffer limits
 - **System tray** — always available, shows running processes, double-click to restore
 - **Utilities** — Process Scanner to kill lost JARs running in the background, Activity Log to follow up on what has happened
+
+## 🖥️ Main Window
+
+| Console | Console Search |
+|---------|----------------|
+| ![Console](https://github.com/user-attachments/assets/d92cafc6-8ec3-4c2c-b7e0-4731a3a390c7) | ![Console Search](https://github.com/user-attachments/assets/5989f954-b3c1-4f96-8ee4-8716245ec036) |
+
+---
+
+## 👤 Profiles
+
+
+| Configuration | Profile Templates |
+|---------------|-----------------|
+| ![Configuration](https://github.com/user-attachments/assets/70aed735-470b-4c54-83b0-03c33f9cb1db) | ![Profile Templates](https://github.com/user-attachments/assets/2814541b-d197-46a8-9b93-bad81a403405) |
+
+---
+
+## 🛠️ Utilities
+
+| Process Scanner | Activity Log |
+|-----------------|-------------|
+| ![Process Scanner](https://github.com/user-attachments/assets/e7cf205c-1b01-4cb8-839e-60fbb773eb53) | ![Activity Log](https://github.com/user-attachments/assets/4e8d0083-5c58-4d0d-b0bc-b3932df720de) |
+
+---
+
+## ⚙️ Settings
+
+![Settings](https://github.com/user-attachments/assets/0f1e4459-082c-4564-ac73-40b0e62e5ab5)  
 
 ---
 
