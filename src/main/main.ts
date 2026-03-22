@@ -1,13 +1,13 @@
-import { app, BrowserWindow, Menu, nativeImage, Tray } from 'electron';
+import { app, BrowserWindow, Input, Menu, nativeImage, Tray } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { allRoutes, initDevIPC, initSystemIPC, initWindowIPC } from './ipc/_index';
 import { EnvironmentIPC } from './ipc/Environment.ipc';
-import { getEnvironment, loadEnvironment } from './JRCEnvironment';
+import { getEnvironment, loadEnvironment, shouldStartMinimized } from './JRCEnvironment';
 import { processManager } from './ProcessManager';
 import { restApiServer } from './RestAPI';
 import { registerIPC } from './IPCController';
-import { getAllProfiles, getSettings } from './Store';
+import { getAllProfiles, getSettings, syncLoginItem } from './Store';
 
 loadEnvironment();
 
@@ -44,7 +44,7 @@ function createWindow(): void {
     frame: false,
     backgroundColor: '#08090d',
     icon: getIconImage(),
-    show: getEnvironment().startUpSource != 'withSystem',
+    show: getEnvironment().startUpSource !== 'withSystem',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
@@ -58,8 +58,7 @@ function createWindow(): void {
   else mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
 
   mainWindow.once('ready-to-show', () => {
-    const shouldStartHidden =
-      getSettings().startMinimized && getEnvironment().startUpSource === 'withSystem';
+    const shouldStartHidden = shouldStartMinimized();
     if (shouldStartHidden) mainWindow?.hide();
     else mainWindow?.show();
   });
@@ -134,39 +133,17 @@ if (!gotLock) {
   });
 
   app.whenReady().then(() => {
+    // If launched by the OS at login but the user has since disabled autostart, bail out.
+    // This handles the edge case where the registry entry outlives the setting.
     if (getEnvironment().startUpSource === 'withSystem' && !getSettings().launchOnStartup) return;
+
+    // Ensure the OS login item always reflects the stored setting
+    syncLoginItem(getSettings().launchOnStartup, getSettings().startMinimized);
 
     createWindow();
     createTray();
-    mainWindow?.webContents.on('before-input-event', (event, input) => {
-      const isDevToolsShortcut =
-        input.key === 'F12' ||
-        (input.control && input.shift && input.key === 'I') ||
-        (input.meta && input.alt && input.key === 'I');
 
-      if (!isDevToolsShortcut) return;
-
-      event.preventDefault();
-
-      devToolsPressCount++;
-
-      // reset counter after 1 second of inactivity
-      if (devToolsTimer) clearTimeout(devToolsTimer);
-      devToolsTimer = setTimeout(() => {
-        devToolsPressCount = 0;
-      }, 1000);
-
-      if (devToolsPressCount >= 7) {
-        devToolsPressCount = 0;
-        mainWindow?.webContents.openDevTools({ mode: 'detach' });
-        return;
-      }
-
-      // normal single-press behavior only if devModeEnabled
-      if (getEnvironment().devMode) {
-        mainWindow?.webContents.openDevTools();
-      }
-    });
+    mainWindow?.webContents.on('before-input-event', handleBeforeInputEvent);
 
     // ── IPC ────────────────────────────────────────────────────────────────────
     initSystemIPC(() => mainWindow);
@@ -199,3 +176,29 @@ app.on('before-quit', () => {
 app.on('activate', () => {
   mainWindow?.show();
 });
+
+const handleBeforeInputEvent = (event: Electron.Event, input: Input) => {
+  const isDevToolsShortcut =
+    input.key === 'F12' ||
+    (input.control && input.shift && input.key.toUpperCase() === 'I') ||
+    (input.meta && input.alt && input.key.toUpperCase() === 'I');
+
+  if (!isDevToolsShortcut) return;
+
+  event.preventDefault();
+
+  devToolsPressCount++;
+
+  if (devToolsTimer) clearTimeout(devToolsTimer);
+  devToolsTimer = setTimeout(() => (devToolsPressCount = 0), 1000);
+
+  if (devToolsPressCount >= 7) {
+    devToolsPressCount = 0;
+    mainWindow?.webContents.openDevTools({ mode: 'detach' });
+    return;
+  }
+
+  if (getEnvironment().devMode) {
+    mainWindow?.webContents.openDevTools();
+  }
+};

@@ -3,7 +3,7 @@ import { useApp } from '../../store/AppStore';
 import { Button } from '../common/Button';
 import { Toggle } from '../common/Toggle';
 import { VersionChecker } from './version/VersionChecker';
-import { REST_API_CONFIG } from '../../../main/shared/config/RestApi.config';
+import { REST_API_CONFIG } from '../../../main/shared/config/API.config';
 import { version } from '../../../../package.json';
 import { AppSettings, JRCEnvironment } from '../../../main/shared/types/App.types';
 

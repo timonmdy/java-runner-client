@@ -35,8 +35,8 @@ function defineRoute<K extends RouteKey>(key: K, handler: RouteHandler): BuiltRo
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 
-export const routes = [
-  defineRoute('status', ({ res }) =>
+export const routes: { [K in RouteKey]: BuiltRoute<K> } = {
+  status: defineRoute('status', ({ res }) =>
     ok(res, {
       ok: true,
       version: process.env.npm_package_version ?? 'unknown',
@@ -45,15 +45,14 @@ export const routes = [
     })
   ),
 
-  defineRoute('profiles_list', ({ res }) => ok(res, getAllProfiles())),
+  profiles_list: defineRoute('profiles_list', ({ res }) => ok(res, getAllProfiles())),
 
-  defineRoute('profiles_get', ({ res, params }) => {
+  profiles_get: defineRoute('profiles_get', ({ res, params }) => {
     const p = getAllProfiles().find((p) => p.id === params.id);
-    console.log(p, params, getAllProfiles());
     p ? ok(res, p) : err(res, 'Profile not found', 404);
   }),
 
-  defineRoute('profiles_create', ({ res, body }) => {
+  profiles_create: defineRoute('profiles_create', ({ res, body }) => {
     const b = body as Partial<Profile>;
 
     const p: Profile = {
@@ -77,7 +76,7 @@ export const routes = [
     ok(res, p, 201);
   }),
 
-  defineRoute('profiles_update', ({ res, params, body }) => {
+  profiles_update: defineRoute('profiles_update', ({ res, params, body }) => {
     const existing = getAllProfiles().find((p) => p.id === params.id);
     if (!existing) return err(res, 'Profile not found', 404);
 
@@ -93,7 +92,7 @@ export const routes = [
     ok(res, updated);
   }),
 
-  defineRoute('profiles_delete', ({ res, params }) => {
+  profiles_delete: defineRoute('profiles_delete', ({ res, params }) => {
     if (!getAllProfiles().find((p) => p.id === params.id))
       return err(res, 'Profile not found', 404);
 
@@ -101,26 +100,30 @@ export const routes = [
     ok(res);
   }),
 
-  defineRoute('processes_list', ({ res }) => ok(res, processManager.getStates())),
+  processes_list: defineRoute('processes_list', ({ res }) => ok(res, processManager.getStates())),
 
-  defineRoute('processes_log', ({ res }) => ok(res, processManager.getActivityLog())),
+  processes_log: defineRoute('processes_log', ({ res }) =>
+    ok(res, processManager.getActivityLog())
+  ),
 
-  defineRoute('processes_start', ({ res, params }) => {
+  processes_start: defineRoute('processes_start', ({ res, params }) => {
     const p = getAllProfiles().find((p) => p.id === params.id);
     if (!p) return err(res, 'Profile not found', 404);
     ok(res, processManager.start(p));
   }),
 
-  defineRoute('processes_stop', ({ res, params }) => ok(res, processManager.stop(params.id))),
+  processes_stop: defineRoute('processes_stop', ({ res, params }) =>
+    ok(res, processManager.stop(params.id))
+  ),
 
-  defineRoute('processes_clear', ({ res, params }) => {
+  processes_clear: defineRoute('processes_clear', ({ res, params }) => {
     processManager.clearConsoleForProfile(params.id);
     ok(res);
   }),
 
-  defineRoute('settings_get', ({ res }) => ok(res, getSettings())),
+  settings_get: defineRoute('settings_get', ({ res }) => ok(res, getSettings())),
 
-  defineRoute('settings_update', ({ res, body }) => {
+  settings_update: defineRoute('settings_update', ({ res, body }) => {
     const updated: AppSettings = {
       ...getSettings(),
       ...(body as Partial<AppSettings>),
@@ -129,4 +132,4 @@ export const routes = [
     saveSettings(updated);
     ok(res, updated);
   }),
-];
+};

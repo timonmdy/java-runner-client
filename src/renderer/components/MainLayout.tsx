@@ -73,7 +73,7 @@ export function MainLayout() {
   };
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex flex-1 min-h-0">
       <ProfileSidebar
         onOpenSettings={() => openPanel('settings')}
         onOpenFaq={() => openPanel('faq')}
@@ -83,7 +83,7 @@ export function MainLayout() {
         activeSidePanel={activePanel}
       />
 
-      <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="flex flex-col flex-1 min-h-0">
         {activePanel ? (
           <>
             <div className="shrink-0">
@@ -113,7 +113,7 @@ export function MainLayout() {
               <div className="border-b border-surface-border" />
             </div>
 
-            <div className="flex-1 overflow-hidden bg-base-800">
+            <div className="flex-1 min-h-0 bg-base-800 animate-fade-in">
               <Routes>
                 <Route path="settings" element={<SettingsTab />} />
                 <Route path="faq" element={<FaqPanel />} />
@@ -158,7 +158,7 @@ export function MainLayout() {
               )}
             </div>
 
-            <div className="flex-1 overflow-hidden bg-base-800 animate-fade-in">
+            <div className="flex-1 min-h-0 bg-base-800 animate-fade-in">
               <Routes>
                 <Route path="console" element={<ConsoleTab />} />
                 <Route path="config" element={<ConfigTab />} />

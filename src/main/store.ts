@@ -1,3 +1,4 @@
+import { app } from 'electron';
 import Store from 'electron-store';
 import { DEFAULT_SETTINGS } from './shared/config/App.config';
 import { Profile } from './shared/types/Profile.types';
@@ -57,5 +58,21 @@ export function getSettings(): AppSettings {
 }
 
 export function saveSettings(settings: AppSettings): void {
+  const prev = getSettings();
   store.set('settings', settings);
+  if (
+    settings.launchOnStartup !== prev.launchOnStartup ||
+    settings.startMinimized !== prev.startMinimized
+  ) {
+    syncLoginItem(settings.launchOnStartup, settings.startMinimized);
+  }
+}
+
+export function syncLoginItem(openAtLogin: boolean, startMinimized: boolean): void {
+  if (!app.isPackaged) return;
+  const args = ['--autostart', startMinimized && '--minimized'].filter(Boolean) as string[];
+  app.setLoginItemSettings({
+    openAtLogin,
+    args,
+  });
 }

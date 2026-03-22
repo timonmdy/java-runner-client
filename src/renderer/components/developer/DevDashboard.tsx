@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../store/AppStore';
 import { VscCircleFilled, VscCircle } from 'react-icons/vsc';
+import { JRCEnvironment } from '../../../main/shared/types/App.types';
 
 declare const __APP_VERSION__: string;
 
@@ -10,6 +11,7 @@ interface SysInfo {
   nodeVersion: string;
   electronVersion: string;
   chromeVersion: string;
+  argv: string[];
   uptime: number;
   memoryUsageMB: number;
 }
@@ -57,18 +59,33 @@ function Badge({ ok, label }: { ok: boolean; label: string }) {
   );
 }
 
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-2">
+      <p className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</p>
+      {children}
+    </div>
+  );
+}
+
 export function DevDashboard() {
   const { state } = useApp();
   const [sysInfo, setSysInfo] = useState<SysInfo | null>(null);
-  const [tick, setTick] = useState(0);
+  const [env, setEnv] = useState<JRCEnvironment>();
 
   useEffect(() => {
-    window.api.getSysInfo().then(setSysInfo);
-    const id = setInterval(() => {
-      window.api.getSysInfo().then(setSysInfo);
-      setTick((t) => t + 1);
-    }, 3000);
+    const load = () => window.api.getSysInfo().then(setSysInfo);
+    load();
+    const id = setInterval(load, 3000);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const loadEnv = async () => {
+      const environment = await window.env.get();
+      setEnv(environment);
+    };
+    loadEnv();
   }, []);
 
   const runningProfiles = state.processStates.filter((s) => s.running);
@@ -76,89 +93,79 @@ export function DevDashboard() {
   const restEnabled = state.settings?.restApiEnabled ?? false;
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-      {/* App state */}
-      <Section title="Application State">
-        <div className="grid grid-cols-2 gap-2">
-          <StatCard label="Version" value={`v${__APP_VERSION__}`} accent />
-          <StatCard
-            label="Profiles"
-            value={state.profiles.length}
-            sub={`${runningProfiles.length} running`}
-          />
-          <StatCard
-            label="Console Lines"
-            value={totalConsoleLines.toLocaleString()}
-            sub="across all profiles"
-          />
-          <StatCard
-            label="REST API"
-            value={restEnabled ? `Port ${state.settings?.restApiPort}` : 'Disabled'}
-            accent={restEnabled}
-          />
-        </div>
-      </Section>
-
-      {/* Feature flags */}
-      <Section title="Feature Flags">
-        <div className="flex flex-wrap gap-2">
-          <Badge ok={restEnabled} label="REST API" />
-          <Badge ok={state.settings?.launchOnStartup ?? false} label="Launch on Startup" />
-          <Badge ok={state.settings?.minimizeToTray ?? false} label="Minimize to Tray" />
-          <Badge ok={state.settings?.consoleWordWrap ?? false} label="Word Wrap" />
-          <Badge ok={state.settings?.consoleLineNumbers ?? false} label="Line Numbers" />
-        </div>
-      </Section>
-
-      {/* Running processes */}
-      <Section title={`Running Processes (${runningProfiles.length})`}>
-        {runningProfiles.length === 0 ? (
-          <p className="text-xs font-mono text-text-muted py-2">No processes running</p>
-        ) : (
-          <div className="space-y-1.5">
-            {runningProfiles.map((s) => {
-              const profile = state.profiles.find((p) => p.id === s.profileId);
-              const uptimeSec = s.startedAt ? Math.floor((Date.now() - s.startedAt) / 1000) : 0;
-              return (
-                <div
-                  key={s.profileId}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg border border-accent/20 bg-accent/5"
-                >
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot shrink-0" />
-                  <span className="text-xs font-mono text-text-primary flex-1 truncate">
-                    {profile?.name ?? s.profileId}
-                  </span>
-                  <span className="text-xs font-mono text-text-muted">PID {s.pid}</span>
-                  <span className="text-xs font-mono text-text-muted">{uptimeSec}s</span>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </Section>
-
-      {/* System info */}
-      <Section title="System">
-        {sysInfo ? (
+    <div className="h-full overflow-y-auto">
+      <div className="px-4 py-4 pb-4 space-y-5">
+        {/* Application State */}
+        <Section title="Environment">
           <div className="grid grid-cols-2 gap-2">
-            <StatCard label="Platform" value={sysInfo.platform} sub={sysInfo.arch} />
-            <StatCard label="Memory (renderer)" value={`${sysInfo.memoryUsageMB} MB`} />
-            <StatCard label="Node.js" value={sysInfo.nodeVersion} />
-            <StatCard label="Electron" value={sysInfo.electronVersion} />
+            <StatCard label="Start-Source" value={env?.startUpSource ?? 'undefined'} />
+            <StatCard label="Type (env)" value={env?.type ?? 'undefined'} />
           </div>
-        ) : (
-          <p className="text-xs font-mono text-text-muted animate-pulse">Loading...</p>
-        )}
-      </Section>
-    </div>
-  );
-}
+        </Section>
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</p>
-      {children}
+        {sysInfo && (
+          <div className="rounded-lg bg-base-900 border border-surface-border p-3">
+            <p className="text-xs text-text-muted font-mono uppercase tracking-widest mb-2">
+              Process Argv
+            </p>
+            <p className="text-xs font-mono text-text-secondary break-all leading-5 select-text">
+              {sysInfo.argv.join(' ')}
+            </p>
+          </div>
+        )}
+        {/* Feature Flags */}
+        <Section title="Feature Flags">
+          <div className="flex flex-wrap gap-2">
+            <Badge ok={restEnabled} label="REST API" />
+            <Badge ok={state.settings?.launchOnStartup ?? false} label="Launch on Startup" />
+            <Badge ok={state.settings?.minimizeToTray ?? false} label="Minimize to Tray" />
+            <Badge ok={state.settings?.consoleWordWrap ?? false} label="Word Wrap" />
+            <Badge ok={state.settings?.consoleLineNumbers ?? false} label="Line Numbers" />
+          </div>
+        </Section>
+
+        {/* Running Processes */}
+        <Section title={`Running Processes (${runningProfiles.length})`}>
+          {runningProfiles.length === 0 ? (
+            <p className="text-xs font-mono text-text-muted py-2">No processes running</p>
+          ) : (
+            <div className="space-y-1.5">
+              {runningProfiles.map((s) => {
+                const profile = state.profiles.find((p) => p.id === s.profileId);
+                const uptimeSec = s.startedAt ? Math.floor((Date.now() - s.startedAt) / 1000) : 0;
+
+                return (
+                  <div
+                    key={s.profileId}
+                    className="flex items-center gap-3 px-3 py-2 rounded-lg border border-accent/20 bg-accent/5"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot shrink-0" />
+                    <span className="text-xs font-mono text-text-primary flex-1 truncate">
+                      {profile?.name ?? s.profileId}
+                    </span>
+                    <span className="text-xs font-mono text-text-muted">PID {s.pid}</span>
+                    <span className="text-xs font-mono text-text-muted">{uptimeSec}s</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Section>
+
+        {/* System */}
+        <Section title="System">
+          {sysInfo ? (
+            <div className="grid grid-cols-4 gap-2">
+              <StatCard label="Platform" value={sysInfo.platform} sub={sysInfo.arch} />
+              <StatCard label="Memory" value={`${sysInfo.memoryUsageMB} MB`} />
+              <StatCard label="Node.js" value={sysInfo.nodeVersion} />
+              <StatCard label="Electron" value={sysInfo.electronVersion} />
+            </div>
+          ) : (
+            <p className="text-xs font-mono text-text-muted animate-pulse">Loading...</p>
+          )}
+        </Section>
+      </div>
     </div>
   );
 }

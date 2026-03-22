@@ -1,5 +1,5 @@
 import type { AppSettings } from '../types/App.types';
-import { REST_API_CONFIG } from './RestApi.config';
+import { REST_API_CONFIG } from './API.config';
 
 export const DEFAULT_SETTINGS: AppSettings = {
   launchOnStartup: false,

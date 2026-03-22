@@ -1,7 +1,7 @@
 import { app, BrowserWindow } from 'electron';
+import { EnvironmentIPC } from './ipc/Environment.ipc';
 import { JRCEnvironment } from './shared/types/App.types';
 import { getSettings } from './Store';
-import { EnvironmentIPC } from './ipc/Environment.ipc';
 
 let env: JRCEnvironment = {
   isReady: false,
@@ -23,6 +23,10 @@ export function loadEnvironment() {
 
 export function getEnvironment() {
   return env;
+}
+
+export function shouldStartMinimized(): boolean {
+  return process.argv.includes('--minimized');
 }
 
 function broadcast(channel: string = EnvironmentIPC.change.channel) {

@@ -34,7 +34,7 @@ export default function App() {
           v7_relativeSplatPath: false,
         }}
       >
-        <div className="flex flex-col h-screen bg-base-900 text-text-primary overflow-hidden select-none">
+        <div className="flex flex-col h-screen bg-base-900 text-text-primary min-h-0 select-none">
           <TitleBar />
           <Routes>
             <Route path="/" element={<Navigate to="/console" replace />} />

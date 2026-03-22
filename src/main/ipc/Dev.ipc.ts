@@ -18,6 +18,7 @@ export const DevIPC = {
       arch: process.arch,
       nodeVersion: process.versions.node,
       electronVersion: process.versions.electron,
+      argv: process.argv,
       chromeVersion: process.versions.chrome,
       uptime: Math.floor(process.uptime()),
       memoryUsageMB: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),

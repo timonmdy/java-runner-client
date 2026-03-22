@@ -2,7 +2,7 @@ import http from 'http';
 import { routes } from './RestAPI.routes';
 import { routeConfig } from './shared/config/API.config';
 import { getSettings } from './Store';
-import { REST_API_CONFIG } from './shared/config/RestApi.config';
+import { REST_API_CONFIG } from './shared/config/API.config';
 
 type Params = Record<string, string>;
 
@@ -63,7 +63,7 @@ function parsePattern(path: string) {
 }
 
 function compileRoutes(): CompiledRoute[] {
-  return routes.map((r) => ({
+  return Object.entries(routes).map(([_, r]) => ({
     ...r,
     ...parsePattern(r.path),
   }));
