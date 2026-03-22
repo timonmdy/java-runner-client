@@ -18,8 +18,7 @@ export function DeveloperTab() {
   const [panel, setPanel] = useState<Panel>('dashboard');
 
   return (
-    <div className="flex flex-col h-full bg-base-800">
-      {/* Header banner */}
+    <div className="flex flex-col h-full min-h-0 bg-base-800">
       <div className="shrink-0 px-4 py-2 bg-accent/5 border-b border-accent/20 flex items-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
         <span className="text-xs font-mono text-accent tracking-widest uppercase">
@@ -27,7 +26,6 @@ export function DeveloperTab() {
         </span>
       </div>
 
-      {/* Sub-tab bar */}
       <div className="flex items-center gap-0 px-4 border-b border-surface-border bg-base-900 shrink-0">
         {PANELS.map((p) => (
           <button
@@ -46,7 +44,7 @@ export function DeveloperTab() {
         ))}
       </div>
 
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
         {panel === 'dashboard' && <DevDashboard />}
         {panel === 'api' && <DevApiExplorer />}
         {panel === 'storage' && <DevStorage />}

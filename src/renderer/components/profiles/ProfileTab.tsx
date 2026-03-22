@@ -15,12 +15,13 @@ export function ProfileTab() {
     if (activeProfile) setDraft({ ...activeProfile });
   }, [activeProfile?.id]);
 
-  if (!draft || !activeProfile)
+  if (!draft || !activeProfile) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-text-muted">
         No profile selected
       </div>
     );
+  }
 
   const update = (patch: Partial<Profile>) =>
     setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
@@ -31,14 +32,10 @@ export function ProfileTab() {
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
   };
-  const handleDelete = async () => {
-    await deleteProfile(draft.id);
-    setShowDelete(false);
-  };
 
   return (
     <>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0">
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0">
           <h2 className="text-sm font-medium text-text-primary flex-1">Profile Identity</h2>
           <Button
@@ -50,7 +47,8 @@ export function ProfileTab() {
             {saved ? 'Saved' : 'Save'}
           </Button>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-5 space-y-6">
+
+        <div className="flex-1 overflow-y-auto min-h-0 px-4 py-5 space-y-6">
           <Section title="Name">
             <Input
               value={draft.name}
@@ -58,6 +56,7 @@ export function ProfileTab() {
               placeholder="My Server"
             />
           </Section>
+
           <Section
             title="Accent Colour"
             hint="Used in the sidebar and as the tab highlight colour."
@@ -67,7 +66,6 @@ export function ProfileTab() {
                 <button
                   key={c}
                   onClick={() => update({ color: c })}
-                  title={c}
                   className="w-7 h-7 rounded-full transition-all duration-150 hover:scale-110 focus:outline-none"
                   style={{
                     backgroundColor: c,
@@ -78,6 +76,7 @@ export function ProfileTab() {
               ))}
             </div>
           </Section>
+
           <Section title="Danger Zone">
             <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 flex items-center justify-between gap-4">
               <div>
@@ -98,13 +97,17 @@ export function ProfileTab() {
           </Section>
         </div>
       </div>
+
       <Dialog
         open={showDelete}
         title="Delete profile?"
         message={`"${draft.name}" will be permanently removed. This cannot be undone.`}
         confirmLabel="Delete"
         danger
-        onConfirm={handleDelete}
+        onConfirm={async () => {
+          await deleteProfile(draft.id);
+          setShowDelete(false);
+        }}
         onCancel={() => setShowDelete(false)}
       />
     </>

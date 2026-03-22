@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react';
-import type { FaqItem, FaqTopic } from '../../../main/shared/config/FAQ.config';
+import React, { useMemo, useState } from 'react';
 import { FAQ_TOPICS } from '../../../main/shared/config/FAQ.config';
+import type { FaqItem, FaqTopic } from '../../../main/shared/config/FAQ.config';
 
 export function FaqPanel() {
   const [search, setSearch] = useState('');
@@ -20,14 +20,8 @@ export function FaqPanel() {
   const activeTopic_ = FAQ_TOPICS.find((t) => t.id === activeTopic) ?? FAQ_TOPICS[0];
   const displayItems = searchTrimmed ? searchResults : (activeTopic_?.items ?? []);
 
-  const handleTopicClick = (id: string) => {
-    setActiveTopic(id);
-    setExpandedIdx(null);
-    setSearch('');
-  };
-
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       <div className="px-4 py-3 border-b border-surface-border bg-base-900 shrink-0">
         <input
           type="text"
@@ -40,7 +34,8 @@ export function FaqPanel() {
           className="w-full bg-base-950 border border-surface-border rounded-md px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 transition-colors font-mono"
         />
       </div>
-      <div className="flex flex-1 overflow-hidden">
+
+      <div className="flex flex-1 overflow-hidden min-h-0">
         {!searchTrimmed && (
           <div className="w-36 shrink-0 border-r border-surface-border bg-base-900/60 overflow-y-auto py-2">
             {FAQ_TOPICS.map((topic) => (
@@ -48,12 +43,16 @@ export function FaqPanel() {
                 key={topic.id}
                 topic={topic}
                 active={activeTopic === topic.id}
-                onClick={() => handleTopicClick(topic.id)}
+                onClick={() => {
+                  setActiveTopic(topic.id);
+                  setExpandedIdx(null);
+                  setSearch('');
+                }}
               />
             ))}
           </div>
         )}
-        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2">
+        <div className="flex-1 overflow-y-auto min-h-0 px-4 py-3 space-y-2">
           {displayItems.length === 0 && (
             <p className="text-xs text-text-muted font-mono py-8 text-center">
               {searchTrimmed ? 'No results found.' : 'No items in this topic.'}

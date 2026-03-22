@@ -1,11 +1,6 @@
 import React, { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Reorder } from 'framer-motion';
-import { useApp, PROFILE_COLORS } from '../../store/AppStore';
-import { Dialog } from '../common/Dialog';
-import { ContextMenu } from '../common/ContextMenu';
-import { TemplateModal } from './TemplateModal';
-import { useDevMode } from '../../hooks/useDevMode';
-import type { ContextMenuItem } from '../common/ContextMenu';
 import {
   VscPlay,
   VscDebugStop,
@@ -19,15 +14,15 @@ import {
   VscLayout,
   VscCode,
 } from 'react-icons/vsc';
+import { useApp, PROFILE_COLORS } from '../../store/AppStore';
+import { useDevMode } from '../../hooks/useDevMode';
+import { Dialog } from '../common/Dialog';
+import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
+import { TemplateModal } from './TemplateModal';
 import { Profile } from '../../../main/shared/types/Profile.types';
 
 interface Props {
-  onOpenSettings: () => void;
-  onOpenFaq: () => void;
-  onOpenUtilities: () => void;
-  onOpenDeveloper: () => void;
-  onProfileClick?: () => void;
-  activeSidePanel: 'settings' | 'faq' | 'utilities' | 'developer' | null;
+  activeSidePanel: string | null;
 }
 
 interface CtxState {
@@ -36,14 +31,8 @@ interface CtxState {
   y: number;
 }
 
-export function ProfileSidebar({
-  onOpenSettings,
-  onOpenFaq,
-  onOpenUtilities,
-  onOpenDeveloper,
-  onProfileClick,
-  activeSidePanel,
-}: Props) {
+export function ProfileSidebar({ activeSidePanel }: Props) {
+  const navigate = useNavigate();
   const {
     state,
     activeProfile,
@@ -56,8 +45,8 @@ export function ProfileSidebar({
     isRunning,
     reorderProfiles,
   } = useApp();
-
   const devMode = useDevMode();
+
   const [ctxMenu, setCtxMenu] = useState<CtxState | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -115,7 +104,7 @@ export function ProfileSidebar({
           icon: <VscCheck size={12} />,
           onClick: () => {
             setActiveProfile(ctxProfile.id);
-            onProfileClick?.();
+            navigate('/console');
           },
         },
         {
@@ -138,25 +127,25 @@ export function ProfileSidebar({
       ]
     : [];
 
+  const openPanel = (path: string) => {
+    navigate(activeSidePanel === path.slice(1) ? '/console' : path);
+  };
+
   return (
     <>
       <aside className="w-52 shrink-0 flex flex-col bg-base-950 border-r border-surface-border">
         <div className="px-2 pt-2 pb-1 shrink-0">
           <button
-            onClick={async () => createProfile()}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono
-              text-text-muted hover:text-accent hover:bg-surface-raised transition-colors border border-dashed border-surface-border hover:border-accent/40"
+            onClick={() => createProfile()}
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-text-muted hover:text-accent hover:bg-surface-raised transition-colors border border-dashed border-surface-border hover:border-accent/40"
           >
-            <VscAdd size={11} />
-            New Profile
+            <VscAdd size={11} /> New Profile
           </button>
           <button
             onClick={() => setTemplateOpen(true)}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono
-              text-text-muted hover:text-text-primary hover:bg-surface-raised/50 transition-colors"
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-text-muted hover:text-text-primary hover:bg-surface-raised/50 transition-colors"
           >
-            <VscLayout size={11} />
-            From Template
+            <VscLayout size={11} /> From Template
           </button>
         </div>
 
@@ -164,14 +153,13 @@ export function ProfileSidebar({
           axis="y"
           values={state.profiles}
           onReorder={reorderProfiles}
-          className="flex-1 overflow-y-auto py-1 space-y-0.5 px-2"
+          className="flex-1 overflow-y-auto py-1 space-y-0.5 px-2 min-h-0"
         >
           {state.profiles.length === 0 && (
             <p className="px-2 py-4 text-xs text-text-muted font-mono text-center">
               No profiles yet.
             </p>
           )}
-
           {state.profiles.map((profile) => (
             <Reorder.Item
               key={profile.id}
@@ -187,7 +175,7 @@ export function ProfileSidebar({
                 isDragging={draggingId === profile.id}
                 onClick={() => {
                   setActiveProfile(profile.id);
-                  onProfileClick?.();
+                  navigate('/console');
                 }}
                 onContextMenu={(e) => handleContextMenu(e, profile)}
               />
@@ -195,30 +183,30 @@ export function ProfileSidebar({
           ))}
         </Reorder.Group>
 
-        <div className="px-2 pt-1 pb-2 border-t border-surface-border space-y-0.5">
+        <div className="px-2 pt-1 pb-2 border-t border-surface-border space-y-0.5 shrink-0">
           <FooterButton
             label="Utilities"
             active={activeSidePanel === 'utilities'}
-            onClick={onOpenUtilities}
+            onClick={() => openPanel('/utilities')}
             icon={<VscTools size={13} />}
           />
           <FooterButton
             label="FAQ"
             active={activeSidePanel === 'faq'}
-            onClick={onOpenFaq}
+            onClick={() => openPanel('/faq')}
             icon={<VscQuestion size={13} />}
           />
           <FooterButton
             label="Settings"
             active={activeSidePanel === 'settings'}
-            onClick={onOpenSettings}
+            onClick={() => openPanel('/settings')}
             icon={<VscSettings size={13} />}
           />
           {devMode && (
             <FooterButton
               label="Developer"
               active={activeSidePanel === 'developer'}
-              onClick={onOpenDeveloper}
+              onClick={() => openPanel('/developer')}
               icon={<VscCode size={13} />}
               accent
             />
@@ -262,6 +250,8 @@ export function ProfileSidebar({
   );
 }
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
 function ProfileItem({
   profile,
   active,
@@ -279,7 +269,6 @@ function ProfileItem({
 }) {
   const color = profile.color || PROFILE_COLORS[0];
   const jarName = profile.jarPath?.split(/[/\\]/).pop() ?? '';
-
   return (
     <button
       onClick={onClick}
@@ -302,7 +291,6 @@ function ProfileItem({
           />
         )}
       </span>
-
       <span className="flex-1 min-w-0 flex flex-col">
         <span
           className={[
@@ -316,7 +304,6 @@ function ProfileItem({
           <span className="text-[10px] text-text-muted font-mono truncate">{jarName}</span>
         )}
       </span>
-
       {running && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />}
     </button>
   );
@@ -349,8 +336,7 @@ function FooterButton({
             : 'text-text-muted hover:text-text-primary hover:bg-surface-raised/50',
       ].join(' ')}
     >
-      {icon}
-      {label}
+      {icon} {label}
     </button>
   );
 }

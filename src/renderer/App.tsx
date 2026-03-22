@@ -1,10 +1,11 @@
+import React from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { TitleBar } from './components/common/TitleBar';
-import { DevModeGate } from './components/developer/DevModeGate';
-import { MainLayout } from './components/MainLayout';
 import { AppProvider } from './store/AppStore';
+import { TitleBar } from './components/layout/TitleBar';
+import { MainLayout } from './components/MainLayout';
+import { DevModeGate } from './components/developer/DevModeGate';
 
-function JavaRunnerFallback() {
+function Fallback() {
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-gray-100 p-8 text-center select-none">
       <div className="mb-6 text-6xl">!</div>
@@ -24,22 +25,21 @@ function JavaRunnerFallback() {
 }
 
 export default function App() {
-  if (!window.api) return <JavaRunnerFallback />;
+  if (!window.api) return <Fallback />;
 
   return (
     <AppProvider>
-      <HashRouter
-        future={{
-          v7_startTransition: false,
-          v7_relativeSplatPath: false,
-        }}
-      >
-        <div className="flex flex-col h-screen bg-base-900 text-text-primary min-h-0 select-none">
+      <HashRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+        {/* Root: full viewport, flex column, no overflow */}
+        <div className="flex flex-col h-screen bg-base-900 text-text-primary select-none overflow-hidden">
           <TitleBar />
-          <Routes>
-            <Route path="/" element={<Navigate to="/console" replace />} />
-            <Route path="/*" element={<MainLayout />} />
-          </Routes>
+          {/* Content area: takes remaining height, no overflow — children manage their own */}
+          <div className="flex flex-1 min-h-0 overflow-hidden">
+            <Routes>
+              <Route path="/" element={<Navigate to="/console" replace />} />
+              <Route path="/*" element={<MainLayout />} />
+            </Routes>
+          </div>
         </div>
         <DevModeGate />
       </HashRouter>

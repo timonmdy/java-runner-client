@@ -72,7 +72,6 @@ export function TemplateModal({ open, onClose }: Props) {
         e.template.tags.some((t) => t.toLowerCase().includes(filter.toLowerCase()))
     ) ?? [];
 
-  // Group by category
   const grouped = filtered.reduce<Record<string, TemplateEntry[]>>((acc, e) => {
     const cat = e.template.category || 'Other';
     if (!acc[cat]) acc[cat] = [];
@@ -83,7 +82,6 @@ export function TemplateModal({ open, onClose }: Props) {
   return (
     <Modal open={open} onClose={onClose} title="Profile Templates" width="lg">
       <div className="flex flex-col" style={{ height: 480 }}>
-        {/* Search + reload */}
         <div className="flex items-center gap-2 px-4 py-3 border-b border-surface-border shrink-0">
           <input
             type="text"
@@ -101,9 +99,7 @@ export function TemplateModal({ open, onClose }: Props) {
           </button>
         </div>
 
-        {/* Body */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* List */}
+        <div className="flex flex-1 overflow-hidden min-h-0">
           <div className="w-52 shrink-0 border-r border-surface-border overflow-y-auto py-2">
             {loading && !templates && (
               <p className="text-xs text-text-muted font-mono px-4 py-6 text-center">Loading...</p>
@@ -152,8 +148,7 @@ export function TemplateModal({ open, onClose }: Props) {
             ))}
           </div>
 
-          {/* Detail */}
-          <div className="flex-1 overflow-y-auto px-5 py-4">
+          <div className="flex-1 overflow-y-auto px-5 py-4 min-h-0">
             {!selected ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-text-muted">
                 <VscPackage size={28} />
@@ -182,43 +177,38 @@ export function TemplateModal({ open, onClose }: Props) {
                     ))}
                   </div>
                 </div>
-
-                <Divider />
-
-                <Section title="JVM Args">
+                <div className="border-t border-surface-border" />
+                <TplSection title="JVM Args">
                   {selected.template.defaults.jvmArgs.length === 0 ? (
-                    <Empty />
+                    <TplEmpty />
                   ) : (
                     selected.template.defaults.jvmArgs.map((a, i) => (
-                      <Pill key={i} value={a.value} enabled={a.enabled} />
+                      <TplPill key={i} value={a.value} enabled={a.enabled} />
                     ))
                   )}
-                </Section>
-
-                <Section title="System Properties">
+                </TplSection>
+                <TplSection title="System Properties">
                   {selected.template.defaults.systemProperties.length === 0 ? (
-                    <Empty />
+                    <TplEmpty />
                   ) : (
                     selected.template.defaults.systemProperties.map((p, i) => (
-                      <Pill
+                      <TplPill
                         key={i}
                         value={`-D${p.key}${p.value ? `=${p.value}` : ''}`}
                         enabled={p.enabled}
                       />
                     ))
                   )}
-                </Section>
-
-                <Section title="Program Args">
+                </TplSection>
+                <TplSection title="Program Args">
                   {selected.template.defaults.programArgs.length === 0 ? (
-                    <Empty />
+                    <TplEmpty />
                   ) : (
                     selected.template.defaults.programArgs.map((a, i) => (
-                      <Pill key={i} value={a.value} enabled={a.enabled} />
+                      <TplPill key={i} value={a.value} enabled={a.enabled} />
                     ))
                   )}
-                </Section>
-
+                </TplSection>
                 <div className="flex items-center gap-1.5 text-xs text-text-muted font-mono">
                   <LuShield size={11} />
                   Template version {selected.template.templateVersion} · Requires app{' '}
@@ -229,14 +219,12 @@ export function TemplateModal({ open, onClose }: Props) {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-surface-border shrink-0">
           <Button variant="ghost" size="sm" onClick={onClose}>
             Cancel
           </Button>
           <Button variant="primary" size="sm" disabled={!selected} onClick={handleCreate}>
-            <VscAdd size={11} />
-            Create Profile
+            <VscAdd size={11} /> Create Profile
           </Button>
         </div>
       </div>
@@ -244,7 +232,7 @@ export function TemplateModal({ open, onClose }: Props) {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function TplSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1.5">
       <p className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</p>
@@ -253,7 +241,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Pill({ value, enabled }: { value: string; enabled: boolean }) {
+function TplPill({ value, enabled }: { value: string; enabled: boolean }) {
   return (
     <span
       className={[
@@ -268,9 +256,6 @@ function Pill({ value, enabled }: { value: string; enabled: boolean }) {
   );
 }
 
-function Divider() {
-  return <div className="border-t border-surface-border" />;
-}
-function Empty() {
+function TplEmpty() {
   return <span className="text-xs text-text-muted font-mono italic">none</span>;
 }

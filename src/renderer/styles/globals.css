@@ -1,11 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
+
 body {
   font-family:
     'Inter',
@@ -17,6 +19,7 @@ body {
   overflow: hidden;
   user-select: none;
 }
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -31,9 +34,11 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #3a3d4a;
 }
+
 .select-text {
   user-select: text;
 }
+
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -47,6 +52,7 @@ body {
 .animate-fade-in {
   animation: fade-in 0.15s ease-out;
 }
+
 @keyframes pulse-dot {
   0%,
   100% {

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../../store/AppStore';
 import { Button } from '../common/Button';
 import { Toggle } from '../common/Toggle';
-import { VersionChecker } from './version/VersionChecker';
+import { VersionChecker } from './VersionChecker';
 import { REST_API_CONFIG } from '../../../main/shared/config/API.config';
 import { version } from '../../../../package.json';
 import { AppSettings, JRCEnvironment } from '../../../main/shared/types/App.types';
@@ -19,42 +19,23 @@ export function SettingsTab() {
 
   useEffect(() => {
     if (!state.settings) return;
-
     setDraft((prev) => {
       if (!prev) return state.settings;
-
-      // keep user changes, but refresh from store
-      return {
-        ...state.settings,
-        ...prev,
-        devModeEnabled: prev.devModeEnabled, // external wins
-      };
+      return { ...state.settings, ...prev, devModeEnabled: prev.devModeEnabled };
     });
   }, [state.settings]);
 
   useEffect(() => {
     const listener = async (e: JRCEnvironment) => {
       setSaved(false);
-
       setDraft((prev) => {
-        if (!prev) return prev;
-        if (prev.devModeEnabled === e.devMode) return prev;
-
-        return {
-          ...prev,
-          devModeEnabled: e.devMode,
-        };
+        if (!prev || prev.devModeEnabled === e.devMode) return prev;
+        return { ...prev, devModeEnabled: e.devMode };
       });
-
-      // 🔥 sync to store so isDirty stays correct
       if (state.settings && state.settings.devModeEnabled !== e.devMode) {
-        await saveSettings({
-          ...state.settings,
-          devModeEnabled: e.devMode,
-        });
+        await saveSettings({ ...state.settings, devModeEnabled: e.devMode });
       }
     };
-
     window.env.onChange(listener);
   }, [state.settings, saveSettings]);
 
@@ -73,7 +54,7 @@ export function SettingsTab() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       {(isDirty || saved) && (
         <div className="flex items-center gap-3 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0 animate-fade-in">
           <span className="text-xs text-text-secondary flex-1">
@@ -84,7 +65,8 @@ export function SettingsTab() {
           </Button>
         </div>
       )}
-      <div className="flex-1 overflow-y-auto">
+
+      <div className="flex-1 overflow-y-auto min-h-0">
         <div className="px-5 py-5 max-w-2xl space-y-8">
           <Section title="Startup">
             <Row
@@ -114,7 +96,9 @@ export function SettingsTab() {
               <Toggle checked={draft.minimizeToTray} onChange={(v) => set({ minimizeToTray: v })} />
             </Row>
           </Section>
+
           <Divider />
+
           <Section title="Console">
             <Row label="Font size" hint="Console output font size in pixels">
               <div className="flex items-center gap-2.5">
@@ -174,7 +158,7 @@ export function SettingsTab() {
           <Section title="Developer Options">
             <Row
               label="Toggle Developer Mode (Right-Shift + 7)"
-              hint="Enables the Developer tab and DevTools. Warning: may expose sensitive information and powerful features. Use with caution."
+              hint="Enables the Developer tab and DevTools. Use with caution."
             >
               <Toggle checked={draft.devModeEnabled} onChange={(v) => set({ devModeEnabled: v })} />
             </Row>
@@ -211,6 +195,7 @@ export function SettingsTab() {
           </Section>
 
           <Divider />
+
           <Section title="About">
             <VersionChecker currentVersion={version} />
             <Row label="Stack">

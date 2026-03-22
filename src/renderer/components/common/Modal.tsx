@@ -44,7 +44,6 @@ export function Modal({ open, title, onClose, width = 'md', children }: Props) {
           WIDTHS[width],
         ].join(' ')}
       >
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-surface-border shrink-0">
           <h2 className="text-sm font-semibold text-text-primary">{title}</h2>
           <button
@@ -54,9 +53,7 @@ export function Modal({ open, title, onClose, width = 'md', children }: Props) {
             <VscClose size={15} />
           </button>
         </div>
-
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto">{children}</div>
+        <div className="flex-1 overflow-y-auto min-h-0">{children}</div>
       </div>
     </div>
   );

@@ -1,9 +1,12 @@
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { VscCheck, VscCopy, VscPlay, VscEdit, VscCode } from 'react-icons/vsc';
-import { routeConfig, RouteDefinition } from '../../../main/shared/config/API.config';
+import {
+  routeConfig,
+  RouteDefinition,
+  REST_API_CONFIG,
+} from '../../../main/shared/config/API.config';
 import { useApp } from '../../store/AppStore';
 import { Button } from '../common/Button';
-import { REST_API_CONFIG } from '../../../main/shared/config/API.config';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
 
 const METHOD_COLORS: Record<string, string> = {
@@ -13,33 +16,24 @@ const METHOD_COLORS: Record<string, string> = {
   DELETE: 'text-red-400 border-red-400/30 bg-red-400/10',
 };
 
-// ─── JSON Syntax Highlighter ────────────────────────────────────────────────
+// ─── JSON syntax highlighter ─────────────────────────────────────────────────
 
-type Token =
-  | { type: 'key'; value: string }
-  | { type: 'string'; value: string }
-  | { type: 'number'; value: string }
-  | { type: 'boolean'; value: string }
-  | { type: 'null'; value: string }
-  | { type: 'punct'; value: string }
-  | { type: 'plain'; value: string };
+type Token = {
+  type: 'key' | 'string' | 'number' | 'boolean' | 'null' | 'punct' | 'plain';
+  value: string;
+};
 
 function tokenizeJson(text: string): Token[] {
   const tokens: Token[] = [];
   let i = 0;
-
   while (i < text.length) {
     const ws = text.slice(i).match(/^[\s,:\[\]{}]+/);
     if (ws) {
-      const chunk = ws[0];
-      for (const ch of chunk) {
-        if ('{}[],:'.includes(ch)) tokens.push({ type: 'punct', value: ch });
-        else tokens.push({ type: 'plain', value: ch });
-      }
-      i += chunk.length;
+      for (const ch of ws[0])
+        tokens.push({ type: '{}[],:'.includes(ch) ? 'punct' : 'plain', value: ch });
+      i += ws[0].length;
       continue;
     }
-
     if (text[i] === '"') {
       let j = i + 1;
       while (j < text.length) {
@@ -53,31 +47,28 @@ function tokenizeJson(text: string): Token[] {
         }
         j++;
       }
-      const raw = text.slice(i, j);
-      const afterStr = text.slice(j).match(/^\s*:/);
-      tokens.push({ type: afterStr ? 'key' : 'string', value: raw });
+      tokens.push({
+        type: text.slice(j).match(/^\s*:/) ? 'key' : 'string',
+        value: text.slice(i, j),
+      });
       i = j;
       continue;
     }
-
     const num = text.slice(i).match(/^-?\d+(\.\d+)?([eE][+-]?\d+)?/);
     if (num) {
       tokens.push({ type: 'number', value: num[0] });
       i += num[0].length;
       continue;
     }
-
-    const keyword = text.slice(i).match(/^(true|false|null)/);
-    if (keyword) {
-      tokens.push({ type: keyword[0] === 'null' ? 'null' : 'boolean', value: keyword[0] });
-      i += keyword[0].length;
+    const kw = text.slice(i).match(/^(true|false|null)/);
+    if (kw) {
+      tokens.push({ type: kw[0] === 'null' ? 'null' : 'boolean', value: kw[0] });
+      i += kw[0].length;
       continue;
     }
-
     tokens.push({ type: 'plain', value: text[i] });
     i++;
   }
-
   return tokens;
 }
 
@@ -97,16 +88,13 @@ function JsonHighlight({ text }: { text: string }) {
     JSON.parse(text);
     isJson = true;
   } catch {
-    /* not JSON */
+    /* not json */
   }
-
   if (!isJson) return <span className="text-text-secondary">{text}</span>;
-
-  const tokens = tokenizeJson(text);
   return (
     <>
-      {tokens.map((tok, idx) => (
-        <span key={idx} className={TOKEN_CLASS[tok.type]}>
+      {tokenizeJson(text).map((tok, i) => (
+        <span key={i} className={TOKEN_CLASS[tok.type]}>
           {tok.value}
         </span>
       ))}
@@ -118,66 +106,35 @@ function JsonHighlight({ text }: { text: string }) {
 
 export function DevApiExplorer() {
   const { state } = useApp();
-
   const [selected, setSelected] = useState<RouteDefinition | null>(null);
   const [pathParams, setPathParams] = useState<Record<string, string>>({});
   const [body, setBody] = useState('');
   const [response, setResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
   const [urlCopied, setUrlCopied] = useState(false);
   const [responseCopied, setResponseCopied] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
-  const [ctxMenu, setCtxMenu] = useState<{
-    x: number;
-    y: number;
-    items: ContextMenuItem[];
-  } | null>(null);
+  const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(
+    null
+  );
 
   const port = state.settings?.restApiPort ?? 4444;
   const restEnabled = state.settings?.restApiEnabled ?? false;
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
-
-  const handleContextMenu = useCallback(
-    (e: React.MouseEvent, extraItems: ContextMenuItem[] = []) => {
-      const selection = window.getSelection()?.toString() ?? '';
-
-      const items: ContextMenuItem[] = [
-        {
-          label: 'Copy',
-          icon: <VscCopy size={12} />,
-          disabled: !selection,
-          onClick: () => navigator.clipboard.writeText(selection),
-        },
-        ...extraItems,
-      ];
-
-      e.preventDefault();
-      setCtxMenu({ x: e.clientX, y: e.clientY, items });
-    },
-    []
-  );
 
   const handleSelect = (route: RouteDefinition) => {
     setSelected(route);
     setResponse(null);
     setIsEditing(false);
     setBody(route.bodyTemplate ?? '');
-
     const params: Record<string, string> = {};
-    const matches = route.path.matchAll(/:([a-zA-Z]+)/g);
-    for (const m of matches) params[m[1]] = '';
+    for (const m of route.path.matchAll(/:([a-zA-Z]+)/g)) params[m[1]] = '';
     setPathParams(params);
   };
 
   const buildUrl = () => {
     if (!selected) return '';
     let path = selected.path;
-    for (const [k, v] of Object.entries(pathParams)) {
-      path = path.replace(`:${k}`, v || `:${k}`);
-    }
+    for (const [k, v] of Object.entries(pathParams)) path = path.replace(`:${k}`, v || `:${k}`);
     return `http://${REST_API_CONFIG.host}:${port}${path}`;
   };
 
@@ -186,19 +143,14 @@ export function DevApiExplorer() {
     setLoading(true);
     setResponse(null);
     setIsEditing(false);
-
     try {
-      const url = buildUrl();
       const opts: RequestInit = { method: selected.method };
-
       if (body.trim() && ['POST', 'PUT', 'PATCH'].includes(selected.method)) {
         opts.headers = { 'Content-Type': 'application/json' };
         opts.body = body;
       }
-
-      const res = await fetch(url, opts);
+      const res = await fetch(buildUrl(), opts);
       const text = await res.text();
-
       try {
         setResponse(JSON.stringify(JSON.parse(text), null, 2));
       } catch {
@@ -207,7 +159,6 @@ export function DevApiExplorer() {
     } catch (err) {
       setResponse(`Error: ${err instanceof Error ? err.message : String(err)}`);
     }
-
     setLoading(false);
   };
 
@@ -216,7 +167,6 @@ export function DevApiExplorer() {
     setUrlCopied(true);
     setTimeout(() => setUrlCopied(false), 1500);
   };
-
   const copyResponse = useCallback(() => {
     if (!response) return;
     navigator.clipboard.writeText(response);
@@ -224,9 +174,23 @@ export function DevApiExplorer() {
     setTimeout(() => setResponseCopied(false), 1500);
   }, [response]);
 
-  const toggleEdit = () => setIsEditing((v) => !v);
-
-  // ── Response context menu items (extend here in the future) ──────────────
+  const handleContextMenu = useCallback((e: React.MouseEvent, extra: ContextMenuItem[] = []) => {
+    const sel = window.getSelection()?.toString() ?? '';
+    e.preventDefault();
+    setCtxMenu({
+      x: e.clientX,
+      y: e.clientY,
+      items: [
+        {
+          label: 'Copy',
+          icon: <VscCopy size={12} />,
+          disabled: !sel,
+          onClick: () => navigator.clipboard.writeText(sel),
+        },
+        ...extra,
+      ],
+    });
+  }, []);
 
   const responseCtxItems = useCallback(
     (): ContextMenuItem[] =>
@@ -243,18 +207,15 @@ export function DevApiExplorer() {
     [response]
   );
 
-  // ─────────────────────────────────────────────────────────────────────────
-
   return (
-    <div className="flex h-full overflow-hidden">
-      {/* ── Route list ──────────────────────────────────────────────────── */}
+    <div className="flex h-full min-h-0 overflow-hidden">
+      {/* Route list */}
       <div className="w-56 shrink-0 border-r border-surface-border overflow-y-auto py-2 bg-base-900/50">
         {!restEnabled && (
           <div className="mx-2 mb-2 px-2 py-1.5 rounded-md bg-yellow-400/10 border border-yellow-400/20 text-xs font-mono text-yellow-400">
             REST API disabled in Settings
           </div>
         )}
-
         {Object.entries(routeConfig).map(([key, route]) => (
           <button
             key={key}
@@ -282,15 +243,14 @@ export function DevApiExplorer() {
         ))}
       </div>
 
-      {/* ── Request + response ──────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      {/* Request + response */}
+      <div className="flex-1 flex flex-col overflow-hidden min-h-0">
         {!selected ? (
           <div className="flex items-center justify-center h-full text-xs font-mono text-text-muted">
             Select a route to inspect and call it
           </div>
         ) : (
           <>
-            {/* URL bar */}
             <div className="px-4 py-3 border-b border-surface-border bg-base-900 shrink-0 space-y-2">
               <div className="flex items-center gap-2">
                 <span
@@ -301,14 +261,12 @@ export function DevApiExplorer() {
                 >
                   {selected.method}
                 </span>
-
                 <code
                   onContextMenu={(e) => handleContextMenu(e)}
                   className="flex-1 text-xs font-mono text-text-primary bg-base-950 border border-surface-border rounded px-2.5 py-1.5 truncate select-text"
                 >
                   {buildUrl()}
                 </code>
-
                 <button
                   onClick={copyUrl}
                   className="text-text-muted hover:text-accent transition-colors p-1"
@@ -320,14 +278,11 @@ export function DevApiExplorer() {
                     <VscCopy size={13} />
                   )}
                 </button>
-
                 <Button variant="primary" size="sm" onClick={handleCall} loading={loading}>
                   <VscPlay size={11} />
                   Send
                 </Button>
               </div>
-
-              {/* Path params */}
               {Object.keys(pathParams).length > 0 && (
                 <div className="flex items-center gap-2 flex-wrap">
                   {Object.entries(pathParams).map(([k, v]) => (
@@ -345,10 +300,9 @@ export function DevApiExplorer() {
               )}
             </div>
 
-            <div className="flex flex-1 overflow-hidden">
-              {/* Body */}
+            <div className="flex flex-1 overflow-hidden min-h-0">
               {['POST', 'PUT', 'PATCH'].includes(selected.method) && (
-                <div className="w-1/2 border-r border-surface-border flex flex-col">
+                <div className="w-1/2 border-r border-surface-border flex flex-col min-h-0">
                   <div className="px-3 py-1.5 border-b border-surface-border bg-base-900/50 shrink-0">
                     <span className="text-xs font-mono text-text-muted">Request Body (JSON)</span>
                   </div>
@@ -356,22 +310,17 @@ export function DevApiExplorer() {
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
                     spellCheck={false}
-                    className="flex-1 bg-base-950 text-xs font-mono text-text-primary px-3 py-2 resize-none focus:outline-none select-text"
+                    className="flex-1 bg-base-950 text-xs font-mono text-text-primary px-3 py-2 resize-none focus:outline-none select-text min-h-0"
                   />
                 </div>
               )}
-
-              {/* ── Response panel ────────────────────────────────────── */}
-              <div className="flex-1 flex flex-col overflow-hidden">
-                {/* Titlebar */}
+              <div className="flex-1 flex flex-col overflow-hidden min-h-0">
                 <div className="px-3 py-1.5 border-b border-surface-border bg-base-900/50 shrink-0 flex items-center justify-between">
                   <span className="text-xs font-mono text-text-muted">Response</span>
-
                   {response && (
                     <div className="flex items-center gap-0.5">
                       <button
-                        onClick={toggleEdit}
-                        title={isEditing ? 'Show highlighted' : 'Edit raw'}
+                        onClick={() => setIsEditing((v) => !v)}
                         className={[
                           'p-1 rounded transition-colors',
                           isEditing ? 'text-accent' : 'text-text-muted hover:text-accent',
@@ -379,10 +328,8 @@ export function DevApiExplorer() {
                       >
                         {isEditing ? <VscCode size={13} /> : <VscEdit size={13} />}
                       </button>
-
                       <button
                         onClick={copyResponse}
-                        title="Copy response"
                         className="p-1 rounded text-text-muted hover:text-accent transition-colors"
                       >
                         {responseCopied ? (
@@ -394,26 +341,24 @@ export function DevApiExplorer() {
                     </div>
                   )}
                 </div>
-
-                {/* Highlighted view or editable textarea */}
                 {isEditing ? (
                   <textarea
                     value={response ?? ''}
                     onChange={(e) => setResponse(e.target.value)}
                     onContextMenu={(e) => handleContextMenu(e, responseCtxItems())}
                     spellCheck={false}
-                    className="flex-1 overflow-auto px-3 py-2 text-xs font-mono text-text-secondary bg-base-950 resize-none focus:outline-none select-text"
+                    className="flex-1 overflow-auto px-3 py-2 text-xs font-mono text-text-secondary bg-base-950 resize-none focus:outline-none select-text min-h-0"
                   />
                 ) : (
                   <pre
                     onContextMenu={(e) => handleContextMenu(e, responseCtxItems())}
-                    className="flex-1 overflow-auto px-3 py-2 text-xs font-mono bg-base-950 whitespace-pre-wrap select-text"
+                    className="flex-1 overflow-auto px-3 py-2 text-xs font-mono bg-base-950 whitespace-pre-wrap select-text min-h-0"
                   >
                     {response != null ? (
                       <JsonHighlight text={response} />
                     ) : (
                       <span className="text-text-muted">
-                        {loading ? 'Waiting…' : 'Press Send to call the API'}
+                        {loading ? 'Waiting...' : 'Press Send to call the API'}
                       </span>
                     )}
                   </pre>
@@ -424,7 +369,6 @@ export function DevApiExplorer() {
         )}
       </div>
 
-      {/* ── Context menu ────────────────────────────────────────────────── */}
       {ctxMenu && (
         <ContextMenu
           x={ctxMenu.x}
