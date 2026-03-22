@@ -6,36 +6,43 @@ import React, {
   useCallback,
   type ReactNode,
 } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { AppSettings } from '../../main/shared/types/App.types';
 import { ConsoleLine, ProcessState } from '../../main/shared/types/Process.types';
 import { Profile } from '../../main/shared/types/Profile.types';
-import { v4 as uuidv4 } from 'uuid';
 
-const SS_KEY = (id: string) => `jrc:console:${id}`;
+// ─── Session log helpers ──────────────────────────────────────────────────────
+
+const ssKey = (id: string) => `jrc:console:${id}`;
+
 function loadLogs(id: string, max: number): ConsoleLine[] {
   try {
-    const r = sessionStorage.getItem(SS_KEY(id));
+    const r = sessionStorage.getItem(ssKey(id));
     return r ? (JSON.parse(r) as ConsoleLine[]).slice(-max) : [];
   } catch {
     return [];
   }
 }
+
 function saveLogs(id: string, lines: ConsoleLine[]): void {
   try {
-    sessionStorage.setItem(SS_KEY(id), JSON.stringify(lines));
+    sessionStorage.setItem(ssKey(id), JSON.stringify(lines));
   } catch {
     /* quota */
   }
 }
+
 function clearLogs(id: string): void {
   try {
-    sessionStorage.removeItem(SS_KEY(id));
+    sessionStorage.removeItem(ssKey(id));
   } catch {
     /* ignore */
   }
 }
 
-interface AppState {
+// ─── State ────────────────────────────────────────────────────────────────────
+
+export interface AppState {
   profiles: Profile[];
   activeProfileId: string;
   processStates: ProcessState[];
@@ -52,6 +59,8 @@ const INITIAL_STATE: AppState = {
   consoleLogs: {},
   loading: true,
 };
+
+// ─── Actions ──────────────────────────────────────────────────────────────────
 
 type Action =
   | { type: 'INIT'; profiles: Profile[]; settings: AppSettings; states: ProcessState[] }
@@ -100,6 +109,8 @@ function reducer(state: AppState, action: Action): AppState {
   }
 }
 
+// ─── Context ──────────────────────────────────────────────────────────────────
+
 interface AppContextValue {
   state: AppState;
   activeProfile: Profile | undefined;
@@ -117,6 +128,17 @@ interface AppContextValue {
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
+
+export const PROFILE_COLORS = [
+  '#4ade80',
+  '#60a5fa',
+  '#f472b6',
+  '#fb923c',
+  '#a78bfa',
+  '#34d399',
+  '#fbbf24',
+  '#f87171',
+];
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
@@ -149,9 +171,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!window.api) return;
-    return window.api.onConsoleClear((profileId) => {
-      dispatch({ type: 'CLEAR_LOG', profileId });
-    });
+    return window.api.onConsoleClear((profileId) => dispatch({ type: 'CLEAR_LOG', profileId }));
   }, []);
 
   useEffect(() => {
@@ -210,21 +230,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const startProcess = useCallback((p: Profile) => window.api.startProcess(p), []);
   const stopProcess = useCallback((id: string) => window.api.stopProcess(id), []);
+
   const sendInput = useCallback(async (profileId: string, input: string) => {
     await window.api.sendInput(profileId, input);
   }, []);
+
   const clearConsole = useCallback(
     (profileId: string) => dispatch({ type: 'CLEAR_LOG', profileId }),
     []
   );
+
   const saveSettings = useCallback(async (s: AppSettings) => {
     await window.api.saveSettings(s);
     dispatch({ type: 'SET_SETTINGS', settings: s });
   }, []);
+
   const isRunning = useCallback(
     (profileId: string) => state.processStates.some((s) => s.profileId === profileId && s.running),
     [state.processStates]
   );
+
   const activeProfile = state.profiles.find((p) => p.id === state.activeProfileId);
 
   return (
@@ -255,14 +280,3 @@ export function useApp(): AppContextValue {
   if (!ctx) throw new Error('useApp must be used within AppProvider');
   return ctx;
 }
-
-export const PROFILE_COLORS = [
-  '#4ade80',
-  '#60a5fa',
-  '#f472b6',
-  '#fb923c',
-  '#a78bfa',
-  '#34d399',
-  '#fbbf24',
-  '#f87171',
-];

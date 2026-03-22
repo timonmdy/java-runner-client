@@ -9,24 +9,16 @@ export function DevModeGate() {
 
   useEffect(() => {
     const keysPressed = new Set<string>();
-
     const keydownHandler = (e: KeyboardEvent) => {
       keysPressed.add(e.code);
-
-      // right shift + 7
       if (keysPressed.has('ShiftRight') && keysPressed.has('Digit7')) {
         e.preventDefault();
         setDialogOpen(true);
       }
     };
-
-    const keyupHandler = (e: KeyboardEvent) => {
-      keysPressed.delete(e.code);
-    };
-
+    const keyupHandler = (e: KeyboardEvent) => keysPressed.delete(e.code);
     window.addEventListener('keydown', keydownHandler);
     window.addEventListener('keyup', keyupHandler);
-
     return () => {
       window.removeEventListener('keydown', keydownHandler);
       window.removeEventListener('keyup', keyupHandler);
@@ -34,8 +26,6 @@ export function DevModeGate() {
   }, []);
 
   if (!dialogOpen) return null;
-
-  const isOn = devEnabled;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 animate-fade-in">
@@ -47,17 +37,15 @@ export function DevModeGate() {
           <div>
             <h2 className="text-sm font-semibold text-text-primary">Developer Mode</h2>
             <p className="text-xs text-text-muted mt-0.5">
-              {isOn ? 'Currently enabled' : 'Currently disabled'}
+              {devEnabled ? 'Currently enabled' : 'Currently disabled'}
             </p>
           </div>
         </div>
-
         <p className="text-xs text-text-secondary leading-relaxed">
-          {isOn
+          {devEnabled
             ? 'Disable developer mode? This will hide the Developer panel and close DevTools.'
             : 'Enable developer mode? This will show the Developer panel and enable DevTools for this session.'}
         </p>
-
         <div className="flex justify-end gap-2 pt-1">
           <Button variant="ghost" size="sm" onClick={() => setDialogOpen(false)}>
             Cancel
@@ -66,11 +54,11 @@ export function DevModeGate() {
             variant="primary"
             size="sm"
             onClick={() => {
-              window.env.toggleDevMode(!isOn);
+              window.env.toggleDevMode(!devEnabled);
               setDialogOpen(false);
             }}
           >
-            {isOn ? 'Disable' : 'Enable'}
+            {devEnabled ? 'Disable' : 'Enable'}
           </Button>
         </div>
       </div>

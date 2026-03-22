@@ -18,7 +18,7 @@ function getSessionEntries(): SessionEntry[] {
     entries.push({
       key,
       sizeBytes: new Blob([raw]).size,
-      preview: raw.slice(0, 80) + (raw.length > 80 ? '…' : ''),
+      preview: raw.slice(0, 80) + (raw.length > 80 ? '...' : ''),
     });
   }
   return entries.sort((a, b) => b.sizeBytes - a.sizeBytes);
@@ -35,7 +35,6 @@ export function DevStorage() {
   const [confirmReset, setConfirmReset] = useState<'electron-store' | 'session' | null>(null);
 
   const refresh = () => setSessionEntries(getSessionEntries());
-
   useEffect(() => {
     refresh();
   }, []);
@@ -43,9 +42,8 @@ export function DevStorage() {
   const totalSessionBytes = sessionEntries.reduce((a, b) => a + b.sizeBytes, 0);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-      {/* Electron store */}
-      <Section title="Electron Store (Persistent)">
+    <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-5">
+      <StorageSection title="Electron Store (Persistent)">
         <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
           <StoreRow label="Profiles" value={String(state.profiles.length)} />
           <StoreRow label="Active profile ID" value={state.activeProfileId || '—'} mono />
@@ -66,10 +64,9 @@ export function DevStorage() {
           <VscTrash size={11} />
           Reset Electron Store
         </Button>
-      </Section>
+      </StorageSection>
 
-      {/* Session storage */}
-      <Section title={`Session Storage (${formatBytes(totalSessionBytes)})`}>
+      <StorageSection title={`Session Storage (${formatBytes(totalSessionBytes)})`}>
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs text-text-muted font-mono">{sessionEntries.length} keys</p>
           <button
@@ -116,7 +113,7 @@ export function DevStorage() {
           <VscTrash size={11} />
           Clear Session Storage
         </Button>
-      </Section>
+      </StorageSection>
 
       <Dialog
         open={confirmReset === 'electron-store'}
@@ -130,7 +127,6 @@ export function DevStorage() {
         }}
         onCancel={() => setConfirmReset(null)}
       />
-
       <Dialog
         open={confirmReset === 'session'}
         title="Clear Session Storage?"
@@ -148,7 +144,7 @@ export function DevStorage() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function StorageSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
       <p className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</p>

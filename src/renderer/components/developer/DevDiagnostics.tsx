@@ -3,6 +3,8 @@ import { VscCheck, VscCopy } from 'react-icons/vsc';
 import { useApp } from '../../store/AppStore';
 import { Button } from '../common/Button';
 
+declare const __APP_VERSION__: string;
+
 interface PerfSample {
   timestamp: number;
   memMB: number;
@@ -12,13 +14,11 @@ export function DevDiagnostics() {
   const { state } = useApp();
   const [perfSamples, setPerfSamples] = useState<PerfSample[]>([]);
   const [copied, setCopied] = useState(false);
-  const [ipcLog, setIpcLog] = useState<{ ts: number; msg: string }[]>([]);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const samplePerf = () => {
     if (window.performance && (performance as any).memory) {
-      const mem = (performance as any).memory;
-      const mb = Math.round(mem.usedJSHeapSize / 1024 / 1024);
+      const mb = Math.round((performance as any).memory.usedJSHeapSize / 1024 / 1024);
       setPerfSamples((prev) => [...prev.slice(-29), { timestamp: Date.now(), memMB: mb }]);
     }
   };
@@ -43,8 +43,7 @@ export function DevDiagnostics() {
       ),
       memorySnapshot: perfSamples[perfSamples.length - 1] ?? null,
     };
-    const text = JSON.stringify(report, null, 2);
-    navigator.clipboard.writeText(text);
+    navigator.clipboard.writeText(JSON.stringify(report, null, 2));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -53,22 +52,18 @@ export function DevDiagnostics() {
   const maxMem = Math.max(...perfSamples.map((s) => s.memMB), 1);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-      {/* Memory chart */}
-      <Section title="JS Heap Memory (renderer)">
+    <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-5">
+      <DiagSection title="JS Heap Memory (renderer)">
         <div className="rounded-lg border border-surface-border bg-base-950 px-3 py-2">
           <div className="flex items-end gap-px h-16 mb-1">
-            {perfSamples.map((s, i) => {
-              const pct = (s.memMB / maxMem) * 100;
-              return (
-                <div
-                  key={i}
-                  className="flex-1 bg-accent/40 rounded-t-sm transition-all duration-300"
-                  style={{ height: `${Math.max(4, pct)}%` }}
-                  title={`${s.memMB} MB`}
-                />
-              );
-            })}
+            {perfSamples.map((s, i) => (
+              <div
+                key={i}
+                className="flex-1 bg-accent/40 rounded-t-sm transition-all duration-300"
+                style={{ height: `${Math.max(4, (s.memMB / maxMem) * 100)}%` }}
+                title={`${s.memMB} MB`}
+              />
+            ))}
             {perfSamples.length === 0 && (
               <p className="text-xs font-mono text-text-muted self-center w-full text-center">
                 Collecting samples...
@@ -80,10 +75,9 @@ export function DevDiagnostics() {
             <span>max {maxMem} MB</span>
           </div>
         </div>
-      </Section>
+      </DiagSection>
 
-      {/* Renderer state summary */}
-      <Section title="Renderer State">
+      <DiagSection title="Renderer State">
         <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
           <DiagRow label="Active profile ID" value={state.activeProfileId || '—'} mono />
           <DiagRow label="Profiles loaded" value={String(state.profiles.length)} />
@@ -98,10 +92,9 @@ export function DevDiagnostics() {
           />
           <DiagRow label="Settings loaded" value={state.settings ? 'Yes' : 'No'} />
         </div>
-      </Section>
+      </DiagSection>
 
-      {/* Profile detail */}
-      <Section title="Profile Console Buffers">
+      <DiagSection title="Profile Console Buffers">
         {state.profiles.length === 0 ? (
           <p className="text-xs font-mono text-text-muted">No profiles</p>
         ) : (
@@ -126,10 +119,9 @@ export function DevDiagnostics() {
             })}
           </div>
         )}
-      </Section>
+      </DiagSection>
 
-      {/* Export */}
-      <Section title="Diagnostic Report">
+      <DiagSection title="Diagnostic Report">
         <p className="text-xs text-text-muted font-mono">
           Copy a JSON snapshot of the current app state to clipboard for bug reports.
         </p>
@@ -137,12 +129,12 @@ export function DevDiagnostics() {
           {copied ? <VscCheck size={11} className="text-accent" /> : <VscCopy size={11} />}
           {copied ? 'Copied!' : 'Copy Report to Clipboard'}
         </Button>
-      </Section>
+      </DiagSection>
     </div>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function DiagSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-2">
       <p className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</p>
@@ -166,5 +158,3 @@ function DiagRow({ label, value, mono }: { label: string; value: string; mono?: 
     </div>
   );
 }
-
-declare const __APP_VERSION__: string;

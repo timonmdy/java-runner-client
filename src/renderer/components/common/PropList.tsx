@@ -19,6 +19,7 @@ export function PropList({ items, onChange, onPendingChange }: Props) {
 
   const notify = (k: string, v: string) =>
     onPendingChange?.(k.trim().length > 0 || v.trim().length > 0);
+
   const setKey = (v: string) => {
     setDraftKey(v);
     notify(v, draftValue);
@@ -44,6 +45,12 @@ export function PropList({ items, onChange, onPendingChange }: Props) {
   const editValue = (i: number, value: string) =>
     onChange(items.map((it, idx) => (idx === i ? { ...it, value } : it)));
 
+  const inputCls = (disabled?: boolean) =>
+    [
+      'flex-1 bg-base-900 border border-surface-border rounded-md px-2.5 py-1.5 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 transition-colors',
+      disabled ? 'opacity-40' : '',
+    ].join(' ');
+
   return (
     <div className="space-y-1.5">
       {items.length > 0 && (
@@ -61,7 +68,6 @@ export function PropList({ items, onChange, onPendingChange }: Props) {
         <div key={i} className="flex items-center gap-2 group">
           <button
             onClick={() => toggle(i)}
-            title={item.enabled ? 'Disable' : 'Enable'}
             className={[
               'w-4 h-4 rounded border transition-colors shrink-0',
               item.enabled
@@ -87,10 +93,7 @@ export function PropList({ items, onChange, onPendingChange }: Props) {
             value={item.key}
             onChange={(e) => editKey(i, e.target.value)}
             placeholder="property.key"
-            className={[
-              'flex-1 bg-base-900 border border-surface-border rounded-md px-2.5 py-1.5 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 transition-colors',
-              !item.enabled ? 'opacity-40' : '',
-            ].join(' ')}
+            className={inputCls(!item.enabled)}
           />
           <span className="text-text-muted font-mono text-xs">=</span>
           <input
@@ -98,10 +101,7 @@ export function PropList({ items, onChange, onPendingChange }: Props) {
             value={item.value}
             onChange={(e) => editValue(i, e.target.value)}
             placeholder="value (optional)"
-            className={[
-              'flex-1 bg-base-900 border border-surface-border rounded-md px-2.5 py-1.5 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 transition-colors',
-              !item.enabled ? 'opacity-40' : '',
-            ].join(' ')}
+            className={inputCls(!item.enabled)}
           />
           <button
             onClick={() => remove(i)}

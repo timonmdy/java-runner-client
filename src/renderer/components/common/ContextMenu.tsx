@@ -21,21 +21,13 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (!ref.current) return;
-
-      // only close if clicking OUTSIDE
-      if (!ref.current.contains(e.target as Node)) {
-        onClose();
-      }
+      if (!ref.current?.contains(e.target as Node)) onClose();
     };
-
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-
     document.addEventListener('click', handleClick);
     document.addEventListener('keydown', handleKey);
-
     return () => {
       document.removeEventListener('click', handleClick);
       document.removeEventListener('keydown', handleKey);
@@ -43,10 +35,8 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
   }, [onClose]);
 
   const style: React.CSSProperties = { position: 'fixed', zIndex: 1000 };
-
   if (x + 180 > window.innerWidth) style.right = window.innerWidth - x;
   else style.left = x;
-
   if (y + items.length * 32 > window.innerHeight) style.bottom = window.innerHeight - y;
   else style.top = y;
 
@@ -57,12 +47,11 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
           if (item.type === 'separator') {
             return <div key={i} className="my-1 border-t border-surface-border/60" />;
           }
-
           return (
             <button
               key={i}
               disabled={item.disabled}
-              onMouseDown={(e) => e.preventDefault()} // prevent focus jump
+              onMouseDown={(e) => e.preventDefault()}
               onClick={(e) => {
                 if (item.disabled || !item.onClick) return;
                 item.onClick(e);

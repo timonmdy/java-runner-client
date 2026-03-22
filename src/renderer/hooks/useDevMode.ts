@@ -7,12 +7,10 @@ export function useDevMode(): boolean {
   useEffect(() => {
     let mounted = true;
 
-    // fetch initial value
     window.env.get().then((value) => {
       if (mounted) setEnabled(value.devMode);
     });
 
-    // subscribe to changes
     const handler = (value: JRCEnvironment) => {
       if (mounted) setEnabled(value.devMode);
     };

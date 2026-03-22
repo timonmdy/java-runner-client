@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
+import { EmptyState } from '../common/EmptyState';
 import { VscListUnordered } from 'react-icons/vsc';
 import { ProcessLogEntry } from '../../../main/shared/types/Process.types';
 
@@ -15,13 +16,13 @@ export function ActivityLogPanel() {
     setLoading(false);
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     load();
   }, [load]);
 
   return (
     <>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full min-h-0">
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900/50 shrink-0">
           <p className="text-xs text-text-muted flex-1">
             All processes started by JRC this session
@@ -39,9 +40,9 @@ export function ActivityLogPanel() {
           </Button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-4 py-3">
+        <div className="flex-1 overflow-y-auto min-h-0 px-4 py-3">
           {loading && !entries && (
-            <p className="text-xs text-text-muted py-8 text-center font-mono">Loading…</p>
+            <p className="text-xs text-text-muted py-8 text-center font-mono">Loading...</p>
           )}
           {entries && entries.length === 0 && (
             <EmptyState
@@ -79,7 +80,6 @@ export function ActivityLogPanel() {
 function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
   const duration = entry.stoppedAt ? formatDuration(entry.stoppedAt - entry.startedAt) : null;
   const jarName = entry.jarPath.split(/[/\\]/).pop() ?? entry.jarPath;
-
   return (
     <div className="rounded-lg border border-surface-border bg-base-900 px-3 py-2.5">
       <div className="flex items-start justify-between gap-3">
@@ -117,15 +117,6 @@ function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
-  return (
-    <div className="flex flex-col items-center gap-3 py-12 text-text-muted">
-      {icon}
-      <p className="text-xs font-mono text-center max-w-xs leading-relaxed">{text}</p>
     </div>
   );
 }

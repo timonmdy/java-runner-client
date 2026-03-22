@@ -1,16 +1,16 @@
 import React, { useState, useCallback } from 'react';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
+import { EmptyState } from '../common/EmptyState';
 import { VscCheck } from 'react-icons/vsc';
 import { LuScanLine } from 'react-icons/lu';
 import { JavaProcessInfo } from '../../../main/shared/types/Process.types';
 
+type Filter = 'java' | 'all';
 interface KillIntent {
   proc: JavaProcessInfo;
   nonJava: boolean;
 }
-
-type Filter = 'java' | 'all';
 
 export function ScannerPanel() {
   const [results, setResults] = useState<JavaProcessInfo[] | null>(null);
@@ -29,11 +29,9 @@ export function ScannerPanel() {
     setKilledPids(new Set());
     setSearch('');
     setExpandedPid(null);
-
     const found = await window.api.scanAllProcesses();
     setResults(found);
     setScanning(false);
-
     const javaCount = found.filter((p) => p.isJava).length;
     setStatusMsg({ text: `Found ${found.length} processes — ${javaCount} java`, ok: true });
   }, []);
@@ -53,7 +51,7 @@ export function ScannerPanel() {
   const handleKillAll = async () => {
     const res = await window.api.killAllJava();
     setStatusMsg({
-      text: `Killed ${res.killed} java process${res.killed === 1 ? '' : 'es'}`,
+      text: `Killed ${res.killed} java process${res.killed === 1 ? '' : 'es'} (protected skipped)`,
       ok: true,
     });
     setKillAllConfirm(false);
@@ -72,25 +70,38 @@ export function ScannerPanel() {
         )
     : null;
 
-  const javaVisible = visible?.some((r) => r.isJava) ?? false;
+  const killableJavaVisible = visible?.some((r) => r.isJava && !r.protected) ?? false;
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full min-h-0">
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900/50 shrink-0 flex-wrap gap-y-2">
-        <FilterToggle value={filter} onChange={setFilter} />
-
+        <div className="flex items-center gap-1 bg-base-950 rounded-lg p-0.5 border border-surface-border">
+          {(['java', 'all'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={[
+                'px-2.5 py-1 text-xs rounded-md transition-colors font-mono',
+                filter === f
+                  ? 'bg-surface-raised text-text-primary'
+                  : 'text-text-muted hover:text-text-primary',
+              ].join(' ')}
+            >
+              {f === 'java' ? 'Java only' : 'All'}
+            </button>
+          ))}
+        </div>
         {results !== null && (
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search PID or command…"
+            placeholder="Search PID or command..."
             className="h-7 bg-base-950 border border-surface-border rounded-md px-2.5 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 w-48"
           />
         )}
-
         <div className="flex-1" />
-        {javaVisible && (
+        {killableJavaVisible && (
           <Button variant="danger" size="sm" onClick={() => setKillAllConfirm(true)}>
             Kill All Java
           </Button>
@@ -113,7 +124,7 @@ export function ScannerPanel() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto px-4 py-3">
+      <div className="flex-1 overflow-y-auto min-h-0 px-4 py-3">
         {results === null && !scanning && (
           <EmptyState
             icon={<LuScanLine size={28} />}
@@ -122,7 +133,7 @@ export function ScannerPanel() {
         )}
         {scanning && (
           <p className="text-xs text-text-muted font-mono py-8 text-center animate-pulse">
-            Scanning all processes…
+            Scanning all processes...
           </p>
         )}
         {visible !== null && visible.length === 0 && !scanning && (
@@ -148,13 +159,23 @@ export function ScannerPanel() {
 
       <Dialog
         open={!!killIntent}
-        title={killIntent?.nonJava ? 'Kill non-Java process?' : `Kill PID ${killIntent?.proc.pid}?`}
-        message={
-          killIntent?.nonJava
-            ? `Warning: this process does not appear to be Java.\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}\n\nForcefully terminating unknown processes can cause data loss.`
-            : `Forcefully terminate PID ${killIntent?.proc.pid}?\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}`
+        title={
+          killIntent?.proc.protected
+            ? 'Kill protected process?'
+            : killIntent?.nonJava
+              ? 'Kill non-Java process?'
+              : `Kill PID ${killIntent?.proc.pid}?`
         }
-        confirmLabel={killIntent?.nonJava ? 'Kill anyway' : 'Kill Process'}
+        message={
+          killIntent?.proc.protected
+            ? `This process is marked as protected.\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}\n\nAre you sure?`
+            : killIntent?.nonJava
+              ? `Warning: not a Java process.\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}\n\nForcefully terminating unknown processes can cause data loss.`
+              : `Forcefully terminate PID ${killIntent?.proc.pid}?\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}`
+        }
+        confirmLabel={
+          killIntent?.proc.protected || killIntent?.nonJava ? 'Kill anyway' : 'Kill Process'
+        }
         danger
         onConfirm={handleKill}
         onCancel={() => setKillIntent(null)}
@@ -163,33 +184,12 @@ export function ScannerPanel() {
       <Dialog
         open={killAllConfirm}
         title="Kill all Java processes?"
-        message="This forcefully terminates every java process on this machine — including those not managed by JRC. Running servers will lose unsaved data."
+        message="This forcefully terminates every non-protected java process. Protected processes will be skipped. Running servers will lose unsaved data."
         confirmLabel="Kill All"
         danger
         onConfirm={handleKillAll}
         onCancel={() => setKillAllConfirm(false)}
       />
-    </div>
-  );
-}
-
-function FilterToggle({ value, onChange }: { value: Filter; onChange: (f: Filter) => void }) {
-  return (
-    <div className="flex items-center gap-1 bg-base-950 rounded-lg p-0.5 border border-surface-border">
-      {(['java', 'all'] as const).map((f) => (
-        <button
-          key={f}
-          onClick={() => onChange(f)}
-          className={[
-            'px-2.5 py-1 text-xs rounded-md transition-colors font-mono',
-            value === f
-              ? 'bg-surface-raised text-text-primary'
-              : 'text-text-muted hover:text-text-primary',
-          ].join(' ')}
-        >
-          {f === 'java' ? 'Java only' : 'All'}
-        </button>
-      ))}
     </div>
   );
 }
@@ -209,54 +209,57 @@ function ProcessRow({
     <div
       className={[
         'rounded-lg border transition-colors overflow-hidden',
-        proc.isJava ? 'border-accent/20 bg-accent/5' : 'border-surface-border bg-base-900/40',
+        proc.protected
+          ? 'border-surface-border/50 bg-base-900/20 opacity-50'
+          : proc.isJava
+            ? 'border-accent/20 bg-accent/5'
+            : 'border-surface-border bg-base-900/40',
       ].join(' ')}
     >
       <div className="flex items-center gap-2 px-3 py-2">
-        <ExpandChevron expanded={expanded} onClick={onToggle} />
-
+        <button
+          onClick={onToggle}
+          className="text-text-muted hover:text-text-primary transition-colors shrink-0"
+        >
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 10 10"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            className={['transition-transform', expanded ? 'rotate-90' : ''].join(' ')}
+          >
+            <polyline points="3,2 7,5 3,8" />
+          </svg>
+        </button>
         <div className="flex items-center gap-1 shrink-0">
-          {proc.managed && (
-            <span className="px-1.5 py-0.5 rounded text-xs font-mono bg-accent/15 text-accent border border-accent/30">
-              Managed
-            </span>
-          )}
-          {proc.isJava ? (
-            <span className="px-1.5 py-0.5 rounded text-xs font-mono bg-blue-500/10 text-blue-400 border border-blue-500/20">
-              Java
-            </span>
-          ) : (
-            <span className="px-1.5 py-0.5 rounded text-xs font-mono bg-surface-raised text-text-muted border border-surface-border">
-              Non-Java
-            </span>
-          )}
+          {proc.protected && <Badge label="Protected" />}
+          {proc.managed && <Badge label="Managed" accent />}
+          {proc.isJava ? <Badge label="Java" blue /> : <Badge label="Non-Java" />}
         </div>
-
         <code
           className={[
             'text-xs font-mono shrink-0 w-14',
-            proc.isJava ? 'text-accent' : 'text-text-muted',
+            proc.isJava && !proc.protected ? 'text-accent' : 'text-text-muted',
           ].join(' ')}
         >
           {proc.pid}
         </code>
-
         <span
           className="text-xs font-mono text-text-secondary truncate flex-1 min-w-0"
           title={proc.command}
         >
           {proc.jarName ?? proc.name ?? proc.command.slice(0, 60)}
         </span>
-
         {proc.memoryMB !== undefined && (
           <span className="text-xs font-mono text-text-muted shrink-0">{proc.memoryMB} MB</span>
         )}
-
         <Button variant="danger" size="sm" onClick={onKill}>
           Kill
         </Button>
       </div>
-
       {expanded && (
         <div className="px-10 pb-3 pt-1 border-t border-surface-border/50 space-y-1.5 animate-fade-in">
           <DetailRow label="Full command" value={proc.command} mono wrap />
@@ -267,31 +270,30 @@ function ProcessRow({
           {proc.threads !== undefined && <DetailRow label="Threads" value={String(proc.threads)} />}
           {proc.startTime && <DetailRow label="Started" value={proc.startTime} />}
           <DetailRow label="Managed by JRC" value={proc.managed ? 'Yes' : 'No'} />
+          <DetailRow
+            label="Protected"
+            value={proc.protected ? 'Yes — excluded from Kill All Java' : 'No'}
+          />
         </div>
       )}
     </div>
   );
 }
 
-function ExpandChevron({ expanded, onClick }: { expanded: boolean; onClick: () => void }) {
+function Badge({ label, accent, blue }: { label: string; accent?: boolean; blue?: boolean }) {
   return (
-    <button
-      onClick={onClick}
-      className="text-text-muted hover:text-text-primary transition-colors shrink-0"
+    <span
+      className={[
+        'px-1.5 py-0.5 rounded text-xs font-mono border',
+        accent
+          ? 'bg-accent/15 text-accent border-accent/30'
+          : blue
+            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+            : 'bg-surface-raised text-text-muted border-surface-border',
+      ].join(' ')}
     >
-      <svg
-        width="10"
-        height="10"
-        viewBox="0 0 10 10"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        className={['transition-transform', expanded ? 'rotate-90' : ''].join(' ')}
-      >
-        <polyline points="3,2 7,5 3,8" />
-      </svg>
-    </button>
+      {label}
+    </span>
   );
 }
 
@@ -318,15 +320,6 @@ function DetailRow({
       >
         {value}
       </span>
-    </div>
-  );
-}
-
-function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
-  return (
-    <div className="flex flex-col items-center gap-3 py-12 text-text-muted">
-      {icon}
-      <p className="text-xs font-mono text-center max-w-xs leading-relaxed">{text}</p>
     </div>
   );
 }
