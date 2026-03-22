@@ -1,9 +1,9 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './styles/globals.css'
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import App from './App';
+import './styles/globals.css';
 
-import { name, version } from '../../package.json'
+import { name, version } from '../../package.json';
 
 async function printVersionInfo() {
   console.log(
@@ -12,7 +12,7 @@ async function printVersionInfo() {
     'color: magenta;', // name
     'color: lightgreen;', // version
     'color: gray;' // reset
-  )
+  );
 }
 
 printVersionInfo().then(() => {
@@ -20,5 +20,5 @@ printVersionInfo().then(() => {
     <React.StrictMode>
       <App />
     </React.StrictMode>
-  )
-})
+  );
+});

@@ -1,10 +1,10 @@
-import React from 'react'
-import { useApp } from '../../store/AppStore'
-import { VscChromeMinimize, VscChromeClose } from 'react-icons/vsc'
+import React from 'react';
+import { useApp } from '../../store/AppStore';
+import { VscChromeMinimize, VscChromeClose } from 'react-icons/vsc';
 
 export function TitleBar() {
-  const { state } = useApp()
-  const runningCount = state.processStates.filter((s) => s.running).length
+  const { state } = useApp();
+  const runningCount = state.processStates.filter((s) => s.running).length;
 
   return (
     <div
@@ -73,5 +73,5 @@ export function TitleBar() {
         </button>
       </div>
     </div>
-  )
+  );
 }

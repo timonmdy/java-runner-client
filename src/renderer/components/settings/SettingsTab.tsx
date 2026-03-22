@@ -1,38 +1,76 @@
-import React, { useState, useEffect, useMemo } from 'react'
-import { useApp } from '../../store/AppStore'
-import { Button } from '../common/Button'
-import { Toggle } from '../common/Toggle'
-import { VersionChecker } from './version/VersionChecker'
-import type { AppSettings } from '../../types'
-import { REST_API_CONFIG } from '../../../main/shared/config/RestApi.config'
-import { version } from '../../../../package.json'
+import React, { useState, useEffect, useMemo } from 'react';
+import { useApp } from '../../store/AppStore';
+import { Button } from '../common/Button';
+import { Toggle } from '../common/Toggle';
+import { VersionChecker } from './version/VersionChecker';
+import { REST_API_CONFIG } from '../../../main/shared/config/API.config';
+import { version } from '../../../../package.json';
+import { AppSettings, JRCEnvironment } from '../../../main/shared/types/App.types';
 
 export function SettingsTab() {
-  const { state, saveSettings } = useApp()
-  const [draft, setDraft] = useState<AppSettings | null>(null)
-  const [saved, setSaved] = useState(false)
-
-  useEffect(() => {
-    if (state.settings) setDraft({ ...state.settings })
-  }, [state.settings])
-
-  const isDirty = useMemo(() => {
-    if (!draft || !state.settings) return false
-    return JSON.stringify(draft) !== JSON.stringify(state.settings)
-  }, [draft, state.settings])
-
-  if (!draft) return null
+  const { state, saveSettings } = useApp();
+  const [draft, setDraft] = useState<AppSettings | null>(null);
+  const [saved, setSaved] = useState(false);
 
   const set = (patch: Partial<AppSettings>) => {
-    setSaved(false)
-    setDraft((prev) => (prev ? { ...prev, ...patch } : prev))
-  }
+    setSaved(false);
+    setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
+  };
+
+  useEffect(() => {
+    if (!state.settings) return;
+
+    setDraft((prev) => {
+      if (!prev) return state.settings;
+
+      // keep user changes, but refresh from store
+      return {
+        ...state.settings,
+        ...prev,
+        devModeEnabled: prev.devModeEnabled, // external wins
+      };
+    });
+  }, [state.settings]);
+
+  useEffect(() => {
+    const listener = async (e: JRCEnvironment) => {
+      setSaved(false);
+
+      setDraft((prev) => {
+        if (!prev) return prev;
+        if (prev.devModeEnabled === e.devMode) return prev;
+
+        return {
+          ...prev,
+          devModeEnabled: e.devMode,
+        };
+      });
+
+      // 🔥 sync to store so isDirty stays correct
+      if (state.settings && state.settings.devModeEnabled !== e.devMode) {
+        await saveSettings({
+          ...state.settings,
+          devModeEnabled: e.devMode,
+        });
+      }
+    };
+
+    window.env.onChange(listener);
+  }, [state.settings, saveSettings]);
+
+  const isDirty = useMemo(() => {
+    if (!draft || !state.settings) return false;
+    return JSON.stringify(draft) !== JSON.stringify(state.settings);
+  }, [draft, state.settings]);
+
+  if (!draft) return null;
 
   const handleSave = async () => {
-    await saveSettings(draft)
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
-  }
+    await saveSettings(draft);
+    window.env.reload();
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -133,7 +171,13 @@ export function SettingsTab() {
 
           <Divider />
 
-          <Section title="REST API">
+          <Section title="Developer Options">
+            <Row
+              label="Toggle Developer Mode (Right-Shift + 7)"
+              hint="Enables the Developer tab and DevTools. Warning: may expose sensitive information and powerful features. Use with caution."
+            >
+              <Toggle checked={draft.devModeEnabled} onChange={(v) => set({ devModeEnabled: v })} />
+            </Row>
             <Row
               label="Enable REST API"
               hint={`Exposes a local HTTP API for automation (default port ${REST_API_CONFIG.defaultPort})`}
@@ -155,7 +199,9 @@ export function SettingsTab() {
               <div className="rounded-lg border border-surface-border bg-base-900/50 px-3 py-2.5 pl-5">
                 <p className="text-xs text-text-muted font-mono">
                   Listening on{' '}
-                  <span className="text-accent">http://127.0.0.1:{draft.restApiPort}/api</span>
+                  <span className="text-accent">
+                    http://{REST_API_CONFIG.host}:{draft.restApiPort}/api
+                  </span>
                 </p>
                 <p className="text-xs text-text-muted font-mono mt-0.5">
                   Endpoints: /status · /profiles · /processes · /settings
@@ -181,7 +227,7 @@ export function SettingsTab() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -190,7 +236,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
       <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest mb-4">{title}</h3>
       <div className="space-y-0 divide-y divide-surface-border/50">{children}</div>
     </div>
-  )
+  );
 }
 
 function Row({
@@ -199,10 +245,10 @@ function Row({
   sub,
   children,
 }: {
-  label: string
-  hint?: string
-  sub?: boolean
-  children?: React.ReactNode
+  label: string;
+  hint?: string;
+  sub?: boolean;
+  children?: React.ReactNode;
 }) {
   return (
     <div
@@ -214,11 +260,11 @@ function Row({
       </div>
       {children && <div className="shrink-0">{children}</div>}
     </div>
-  )
+  );
 }
 
 function Divider() {
-  return <div className="border-t border-surface-border" />
+  return <div className="border-t border-surface-border" />;
 }
 
 function NumInput({
@@ -228,11 +274,11 @@ function NumInput({
   step,
   onChange,
 }: {
-  value: number
-  min: number
-  max: number
-  step: number
-  onChange: (v: number) => void
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  onChange: (v: number) => void;
 }) {
   return (
     <input
@@ -244,5 +290,5 @@ function NumInput({
       onChange={(e) => onChange(Number(e.target.value))}
       className="w-24 bg-transparent border border-surface-border rounded-md px-2.5 py-1.5 text-sm font-mono text-text-primary text-right focus:outline-none focus:border-accent/40 transition-colors"
     />
-  )
+  );
 }

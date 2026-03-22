@@ -1,11 +1,11 @@
 export interface FaqItem {
-  q: string
-  a: string
+  q: string;
+  a: string;
 }
 export interface FaqTopic {
-  id: string
-  label: string
-  items: FaqItem[]
+  id: string;
+  label: string;
+  items: FaqItem[];
 }
 
 export const FAQ_TOPICS: FaqTopic[] = [
@@ -97,4 +97,4 @@ export const FAQ_TOPICS: FaqTopic[] = [
       },
     ],
   },
-]
+];

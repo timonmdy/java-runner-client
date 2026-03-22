@@ -1,17 +1,17 @@
-import { app } from 'electron'
-import type { RouteMap } from '../shared/IPCController'
-import { getSettings } from '../Store'
+import { app } from 'electron';
+import type { RouteMap } from '../IPCController';
+import { getSettings } from '../Store';
 
 // Injected from main.ts — avoids a circular import on mainWindow/forceQuit
-let getWindow: () => Electron.BrowserWindow | null = () => null
-let setForceQuit: () => void = () => {}
+let getWindow: () => Electron.BrowserWindow | null = () => null;
+let setForceQuit: () => void = () => {};
 
 export function initWindowIPC(
   windowGetter: () => Electron.BrowserWindow | null,
   forceQuitSetter: () => void
 ) {
-  getWindow = windowGetter
-  setForceQuit = forceQuitSetter
+  getWindow = windowGetter;
+  setForceQuit = forceQuitSetter;
 }
 
 export const WindowIPC = {
@@ -25,11 +25,11 @@ export const WindowIPC = {
     type: 'send',
     channel: 'window:close',
     handler: () => {
-      if (getSettings().minimizeToTray) getWindow()?.hide()
+      if (getSettings().minimizeToTray) getWindow()?.hide();
       else {
-        setForceQuit()
-        app.quit()
+        setForceQuit();
+        app.quit();
       }
     },
   },
-} satisfies RouteMap
+} satisfies RouteMap;

@@ -1,24 +1,19 @@
-/**
- * UtilitiesTab — Activity Log + Process Scanner.
- * Process Scanner: expandable rows, protected processes grayed out,
- * excluded from "Kill All Java".
- */
-import React, { useState, useCallback } from 'react'
-import { Dialog } from '../common/Dialog'
-import { Button } from '../common/Button'
-import { VscCheck, VscListUnordered } from 'react-icons/vsc'
-import { LuScanLine } from 'react-icons/lu'
-import type { ProcessLogEntry, JavaProcessInfo } from '../../types'
+import React, { useState, useCallback } from 'react';
+import { Dialog } from '../common/Dialog';
+import { Button } from '../common/Button';
+import { VscCheck, VscListUnordered } from 'react-icons/vsc';
+import { LuScanLine } from 'react-icons/lu';
+import { JavaProcessInfo, ProcessLogEntry } from '../../../main/shared/types/Process.types';
 
-type Panel = 'log' | 'scanner'
+type Panel = 'log' | 'scanner';
 
 const PANELS = [
   { id: 'log', label: 'Activity Log', Icon: VscListUnordered },
   { id: 'scanner', label: 'Process Scanner', Icon: LuScanLine },
-]
+];
 
 export function UtilitiesTab() {
-  const [panel, setPanel] = useState<Panel>('log')
+  const [panel, setPanel] = useState<Panel>('log');
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-0 px-4 border-b border-surface-border bg-base-900 shrink-0">
@@ -43,25 +38,25 @@ export function UtilitiesTab() {
         {panel === 'scanner' && <ScannerPanel />}
       </div>
     </div>
-  )
+  );
 }
 
 // ── Activity Log ──────────────────────────────────────────────────────────────
 
 function ActivityLogPanel() {
-  const [entries, setEntries] = useState<ProcessLogEntry[] | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [confirmClear, setConfirmClear] = useState(false)
+  const [entries, setEntries] = useState<ProcessLogEntry[] | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
 
   const load = useCallback(async () => {
-    setLoading(true)
-    setEntries(await window.api.getProcessLog())
-    setLoading(false)
-  }, [])
+    setLoading(true);
+    setEntries(await window.api.getProcessLog());
+    setLoading(false);
+  }, []);
 
   React.useEffect(() => {
-    load()
-  }, [load])
+    load();
+  }, [load]);
 
   return (
     <>
@@ -108,19 +103,19 @@ function ActivityLogPanel() {
         confirmLabel="Clear"
         danger
         onConfirm={async () => {
-          await window.api.clearProcessLog()
-          setEntries([])
-          setConfirmClear(false)
+          await window.api.clearProcessLog();
+          setEntries([]);
+          setConfirmClear(false);
         }}
         onCancel={() => setConfirmClear(false)}
       />
     </>
-  )
+  );
 }
 
 function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
-  const duration = entry.stoppedAt ? formatDuration(entry.stoppedAt - entry.startedAt) : null
-  const jarName = entry.jarPath.split(/[/\\]/).pop() ?? entry.jarPath
+  const duration = entry.stoppedAt ? formatDuration(entry.stoppedAt - entry.startedAt) : null;
+  const jarName = entry.jarPath.split(/[/\\]/).pop() ?? entry.jarPath;
   return (
     <div className="rounded-lg border border-surface-border bg-base-900 px-3 py-2.5">
       <div className="flex items-start justify-between gap-3">
@@ -159,63 +154,63 @@ function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 // ── Process Scanner ───────────────────────────────────────────────────────────
 
 interface KillIntent {
-  proc: JavaProcessInfo
-  nonJava: boolean
+  proc: JavaProcessInfo;
+  nonJava: boolean;
 }
 
 function ScannerPanel() {
-  const [results, setResults] = useState<JavaProcessInfo[] | null>(null)
-  const [scanning, setScanning] = useState(false)
-  const [killIntent, setKillIntent] = useState<KillIntent | null>(null)
-  const [killAllConfirm, setKillAllConfirm] = useState(false)
-  const [statusMsg, setStatusMsg] = useState<{ text: string; ok: boolean } | null>(null)
-  const [killedPids, setKilledPids] = useState<Set<number>>(new Set())
-  const [filter, setFilter] = useState<'all' | 'java'>('java')
-  const [search, setSearch] = useState('')
-  const [expandedPid, setExpandedPid] = useState<number | null>(null)
+  const [results, setResults] = useState<JavaProcessInfo[] | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [killIntent, setKillIntent] = useState<KillIntent | null>(null);
+  const [killAllConfirm, setKillAllConfirm] = useState(false);
+  const [statusMsg, setStatusMsg] = useState<{ text: string; ok: boolean } | null>(null);
+  const [killedPids, setKilledPids] = useState<Set<number>>(new Set());
+  const [filter, setFilter] = useState<'all' | 'java'>('java');
+  const [search, setSearch] = useState('');
+  const [expandedPid, setExpandedPid] = useState<number | null>(null);
 
   const scan = useCallback(async () => {
-    setScanning(true)
-    setStatusMsg(null)
-    setKilledPids(new Set())
-    setSearch('')
-    setExpandedPid(null)
-    const found = await window.api.scanAllProcesses()
-    setResults(found)
-    setScanning(false)
-    const javaCount = found.filter((p) => p.isJava).length
-    setStatusMsg({ text: `Found ${found.length} processes - ${javaCount} java`, ok: true })
-  }, [])
+    setScanning(true);
+    setStatusMsg(null);
+    setKilledPids(new Set());
+    setSearch('');
+    setExpandedPid(null);
+    const found = await window.api.scanAllProcesses();
+    setResults(found);
+    setScanning(false);
+    const javaCount = found.filter((p) => p.isJava).length;
+    setStatusMsg({ text: `Found ${found.length} processes - ${javaCount} java`, ok: true });
+  }, []);
 
   const handleKill = async () => {
-    if (!killIntent) return
-    const res = await window.api.killPid(killIntent.proc.pid)
+    if (!killIntent) return;
+    const res = await window.api.killPid(killIntent.proc.pid);
     if (res.ok) {
-      setKilledPids((prev) => new Set([...prev, killIntent.proc.pid]))
-      setStatusMsg({ text: `Killed PID ${killIntent.proc.pid}`, ok: true })
+      setKilledPids((prev) => new Set([...prev, killIntent.proc.pid]));
+      setStatusMsg({ text: `Killed PID ${killIntent.proc.pid}`, ok: true });
     } else {
-      setStatusMsg({ text: `Failed to kill PID ${killIntent.proc.pid}: ${res.error}`, ok: false })
+      setStatusMsg({ text: `Failed to kill PID ${killIntent.proc.pid}: ${res.error}`, ok: false });
     }
-    setKillIntent(null)
-  }
+    setKillIntent(null);
+  };
 
   const handleKillAll = async () => {
-    const res = await window.api.killAllJava()
+    const res = await window.api.killAllJava();
     setStatusMsg({
       text: `Killed ${res.killed} java process${res.killed === 1 ? '' : 'es'} (protected processes skipped)`,
       ok: true,
-    })
-    setKillAllConfirm(false)
-    setTimeout(scan, 800)
-  }
+    });
+    setKillAllConfirm(false);
+    setTimeout(scan, 800);
+  };
 
-  const searchLower = search.trim().toLowerCase()
+  const searchLower = search.trim().toLowerCase();
   const visible = results
     ? (filter === 'java' ? results.filter((r) => r.isJava) : results)
         .filter((r) => !killedPids.has(r.pid))
@@ -225,10 +220,10 @@ function ScannerPanel() {
             r.command.toLowerCase().includes(searchLower) ||
             String(r.pid).includes(searchLower)
         )
-    : null
+    : null;
 
   // Only killable (non-protected) java processes shown in the "Kill All" button
-  const killableJavaVisible = visible?.some((r) => r.isJava && !r.protected) ?? false
+  const killableJavaVisible = visible?.some((r) => r.isJava && !r.protected) ?? false;
 
   return (
     <div className="flex flex-col h-full">
@@ -354,7 +349,7 @@ function ScannerPanel() {
         onCancel={() => setKillAllConfirm(false)}
       />
     </div>
-  )
+  );
 }
 
 function ProcessRow({
@@ -363,12 +358,12 @@ function ProcessRow({
   onToggle,
   onKill,
 }: {
-  proc: JavaProcessInfo
-  expanded: boolean
-  onToggle: () => void
-  onKill: () => void
+  proc: JavaProcessInfo;
+  expanded: boolean;
+  onToggle: () => void;
+  onKill: () => void;
 }) {
-  const isProtected = proc.protected
+  const isProtected = proc.protected;
 
   return (
     <div
@@ -464,7 +459,7 @@ function ProcessRow({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function DetailRow({
@@ -473,10 +468,10 @@ function DetailRow({
   mono,
   wrap,
 }: {
-  label: string
-  value: string
-  mono?: boolean
-  wrap?: boolean
+  label: string;
+  value: string;
+  mono?: boolean;
+  wrap?: boolean;
 }) {
   return (
     <div className="flex gap-3 text-xs">
@@ -491,7 +486,7 @@ function DetailRow({
         {value}
       </span>
     </div>
-  )
+  );
 }
 
 function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
@@ -500,7 +495,7 @@ function EmptyState({ icon, text }: { icon: React.ReactNode; text: string }) {
       {icon}
       <p className="text-xs font-mono text-center max-w-xs leading-relaxed">{text}</p>
     </div>
-  )
+  );
 }
 
 function formatTime(ts: number): string {
@@ -508,12 +503,12 @@ function formatTime(ts: number): string {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-  })
+  });
 }
 
 function formatDuration(ms: number): string {
-  const s = Math.floor(ms / 1000)
-  if (s < 60) return `${s}s`
-  if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`
-  return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return `${s}s`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ${s % 60}s`;
+  return `${Math.floor(s / 3600)}h ${Math.floor((s % 3600) / 60)}m`;
 }

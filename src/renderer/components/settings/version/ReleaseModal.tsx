@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { Modal } from '../../common/Modal'
-import { Button } from '../../common/Button'
-import type { GitHubRelease, GitHubAsset } from '../../../types'
+import React, { useState, useEffect, useCallback } from 'react';
+import { Modal } from '../../common/Modal';
+import { Button } from '../../common/Button';
 import {
   VscPackage,
   VscGithub,
@@ -12,28 +11,29 @@ import {
   VscDebugPause,
   VscDebugContinue,
   VscClose,
-} from 'react-icons/vsc'
-import { LuDownload, LuExternalLink, LuCheck, LuRotateCcw } from 'react-icons/lu'
+} from 'react-icons/vsc';
+import { LuDownload, LuExternalLink, LuCheck, LuRotateCcw } from 'react-icons/lu';
+import { GitHubAsset, GitHubRelease } from '../../../../main/shared/types/GitHub.types';
 
 interface Props {
-  release: GitHubRelease
-  open: boolean
-  onClose: () => void
+  release: GitHubRelease;
+  open: boolean;
+  onClose: () => void;
 }
 
 interface DownloadProgress {
-  filename: string
-  bytesWritten: number
-  totalBytes: number
-  percent: number
-  status: 'downloading' | 'paused' | 'done' | 'error' | 'cancelled'
-  error?: string
+  filename: string;
+  bytesWritten: number;
+  totalBytes: number;
+  percent: number;
+  status: 'downloading' | 'paused' | 'done' | 'error' | 'cancelled';
+  error?: string;
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
 function formatDate(iso: string): string {
@@ -41,24 +41,24 @@ function formatDate(iso: string): string {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  })
+  });
 }
 
 function getPlatformAsset(assets?: GitHubAsset[]): GitHubAsset | undefined {
-  if (!assets || !Array.isArray(assets)) return undefined
+  if (!assets || !Array.isArray(assets)) return undefined;
   return (
     assets.find((a) => a.name.endsWith('.exe') || a.name.endsWith('.msi')) ??
     assets.find((a) => a.name.endsWith('.dmg') || a.name.endsWith('.pkg')) ??
     assets.find((a) => a.name.endsWith('.AppImage') || a.name.endsWith('.deb'))
-  )
+  );
 }
 
 function DownloadProgressBar({ progress }: { progress: DownloadProgress }) {
-  const { status, percent, bytesWritten, totalBytes, error } = progress
-  const isDone = status === 'done'
-  const isError = status === 'error'
-  const isPaused = status === 'paused'
-  const isCancelled = status === 'cancelled'
+  const { status, percent, bytesWritten, totalBytes, error } = progress;
+  const isDone = status === 'done';
+  const isError = status === 'error';
+  const isPaused = status === 'paused';
+  const isCancelled = status === 'cancelled';
 
   const barColor =
     isError || isCancelled
@@ -67,7 +67,7 @@ function DownloadProgressBar({ progress }: { progress: DownloadProgress }) {
         ? 'bg-green-500'
         : isPaused
           ? 'bg-yellow-400'
-          : 'bg-accent'
+          : 'bg-accent';
 
   const label = isError
     ? (error ?? 'Error')
@@ -77,9 +77,9 @@ function DownloadProgressBar({ progress }: { progress: DownloadProgress }) {
         ? 'Complete'
         : isPaused
           ? 'Paused'
-          : `${formatBytes(bytesWritten)}${totalBytes > 0 ? ` / ${formatBytes(totalBytes)}` : ''}`
+          : `${formatBytes(bytesWritten)}${totalBytes > 0 ? ` / ${formatBytes(totalBytes)}` : ''}`;
 
-  const percentLabel = isDone ? '100%' : `${percent}%`
+  const percentLabel = isDone ? '100%' : `${percent}%`;
 
   const percentColor = isDone
     ? 'text-green-400'
@@ -87,7 +87,7 @@ function DownloadProgressBar({ progress }: { progress: DownloadProgress }) {
       ? 'text-red-400'
       : isPaused
         ? 'text-yellow-400'
-        : 'text-accent'
+        : 'text-accent';
 
   return (
     <div className="mt-2 space-y-1">
@@ -104,63 +104,63 @@ function DownloadProgressBar({ progress }: { progress: DownloadProgress }) {
         <span className={percentColor}>{percentLabel}</span>
       </div>
     </div>
-  )
+  );
 }
 
 export function ReleaseModal({ release, open, onClose }: Props) {
-  const [downloads, setDownloads] = useState<Map<string, DownloadProgress>>(new Map())
+  const [downloads, setDownloads] = useState<Map<string, DownloadProgress>>(new Map());
 
   const updateDownload = useCallback((payload: DownloadProgress) => {
-    setDownloads((prev) => new Map(prev).set(payload.filename, payload))
-  }, [])
+    setDownloads((prev) => new Map(prev).set(payload.filename, payload));
+  }, []);
 
   const resetDownload = useCallback((filename: string) => {
     setDownloads((prev) => {
-      const next = new Map(prev)
-      next.delete(filename)
-      return next
-    })
-  }, [])
+      const next = new Map(prev);
+      next.delete(filename);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     const unsub = window.api.onDownloadProgress((progress: DownloadProgress) => {
-      updateDownload(progress)
-    })
-    return () => unsub()
-  }, [updateDownload])
+      updateDownload(progress);
+    });
+    return () => unsub();
+  }, [updateDownload]);
 
-  const platformAsset = getPlatformAsset(release.assets)
+  const platformAsset = getPlatformAsset(release.assets);
 
   const handleDownload = async (asset: GitHubAsset) => {
     // Don't touch download state here — main process drives everything via events
-    await window.api.downloadAsset(asset.browser_download_url, asset.name)
-  }
+    await window.api.downloadAsset(asset.browser_download_url, asset.name);
+  };
 
   const handlePause = async (filename: string) => {
-    const dl = downloads.get(filename)
-    if (!dl) return
+    const dl = downloads.get(filename);
+    if (!dl) return;
     if (dl.status === 'paused') {
-      await window.api.resumeDownload(filename)
+      await window.api.resumeDownload(filename);
     } else {
-      await window.api.pauseDownload(filename)
+      await window.api.pauseDownload(filename);
     }
     // State update comes from the progress event sent by main
-  }
+  };
 
   const handleCancel = async (filename: string) => {
-    await window.api.cancelDownload(filename)
+    await window.api.cancelDownload(filename);
     // State update comes from the progress event sent by main
-  }
+  };
 
-  const getDl = (name: string) => downloads.get(name)
+  const getDl = (name: string) => downloads.get(name);
   const isActive = (name: string) => {
-    const s = downloads.get(name)?.status
-    return s === 'downloading' || s === 'paused'
-  }
+    const s = downloads.get(name)?.status;
+    return s === 'downloading' || s === 'paused';
+  };
 
   const renderControls = (asset: GitHubAsset, variant: 'primary' | 'ghost') => {
-    const dl = getDl(asset.name)
-    const active = isActive(asset.name)
+    const dl = getDl(asset.name);
+    const active = isActive(asset.name);
 
     return (
       <div className="flex items-center gap-1.5 shrink-0">
@@ -210,8 +210,8 @@ export function ReleaseModal({ release, open, onClose }: Props) {
             variant={variant}
             size="sm"
             onClick={() => {
-              resetDownload(asset.name)
-              handleDownload(asset)
+              resetDownload(asset.name);
+              handleDownload(asset);
             }}
           >
             Retry
@@ -225,10 +225,10 @@ export function ReleaseModal({ release, open, onClose }: Props) {
           </Button>
         )}
       </div>
-    )
-  }
+    );
+  };
 
-  const bodyLines = (release.body ?? '').split('\n')
+  const bodyLines = (release.body ?? '').split('\n');
 
   return (
     <Modal open={open} onClose={onClose} title="Release Details" width="xl">
@@ -310,34 +310,34 @@ export function ReleaseModal({ release, open, onClose }: Props) {
             </p>
             <div className="rounded-lg border border-surface-border bg-base-950 px-4 py-3 space-y-1 max-h-48 overflow-y-auto">
               {bodyLines.map((line, i) => {
-                const h2 = line.startsWith('## ')
-                const h3 = line.startsWith('### ')
-                const li = line.startsWith('- ') || line.startsWith('* ')
-                if (!line.trim()) return <div key={i} className="h-1" />
+                const h2 = line.startsWith('## ');
+                const h3 = line.startsWith('### ');
+                const li = line.startsWith('- ') || line.startsWith('* ');
+                if (!line.trim()) return <div key={i} className="h-1" />;
                 if (h2)
                   return (
                     <p key={i} className="text-xs font-semibold text-text-primary pt-1">
                       {line.slice(3)}
                     </p>
-                  )
+                  );
                 if (h3)
                   return (
                     <p key={i} className="text-xs font-medium text-text-secondary">
                       {line.slice(4)}
                     </p>
-                  )
+                  );
                 if (li)
                   return (
                     <div key={i} className="flex gap-2 text-xs text-text-secondary font-mono">
                       <span className="text-accent shrink-0">·</span>
                       <span>{line.slice(2)}</span>
                     </div>
-                  )
+                  );
                 return (
                   <p key={i} className="text-xs text-text-muted font-mono">
                     {line}
                   </p>
-                )
+                );
               })}
             </div>
           </div>
@@ -392,5 +392,5 @@ export function ReleaseModal({ release, open, onClose }: Props) {
         </div>
       </div>
     </Modal>
-  )
+  );
 }

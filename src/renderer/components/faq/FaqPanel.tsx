@@ -1,30 +1,30 @@
-import React, { useState, useMemo } from 'react'
-import { FAQ_TOPICS } from '../../../main/shared/config/FAQ.config'
-import type { FaqItem, FaqTopic } from '../../../main/shared/config/FAQ.config'
+import { useMemo, useState } from 'react';
+import type { FaqItem, FaqTopic } from '../../../main/shared/config/FAQ.config';
+import { FAQ_TOPICS } from '../../../main/shared/config/FAQ.config';
 
 export function FaqPanel() {
-  const [search, setSearch] = useState('')
-  const [activeTopic, setActiveTopic] = useState<string>(FAQ_TOPICS[0]?.id ?? '')
-  const [expandedIdx, setExpandedIdx] = useState<number | null>(null)
+  const [search, setSearch] = useState('');
+  const [activeTopic, setActiveTopic] = useState<string>(FAQ_TOPICS[0]?.id ?? '');
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
-  const searchTrimmed = search.trim().toLowerCase()
+  const searchTrimmed = search.trim().toLowerCase();
 
   const searchResults = useMemo<FaqItem[]>(() => {
-    if (!searchTrimmed) return []
+    if (!searchTrimmed) return [];
     return FAQ_TOPICS.flatMap((t) => t.items).filter(
       (item) =>
         item.q.toLowerCase().includes(searchTrimmed) || item.a.toLowerCase().includes(searchTrimmed)
-    )
-  }, [searchTrimmed])
+    );
+  }, [searchTrimmed]);
 
-  const activeTopic_ = FAQ_TOPICS.find((t) => t.id === activeTopic) ?? FAQ_TOPICS[0]
-  const displayItems = searchTrimmed ? searchResults : (activeTopic_?.items ?? [])
+  const activeTopic_ = FAQ_TOPICS.find((t) => t.id === activeTopic) ?? FAQ_TOPICS[0];
+  const displayItems = searchTrimmed ? searchResults : (activeTopic_?.items ?? []);
 
   const handleTopicClick = (id: string) => {
-    setActiveTopic(id)
-    setExpandedIdx(null)
-    setSearch('')
-  }
+    setActiveTopic(id);
+    setExpandedIdx(null);
+    setSearch('');
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -33,8 +33,8 @@ export function FaqPanel() {
           type="text"
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value)
-            setExpandedIdx(null)
+            setSearch(e.target.value);
+            setExpandedIdx(null);
           }}
           placeholder="Search FAQ..."
           className="w-full bg-base-950 border border-surface-border rounded-md px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 transition-colors font-mono"
@@ -70,7 +70,7 @@ export function FaqPanel() {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function TopicButton({
@@ -78,9 +78,9 @@ function TopicButton({
   active,
   onClick,
 }: {
-  topic: FaqTopic
-  active: boolean
-  onClick: () => void
+  topic: FaqTopic;
+  active: boolean;
+  onClick: () => void;
 }) {
   return (
     <button
@@ -94,7 +94,7 @@ function TopicButton({
     >
       {topic.label}
     </button>
-  )
+  );
 }
 
 function FaqEntry({
@@ -102,9 +102,9 @@ function FaqEntry({
   open,
   onToggle,
 }: {
-  item: FaqItem
-  open: boolean
-  onToggle: () => void
+  item: FaqItem;
+  open: boolean;
+  onToggle: () => void;
 }) {
   return (
     <div
@@ -142,5 +142,5 @@ function FaqEntry({
         </div>
       )}
     </div>
-  )
+  );
 }
