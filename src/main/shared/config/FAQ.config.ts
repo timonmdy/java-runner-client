@@ -55,6 +55,10 @@ export const FAQ_TOPICS: FaqTopic[] = [
         q: 'How can I quickly delete a profile?',
         a: 'Right-click a profile and press Delete. Hold Shift while clicking Delete to skip the confirmation and remove it instantly.',
       },
+      {
+        q: 'How do I use "dynamic" JAR resolution?',
+        a: 'In Configure -> Files & Paths, select "Dynamic" as the JAR selection method. This enables automatic JAR detection in the working directory and lets you customize the search pattern. This is useful for projects that produce versioned JARs or have changing filenames. Change the "app" part in the filename pattern to the (static) prefix of your app and select the type of versioning to be used. You can also use regular expressions (RegExp) to gain full control over file discovery.',
+      },
     ],
   },
   {

@@ -1,25 +1,9 @@
 import http from 'http';
-import { routes } from './RestAPI.routes';
-import { routeConfig } from './shared/config/API.config';
-import { getSettings } from './Store';
-import { REST_API_CONFIG } from './shared/config/API.config';
+import { routes } from './rest-api/_index';
+import { REST_API_CONFIG, routeConfig, RouteKey } from './shared/config/API.config';
+import { CompiledRoute, Params } from './shared/types/RestAPI.types';
 
-type Params = Record<string, string>;
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type CompiledRoute = {
-  method: string;
-  path: string;
-  pattern: RegExp;
-  keys: string[];
-  handler: (ctx: {
-    req: http.IncomingMessage;
-    res: http.ServerResponse;
-    params: Params;
-    body: unknown;
-  }) => void | Promise<void>;
-};
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

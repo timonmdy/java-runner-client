@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useApp } from '../../store/AppStore';
+import { useApp } from '../../AppProvider';
 import { VscCircleFilled, VscCircle } from 'react-icons/vsc';
 import { JRCEnvironment } from '../../../main/shared/types/App.types';
 

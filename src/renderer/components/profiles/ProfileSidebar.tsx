@@ -14,7 +14,7 @@ import {
   VscLayout,
   VscCode,
 } from 'react-icons/vsc';
-import { useApp, PROFILE_COLORS } from '../../store/AppStore';
+import { useApp, PROFILE_COLORS } from '../../AppProvider';
 import { useDevMode } from '../../hooks/useDevMode';
 import { Dialog } from '../common/Dialog';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';

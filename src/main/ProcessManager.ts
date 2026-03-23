@@ -11,6 +11,12 @@ import {
 } from './shared/types/Process.types';
 import { Profile } from './shared/types/Profile.types';
 import { ProcessIPC } from './ipc/Process.ipc';
+import { DEFAULT_JAR_RESOLUTION } from './shared/config/JarResolution.config';
+
+// Inline resolution to avoid circular IPC dependency
+import fs from 'fs';
+import { patternToRegex } from './shared/config/JarResolution.config';
+import type { JarResolutionConfig } from './shared/types/JarResolution.types';
 
 const SELF_PROCESS_NAME = 'Java Client Runner';
 
@@ -34,6 +40,83 @@ interface ManagedProcess {
   intentionallyStopped: boolean;
 }
 
+function parseVersion(str: string): number[] {
+  return str
+    .split(/[.\-_]/)
+    .map((p) => parseInt(p, 10))
+    .filter((n) => !isNaN(n));
+}
+
+function compareVersionArrays(a: number[], b: number[]): number {
+  const len = Math.max(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    const diff = (b[i] ?? 0) - (a[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+function resolveJarPath(profile: Profile): { jarPath: string; error?: string } {
+  const res = profile.jarResolution ?? DEFAULT_JAR_RESOLUTION;
+
+  if (!res.enabled) {
+    return { jarPath: profile.jarPath };
+  }
+
+  if (!res.baseDir) return { jarPath: '', error: 'Dynamic JAR: no base directory set.' };
+
+  let entries: fs.Dirent[];
+  try {
+    entries = fs.readdirSync(res.baseDir, { withFileTypes: true });
+  } catch {
+    return { jarPath: '', error: `Dynamic JAR: cannot read directory "${res.baseDir}".` };
+  }
+
+  const jars = entries.filter((e) => e.isFile() && e.name.endsWith('.jar'));
+
+  let matchRegex: RegExp;
+  if (res.strategy === 'regex' && res.regexOverride?.trim()) {
+    try {
+      matchRegex = new RegExp(res.regexOverride.trim(), 'i');
+    } catch {
+      return { jarPath: '', error: 'Dynamic JAR: invalid regular expression.' };
+    }
+  } else {
+    matchRegex = patternToRegex(res.pattern);
+  }
+
+  const matched = jars.filter((e) => matchRegex.test(e.name));
+  if (matched.length === 0) {
+    return { jarPath: '', error: 'Dynamic JAR: no files matched the pattern.' };
+  }
+
+  let chosen: string;
+
+  if (res.strategy === 'latest-modified') {
+    const withMtime = matched.map((e) => {
+      const full = path.join(res.baseDir, e.name);
+      try {
+        return { name: e.name, mtime: fs.statSync(full).mtimeMs };
+      } catch {
+        return { name: e.name, mtime: 0 };
+      }
+    });
+    chosen = withMtime.sort((a, b) => b.mtime - a.mtime)[0].name;
+  } else if (res.strategy === 'regex') {
+    chosen = matched[0].name;
+  } else {
+    const versionRegex = patternToRegex(res.pattern);
+    const withVersions = matched.map((e) => {
+      const m = versionRegex.exec(e.name);
+      return { name: e.name, version: parseVersion(m?.[1] ?? '') };
+    });
+    withVersions.sort((a, b) => compareVersionArrays(a.version, b.version));
+    chosen = withVersions[0].name;
+  }
+
+  return { jarPath: path.join(res.baseDir, chosen) };
+}
+
 class ProcessManager {
   private processes = new Map<string, ManagedProcess>();
   private activityLog: ProcessLogEntry[] = [];
@@ -48,27 +131,30 @@ class ProcessManager {
     this.window = win;
   }
 
-  private buildArgs(profile: Profile): { cmd: string; args: string[] } {
+  private buildArgs(profile: Profile, resolvedJarPath: string): { cmd: string; args: string[] } {
     const cmd = profile.javaPath || 'java';
     const args: string[] = [];
     for (const a of profile.jvmArgs) if (a.enabled && a.value.trim()) args.push(a.value.trim());
     for (const p of profile.systemProperties)
       if (p.enabled && p.key.trim())
         args.push(p.value.trim() ? `-D${p.key.trim()}=${p.value.trim()}` : `-D${p.key.trim()}`);
-    args.push('-jar', profile.jarPath);
+    args.push('-jar', resolvedJarPath);
     for (const a of profile.programArgs) if (a.enabled && a.value.trim()) args.push(a.value.trim());
     return { cmd, args };
   }
 
   start(profile: Profile): { ok: boolean; error?: string } {
     if (this.processes.has(profile.id)) return { ok: false, error: 'Process already running' };
-    if (!profile.jarPath) return { ok: false, error: 'No JAR file specified' };
+
+    const { jarPath, error: resolveError } = resolveJarPath(profile);
+    if (resolveError) return { ok: false, error: resolveError };
+    if (!jarPath) return { ok: false, error: 'No JAR file specified' };
 
     this.cancelRestartTimer(profile.id);
     this.profileSnapshots.set(profile.id, profile);
 
-    const { cmd, args } = this.buildArgs(profile);
-    const cwd = profile.workingDir || path.dirname(profile.jarPath);
+    const { cmd, args } = this.buildArgs(profile, jarPath);
+    const cwd = profile.workingDir || path.dirname(jarPath);
 
     this.pushSystem('start', profile.id, 'pending', `Starting: ${cmd} ${args.join(' ')}`);
     this.pushSystem('info-workdir', profile.id, 'pending', `Working dir: ${cwd}`);
@@ -92,7 +178,7 @@ class ProcessManager {
       process: proc,
       profileId: profile.id,
       profileName: profile.name,
-      jarPath: profile.jarPath,
+      jarPath,
       startedAt: Date.now(),
       intentionallyStopped: false,
     };
@@ -110,7 +196,7 @@ class ProcessManager {
       id: uuidv4(),
       profileId: profile.id,
       profileName: profile.name,
-      jarPath: profile.jarPath,
+      jarPath,
       pid,
       startedAt: managed.startedAt,
     };
@@ -252,8 +338,6 @@ class ProcessManager {
   clearActivityLog(): void {
     this.activityLog = [];
   }
-
-  // ── Process Scanner ──────────────────────────────────────────────────────────
 
   private isProtected(name: string, cmd: string): boolean {
     return PROTECTED_PROCESS_NAMES.some(
@@ -416,7 +500,6 @@ class ProcessManager {
     }
   }
 
-  // Only kills non-protected java processes
   killAllJava(): { ok: boolean; killed: number } {
     const procs = this.scanAllProcesses().filter((p) => p.isJava && !p.protected);
     let killed = 0;

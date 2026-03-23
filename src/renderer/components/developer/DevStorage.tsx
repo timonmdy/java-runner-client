@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
-import { useApp } from '../../store/AppStore';
+import { useApp } from '../../AppProvider';
 import { VscRefresh, VscTrash } from 'react-icons/vsc';
 
 interface SessionEntry {

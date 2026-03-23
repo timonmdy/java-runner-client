@@ -1,14 +1,9 @@
+import { RouteDefinition } from "../types/RestAPI.types";
+
 export const REST_API_CONFIG = {
   defaultPort: 4444,
   host: '127.0.0.1',
 } as const;
-
-export type RouteDefinition = {
-  method: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  path: string;
-  description: string;
-  bodyTemplate?: string;
-};
 
 export const routeConfig = {
   status: {
