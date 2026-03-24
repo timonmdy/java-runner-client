@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { VscCheck, VscCopy } from 'react-icons/vsc';
-import { useApp } from '../../store/AppStore';
+import { useApp } from '../../AppProvider';
 import { Button } from '../common/Button';
 
 declare const __APP_VERSION__: string;

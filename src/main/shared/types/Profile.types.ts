@@ -1,3 +1,5 @@
+import type { JarResolutionConfig } from './JarResolution.types';
+
 export interface SystemProperty {
   key: string;
   value: string;
@@ -28,4 +30,8 @@ export interface Profile {
   autoRestart: boolean;
   autoRestartInterval: number;
   order?: number;
+  jarResolution?: JarResolutionConfig;
 }
+
+export const hasJarConfigured = (p: Profile) =>
+  p.jarResolution?.enabled ? !!p.jarResolution.baseDir : !!p.jarPath;

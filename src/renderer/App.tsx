@@ -1,6 +1,6 @@
 import React from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
-import { AppProvider } from './store/AppStore';
+import { AppProvider } from './AppProvider';
 import { TitleBar } from './components/layout/TitleBar';
 import { MainLayout } from './components/MainLayout';
 import { DevModeGate } from './components/developer/DevModeGate';

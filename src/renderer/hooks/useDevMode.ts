@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { JRCEnvironment } from 'src/main/shared/types/App.types';
+import { JRCEnvironment } from '../../main/shared/types/App.types';
 
 export function useDevMode(): boolean {
   const [enabled, setEnabled] = useState(false);

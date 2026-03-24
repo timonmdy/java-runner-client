@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useApp } from '../../store/AppStore';
-import { Button } from '../common/Button';
-import { ArgList } from '../common/ArgList';
-import { PropList } from '../common/PropList';
-import { Dialog } from '../common/Dialog';
-import { GeneralSection } from './GeneralSection';
-import { FilesSection } from './FilesSection';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Profile } from '../../../main/shared/types/Profile.types';
+import { useApp } from '../../AppProvider';
+import { ArgList } from '../common/ArgList';
+import { Button } from '../common/Button';
+import { Dialog } from '../common/Dialog';
+import { Input } from '../common/Input';
+import { PropList } from '../common/PropList';
+import { Toggle } from '../common/Toggle';
+import { FolderBtn } from './jar/FolderBtn';
+import { JarSelector } from './jar/JarSelector';
 
 type Section = 'general' | 'files' | 'jvm' | 'props' | 'args';
 
@@ -19,20 +20,8 @@ const SECTIONS: { id: Section; label: string }[] = [
   { id: 'args', label: 'Program Args' },
 ];
 
-function buildCmdPreview(p: Profile): string {
-  const parts: string[] = [p.javaPath || 'java'];
-  p.jvmArgs.filter((a) => a.enabled && a.value).forEach((a) => parts.push(a.value));
-  p.systemProperties
-    .filter((a) => a.enabled && a.key)
-    .forEach((a) => parts.push(a.value ? `-D${a.key}=${a.value}` : `-D${a.key}`));
-  parts.push('-jar', p.jarPath || '<no jar>');
-  p.programArgs.filter((a) => a.enabled && a.value).forEach((a) => parts.push(a.value));
-  return parts.join(' ');
-}
-
 export function ConfigTab() {
   const { activeProfile, saveProfile, isRunning, startProcess, stopProcess } = useApp();
-  const navigate = useNavigate();
 
   const [draft, setDraft] = useState<Profile | null>(null);
   const [saved, setSaved] = useState(false);
@@ -96,8 +85,7 @@ export function ConfigTab() {
 
   return (
     <>
-      <div className="flex flex-col h-full min-h-0">
-        {/* Header */}
+      <div className="flex flex-col h-full">
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0">
           <h2 className="text-sm font-medium text-text-primary flex-1 truncate">{draft.name}</h2>
           {isDirty && !saved && (
@@ -116,7 +104,6 @@ export function ConfigTab() {
           </Button>
         </div>
 
-        {/* Section tabs */}
         <div className="flex gap-0 px-4 border-b border-surface-border shrink-0">
           {SECTIONS.map((s) => (
             <button
@@ -138,13 +125,13 @@ export function ConfigTab() {
           ))}
         </div>
 
-        {/* Section content */}
-        <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-5">
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
           {section === 'general' && (
             <GeneralSection
               draft={draft}
               update={update}
               running={running}
+              color={color}
               onRestart={handleRestart}
             />
           )}
@@ -152,7 +139,7 @@ export function ConfigTab() {
           {section === 'jvm' && (
             <ArgSection
               title="JVM Arguments"
-              hint="Flags passed to the JVM before -jar, e.g. -Xmx2g -XX:+UseG1GC"
+              hint="Flags passed to the JVM before -jar, e.g. -Xmx2g  -XX:+UseG1GC"
             >
               <ArgList
                 items={draft.jvmArgs}
@@ -177,7 +164,7 @@ export function ConfigTab() {
           {section === 'args' && (
             <ArgSection
               title="Program Arguments"
-              hint="Appended after the JAR path, e.g. --nogui --world myWorld"
+              hint="Appended after the JAR path, e.g. --nogui  --world myWorld"
             >
               <ArgList
                 items={draft.programArgs}
@@ -188,7 +175,6 @@ export function ConfigTab() {
             </ArgSection>
           )}
 
-          {/* Command preview */}
           <div className="rounded-lg bg-base-950 border border-surface-border p-3">
             <p className="text-xs text-text-muted font-mono uppercase tracking-widest mb-2">
               Command preview
@@ -221,6 +207,156 @@ export function ConfigTab() {
   );
 }
 
+function GeneralSection({
+  draft,
+  update,
+  running,
+  color,
+  onRestart,
+}: {
+  draft: Profile;
+  update: (p: Partial<Profile>) => void;
+  running: boolean;
+  color: string;
+  onRestart: () => void;
+}) {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-3">
+        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">Auto-start</h3>
+        <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
+          <div>
+            <p className="text-xs text-text-primary font-medium">Auto-start on app launch</p>
+            <p className="text-xs text-text-muted mt-0.5">
+              Automatically run this profile when JRC starts
+            </p>
+          </div>
+          <Toggle checked={draft.autoStart} onChange={(v) => update({ autoStart: v })} />
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">
+          Auto-restart
+        </h3>
+        <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
+          <div>
+            <p className="text-xs text-text-primary font-medium">
+              Automatically restart JAR on crash
+            </p>
+            <p className="text-xs text-text-muted mt-0.5">
+              Restarts the process if it exits with a non-zero code
+            </p>
+          </div>
+          <Toggle
+            checked={draft.autoRestart ?? false}
+            onChange={(v) => update({ autoRestart: v })}
+          />
+        </div>
+
+        {draft.autoRestart && (
+          <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
+            <div>
+              <p className="text-xs text-text-primary font-medium">Restart delay</p>
+              <p className="text-xs text-text-muted mt-0.5">Seconds to wait before restarting</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={3600}
+                value={draft.autoRestartInterval ?? 10}
+                onChange={(e) =>
+                  update({ autoRestartInterval: Math.max(1, parseInt(e.target.value) || 10) })
+                }
+                className="w-20 bg-base-950 border border-surface-border rounded px-2 py-1 text-xs font-mono text-text-primary text-right focus:outline-none focus:border-accent/40"
+              />
+              <span className="text-xs text-text-muted font-mono">sec</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {running && (
+        <div className="space-y-3">
+          <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">Process</h3>
+          <button
+            onClick={onRestart}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-surface-border bg-base-900 text-xs text-text-secondary hover:text-text-primary hover:border-accent/30 transition-colors"
+          >
+            Restart process
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FilesSection({
+  draft,
+  update,
+}: {
+  draft: Profile;
+  update: (p: Partial<Profile>) => void;
+}) {
+  const handlePickJar = async () => {
+    const p = await window.api.pickJar();
+    if (p) update({ jarPath: p });
+  };
+  const handlePickDir = async () => {
+    const p = await window.api.pickDir();
+    if (p) update({ workingDir: p });
+  };
+  const handlePickResolutionDir = async () => {
+    const p = await window.api.pickDir();
+    if (p)
+      update({
+        jarResolution: {
+          ...(draft.jarResolution ?? {
+            enabled: true,
+            pattern: 'app-{version}.jar',
+            strategy: 'highest-version',
+            regexOverride: '',
+          }),
+          baseDir: p,
+        },
+      });
+  };
+  const handlePickJava = async () => {
+    const p = await window.api.pickJava();
+    if (p) update({ javaPath: p });
+  };
+
+  return (
+    <div className="space-y-4">
+      <JarSelector
+        jarPath={draft.jarPath}
+        resolution={draft.jarResolution}
+        onJarPathChange={(jarPath) => update({ jarPath })}
+        onResolutionChange={(jarResolution) => update({ jarResolution })}
+        onPickJar={handlePickJar}
+        onPickDir={handlePickResolutionDir}
+      />
+      <Input
+        label="Working Directory"
+        value={draft.workingDir}
+        onChange={(e) => update({ workingDir: e.target.value })}
+        placeholder="Defaults to JAR directory"
+        hint="Leave empty to use the directory containing the JAR"
+        rightElement={<FolderBtn onClick={handlePickDir} />}
+      />
+      <Input
+        label="Java Executable"
+        value={draft.javaPath}
+        onChange={(e) => update({ javaPath: e.target.value })}
+        placeholder="java  (uses system PATH)"
+        hint="Leave empty to use the java found on PATH"
+        rightElement={<FolderBtn onClick={handlePickJava} />}
+      />
+    </div>
+  );
+}
+
 function ArgSection({
   title,
   hint,
@@ -239,4 +375,20 @@ function ArgSection({
       {children}
     </div>
   );
+}
+
+function buildCmdPreview(p: Profile): string {
+  const isDynamic = p.jarResolution?.enabled;
+  const jarDisplay = isDynamic
+    ? `<dynamic: ${p.jarResolution?.strategy ?? 'highest-version'}>`
+    : p.jarPath || '<no jar>';
+
+  const parts: string[] = [p.javaPath || 'java'];
+  p.jvmArgs.filter((a) => a.enabled && a.value).forEach((a) => parts.push(a.value));
+  p.systemProperties
+    .filter((a) => a.enabled && a.key)
+    .forEach((a) => parts.push(a.value ? `-D${a.key}=${a.value}` : `-D${a.key}`));
+  parts.push('-jar', jarDisplay);
+  p.programArgs.filter((a) => a.enabled && a.value).forEach((a) => parts.push(a.value));
+  return parts.join(' ');
 }

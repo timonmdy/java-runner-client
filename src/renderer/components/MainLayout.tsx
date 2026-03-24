@@ -9,7 +9,7 @@ import { UtilitiesTab } from './utils/UtilitiesTab';
 import { FaqPanel } from './faq/FaqPanel';
 import { DeveloperTab } from './developer/DeveloperTab';
 import { PanelHeader } from './layout/PanelHeader';
-import { useApp } from '../store/AppStore';
+import { useApp } from '../AppProvider';
 import { useDevMode } from '../hooks/useDevMode';
 import { VscTerminal, VscAccount } from 'react-icons/vsc';
 import { LuList } from 'react-icons/lu';

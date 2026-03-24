@@ -1,15 +1,15 @@
-import React, {
+import {
   createContext,
-  useContext,
-  useReducer,
-  useEffect,
   useCallback,
+  useContext,
+  useEffect,
+  useReducer,
   type ReactNode,
 } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { AppSettings } from '../../main/shared/types/App.types';
-import { ConsoleLine, ProcessState } from '../../main/shared/types/Process.types';
-import { Profile } from '../../main/shared/types/Profile.types';
+import { AppSettings } from '../main/shared/types/App.types';
+import { ConsoleLine, ProcessState } from '../main/shared/types/Process.types';
+import { Profile } from '../main/shared/types/Profile.types';
 
 // ─── Session log helpers ──────────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useApp, PROFILE_COLORS } from '../../store/AppStore';
+import { useApp, PROFILE_COLORS } from '../../AppProvider';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { Dialog } from '../common/Dialog';

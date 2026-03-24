@@ -8,6 +8,7 @@ import { processManager } from './ProcessManager';
 import { restApiServer } from './RestAPI';
 import { registerIPC } from './IPCController';
 import { getAllProfiles, getSettings, syncLoginItem } from './Store';
+import { hasJarConfigured } from './shared/types/Profile.types';
 
 loadEnvironment();
 
@@ -160,7 +161,8 @@ if (!gotLock) {
 
     const settings = getSettings();
     if (settings.restApiEnabled) restApiServer.start(settings.restApiPort);
-    for (const p of getAllProfiles()) if (p.autoStart && p.jarPath) processManager.start(p);
+    for (const p of getAllProfiles())
+      if (p.autoStart && hasJarConfigured(p)) processManager.start(p);
 
     mainWindow?.webContents.on('did-finish-load', updateTrayMenu);
     processManager.setTrayUpdater(updateTrayMenu);

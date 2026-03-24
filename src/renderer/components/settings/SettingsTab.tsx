@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useApp } from '../../store/AppStore';
+import { useApp } from '../../AppProvider';
 import { Button } from '../common/Button';
 import { Toggle } from '../common/Toggle';
 import { VersionChecker } from './VersionChecker';
