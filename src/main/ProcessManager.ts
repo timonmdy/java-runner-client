@@ -17,6 +17,8 @@ import { DEFAULT_JAR_RESOLUTION } from './shared/config/JarResolution.config';
 import fs from 'fs';
 import { patternToRegex } from './shared/config/JarResolution.config';
 import type { JarResolutionConfig } from './shared/types/JarResolution.types';
+import { ProfileIPC } from './ipc/Profile.ipc';
+import { saveProfile } from './Store';
 
 const SELF_PROCESS_NAME = 'Java Client Runner';
 

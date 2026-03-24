@@ -1,5 +1,5 @@
 import http from 'http';
-import { routeConfig, RouteKey } from "../config/API.config";
+import { routeConfig, RouteKey } from '../config/API.config';
 
 export type Params = Record<string, string>;
 
@@ -38,10 +38,7 @@ export type BuiltRoute<K extends RouteKey> = (typeof routeConfig)[K] & {
   handler: RouteHandler;
 };
 
-export function defineRoute<K extends RouteKey>(
-  key: K,
-  handler: RouteHandler
-): BuiltRoute<K> {
+export function defineRoute<K extends RouteKey>(key: K, handler: RouteHandler): BuiltRoute<K> {
   return {
     ...routeConfig[key],
     handler,

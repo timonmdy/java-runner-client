@@ -39,7 +39,9 @@ export function ResolutionPreview({ result, loading }: Props) {
           {filename}
         </span>
         {otherCount > 0 && (
-          <span className="text-text-muted shrink-0">+{otherCount} other{otherCount !== 1 ? 's' : ''}</span>
+          <span className="text-text-muted shrink-0">
+            +{otherCount} other{otherCount !== 1 ? 's' : ''}
+          </span>
         )}
       </div>
       {result.candidates && result.candidates.length > 1 && (

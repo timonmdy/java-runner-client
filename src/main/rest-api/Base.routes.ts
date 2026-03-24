@@ -15,9 +15,7 @@ export const BaseRoutes: RouteMap = {
     })
   ),
 
-  settings_get: defineRoute('settings_get', ({ res }) =>
-    ok(res, getSettings())
-  ),
+  settings_get: defineRoute('settings_get', ({ res }) => ok(res, getSettings())),
 
   settings_update: defineRoute('settings_update', ({ res, body }) => {
     const updated: AppSettings = {

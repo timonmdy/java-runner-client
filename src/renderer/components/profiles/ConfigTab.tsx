@@ -1,15 +1,14 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Profile } from '../../../main/shared/types/Profile.types';
 import { useApp } from '../../AppProvider';
-import { Button } from '../common/Button';
-import { Input } from '../common/Input';
-import { Toggle } from '../common/Toggle';
 import { ArgList } from '../common/ArgList';
-import { PropList } from '../common/PropList';
+import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
-import { JarSelector } from './jar/JarSelector';
+import { Input } from '../common/Input';
+import { PropList } from '../common/PropList';
+import { Toggle } from '../common/Toggle';
 import { FolderBtn } from './jar/FolderBtn';
-import { Profile } from 'src/main/shared/types/Profile.types';
-import type { JarResolutionConfig } from '../../../main/shared/types/JarResolution.types';
+import { JarSelector } from './jar/JarSelector';
 
 type Section = 'general' | 'files' | 'jvm' | 'props' | 'args';
 
@@ -313,7 +312,12 @@ function FilesSection({
     if (p)
       update({
         jarResolution: {
-          ...(draft.jarResolution ?? { enabled: true, pattern: 'app-{version}.jar', strategy: 'highest-version', regexOverride: '' }),
+          ...(draft.jarResolution ?? {
+            enabled: true,
+            pattern: 'app-{version}.jar',
+            strategy: 'highest-version',
+            regexOverride: '',
+          }),
           baseDir: p,
         },
       });

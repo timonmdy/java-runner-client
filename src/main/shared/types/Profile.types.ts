@@ -32,3 +32,6 @@ export interface Profile {
   order?: number;
   jarResolution?: JarResolutionConfig;
 }
+
+export const hasJarConfigured = (p: Profile) =>
+  p.jarResolution?.enabled ? !!p.jarResolution.baseDir : !!p.jarPath;

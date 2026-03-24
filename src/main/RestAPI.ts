@@ -3,8 +3,6 @@ import { routes } from './rest-api/_index';
 import { REST_API_CONFIG, routeConfig, RouteKey } from './shared/config/API.config';
 import { CompiledRoute, Params } from './shared/types/RestAPI.types';
 
-
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function json(res: http.ServerResponse, data: unknown, status = 200) {

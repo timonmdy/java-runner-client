@@ -6,9 +6,7 @@ import { defineRoute, RouteMap } from '../shared/types/RestAPI.types';
 import { v4 as uuidv4 } from 'uuid';
 
 export const ProfileRoutes: RouteMap = {
-  profiles_list: defineRoute('profiles_list', ({ res }) =>
-    ok(res, getAllProfiles())
-  ),
+  profiles_list: defineRoute('profiles_list', ({ res }) => ok(res, getAllProfiles())),
 
   profiles_get: defineRoute('profiles_get', ({ res, params }) => {
     const p = getAllProfiles().find((p) => p.id === params.id);

@@ -1,5 +1,3 @@
-// routes/index.ts
-
 import { RouteKey } from '../shared/config/API.config';
 import { RouteMap, BuiltRoute } from '../shared/types/RestAPI.types';
 

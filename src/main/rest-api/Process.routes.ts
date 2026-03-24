@@ -4,9 +4,7 @@ import { processManager } from '../ProcessManager';
 import { getAllProfiles } from '../Store';
 
 export const ProcessRoutes: RouteMap = {
-  processes_list: defineRoute('processes_list', ({ res }) =>
-    ok(res, processManager.getStates())
-  ),
+  processes_list: defineRoute('processes_list', ({ res }) => ok(res, processManager.getStates())),
 
   processes_log: defineRoute('processes_log', ({ res }) =>
     ok(res, processManager.getActivityLog())

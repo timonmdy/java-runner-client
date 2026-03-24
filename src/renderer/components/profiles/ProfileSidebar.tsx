@@ -19,7 +19,7 @@ import { useDevMode } from '../../hooks/useDevMode';
 import { Dialog } from '../common/Dialog';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
 import { TemplateModal } from './TemplateModal';
-import { Profile } from '../../../main/shared/types/Profile.types';
+import { hasJarConfigured, Profile } from '../../../main/shared/types/Profile.types';
 
 interface Props {
   activeSidePanel: string | null;
@@ -65,7 +65,7 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
 
   const handleStart = useCallback(
     async (profile: Profile) => {
-      if (!profile.jarPath) {
+      if (!hasJarConfigured(profile)) {
         setActionError(`"${profile.name}" has no JAR configured.`);
         return;
       }
@@ -95,7 +95,7 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
           : {
               label: 'Start',
               icon: <VscPlay size={11} />,
-              disabled: !ctxProfile.jarPath,
+              disabled: !hasJarConfigured(ctxProfile),
               onClick: () => handleStart(ctxProfile),
             },
         { type: 'separator' },
@@ -268,7 +268,10 @@ function ProfileItem({
   onContextMenu: (e: React.MouseEvent) => void;
 }) {
   const color = profile.color || PROFILE_COLORS[0];
-  const jarName = profile.jarPath?.split(/[/\\]/).pop() ?? '';
+  const jarName = profile.jarResolution?.enabled
+    ? '<dynamic jar>iwin'
+    : (profile.jarPath?.split(/[/\\]/).pop() ?? '');
+
   return (
     <button
       onClick={onClick}
@@ -301,7 +304,11 @@ function ProfileItem({
           {profile.name}
         </span>
         {jarName && (
-          <span className="text-[10px] text-text-muted font-mono truncate">{jarName}</span>
+          <span
+            className={`text-[10px] text-text-muted font-mono truncate ${profile.jarResolution?.enabled ? 'italic' : ''}`}
+          >
+            {jarName}
+          </span>
         )}
       </span>
       {running && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />}

@@ -1,5 +1,8 @@
 import { useState, useCallback, useEffect } from 'react';
-import type { JarResolutionConfig, JarResolutionResult } from '../../../main/shared/types/JarResolution.types';
+import type {
+  JarResolutionConfig,
+  JarResolutionResult,
+} from '../../main/shared/types/JarResolution.types';
 
 export function useJarResolutionPreview(config: JarResolutionConfig, enabled: boolean) {
   const [result, setResult] = useState<JarResolutionResult | null>(null);

@@ -47,7 +47,9 @@ export function JarSelector({
                 onClick={() => setDynamic(mode === 'dynamic')}
                 className={[
                   'px-2.5 py-1 text-xs rounded-md transition-colors font-mono',
-                  active ? 'bg-surface-raised text-text-primary' : 'text-text-muted hover:text-text-primary',
+                  active
+                    ? 'bg-surface-raised text-text-primary'
+                    : 'text-text-muted hover:text-text-primary',
                 ].join(' ')}
               >
                 {mode === 'static' ? 'Static' : 'Dynamic'}

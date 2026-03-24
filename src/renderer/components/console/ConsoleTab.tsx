@@ -3,11 +3,7 @@ import { useApp } from '../../AppProvider';
 import { Button } from '../common/Button';
 import { VscSearch, VscChevronUp, VscChevronDown, VscClose } from 'react-icons/vsc';
 import { ConsoleLine } from '../../../main/shared/types/Process.types';
-
-function hasJarConfigured(profile: { jarPath: string; jarResolution?: { enabled: boolean; baseDir: string } }): boolean {
-  if (profile.jarResolution?.enabled) return !!profile.jarResolution.baseDir;
-  return !!profile.jarPath;
-}
+import { hasJarConfigured } from '../../../main/shared/types/Profile.types';
 
 export function ConsoleTab() {
   const { state, activeProfile, startProcess, stopProcess, sendInput, clearConsole, isRunning } =

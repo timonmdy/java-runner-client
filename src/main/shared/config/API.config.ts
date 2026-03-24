@@ -1,4 +1,4 @@
-import { RouteDefinition } from "../types/RestAPI.types";
+import { RouteDefinition } from '../types/RestAPI.types';
 
 export const REST_API_CONFIG = {
   defaultPort: 4444,
