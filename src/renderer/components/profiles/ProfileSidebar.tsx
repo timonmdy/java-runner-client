@@ -269,7 +269,7 @@ function ProfileItem({
 }) {
   const color = profile.color || PROFILE_COLORS[0];
   const jarName = profile.jarResolution?.enabled
-    ? '<dynamic jar>iwin'
+    ? '<dynamic jar>'
     : (profile.jarPath?.split(/[/\\]/).pop() ?? '');
 
   return (
