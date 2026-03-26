@@ -24,6 +24,8 @@ export function ConfigTab() {
   const { activeProfile, saveProfile, isRunning, startProcess, stopProcess } = useApp();
 
   const [draft, setDraft] = useState<Profile | null>(null);
+  // savedSnapshot holds what was last persisted — used for dirty detection
+  const [savedSnapshot, setSavedSnapshot] = useState<Profile | null>(null);
   const [saved, setSaved] = useState(false);
   const [section, setSection] = useState<Section>('general');
   const [pendingArg, setPendingArg] = useState(false);
@@ -32,23 +34,25 @@ export function ConfigTab() {
   useEffect(() => {
     if (activeProfile) {
       setDraft({ ...activeProfile });
+      setSavedSnapshot({ ...activeProfile });
       setSaved(false);
       setPendingArg(false);
     }
   }, [activeProfile?.id]);
 
   const isDirty = useMemo(() => {
-    if (!draft || !activeProfile) return false;
-    return JSON.stringify(draft) !== JSON.stringify(activeProfile);
-  }, [draft, activeProfile]);
+    if (!draft || !savedSnapshot) return false;
+    return JSON.stringify(draft) !== JSON.stringify(savedSnapshot);
+  }, [draft, savedSnapshot]);
 
   const handleSave = useCallback(async () => {
     if (!draft) return;
     await saveProfile(draft);
-    activeProfile && Object.assign(activeProfile, draft);
+    // Update the saved snapshot so dirty detection resets correctly
+    setSavedSnapshot({ ...draft });
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
-  }, [draft, saveProfile, activeProfile]);
+  }, [draft, saveProfile]);
 
   const requestSectionChange = useCallback(
     (next: Section) => {

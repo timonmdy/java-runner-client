@@ -1,43 +1,51 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../../AppProvider';
 import { Button } from '../common/Button';
 import { Toggle } from '../common/Toggle';
 import { VersionChecker } from './VersionChecker';
 import { REST_API_CONFIG } from '../../../main/shared/config/API.config';
 import { version } from '../../../../package.json';
-import { AppSettings, JRCEnvironment } from '../../../main/shared/types/App.types';
+import { AppSettings } from '../../../main/shared/types/App.types';
 
 export function SettingsTab() {
   const { state, saveSettings } = useApp();
   const [draft, setDraft] = useState<AppSettings | null>(null);
   const [saved, setSaved] = useState(false);
+  // Track whether the draft was initialized so we don't overwrite user edits
+  const initializedRef = useRef(false);
 
   const set = (patch: Partial<AppSettings>) => {
     setSaved(false);
     setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
   };
 
+  // Initialize draft from store once on mount, then only sync fields the user
+  // hasn't touched (devModeEnabled) when the env changes externally.
   useEffect(() => {
     if (!state.settings) return;
+    if (!initializedRef.current) {
+      setDraft(state.settings);
+      initializedRef.current = true;
+      return;
+    }
+    // Only sync devModeEnabled from outside — everything else is user-controlled
     setDraft((prev) => {
       if (!prev) return state.settings;
-      return { ...state.settings, ...prev, devModeEnabled: prev.devModeEnabled };
+      if (prev.devModeEnabled === state.settings!.devModeEnabled) return prev;
+      return { ...prev, devModeEnabled: state.settings!.devModeEnabled };
     });
   }, [state.settings]);
 
+  // Listen for dev-mode toggled externally (via the DevModeGate shortcut)
   useEffect(() => {
-    const listener = async (e: JRCEnvironment) => {
-      setSaved(false);
+    const unsub = window.env.onChange((env) => {
       setDraft((prev) => {
-        if (!prev || prev.devModeEnabled === e.devMode) return prev;
-        return { ...prev, devModeEnabled: e.devMode };
+        if (!prev || prev.devModeEnabled === env.devMode) return prev;
+        return { ...prev, devModeEnabled: env.devMode };
       });
-      if (state.settings && state.settings.devModeEnabled !== e.devMode) {
-        await saveSettings({ ...state.settings, devModeEnabled: e.devMode });
-      }
-    };
-    window.env.onChange(listener);
-  }, [state.settings, saveSettings]);
+    });
+    return unsub;
+  }, []);
 
   const isDirty = useMemo(() => {
     if (!draft || !state.settings) return false;
@@ -60,7 +68,7 @@ export function SettingsTab() {
           <span className="text-xs text-text-secondary flex-1">
             {saved ? 'Settings saved' : 'Unsaved changes'}
           </span>
-          <Button variant="primary" size="sm" onClick={handleSave} disabled={!isDirty && !saved}>
+          <Button variant="primary" size="sm" onClick={handleSave} disabled={!isDirty}>
             {saved ? 'Saved' : 'Save Changes'}
           </Button>
         </div>
