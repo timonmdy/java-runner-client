@@ -15,6 +15,7 @@ export { SystemIPC, initSystemIPC } from './System.ipc';
 export { WindowIPC, initWindowIPC } from './Window.ipc';
 export { DevIPC, initDevIPC } from './Dev.ipc';
 export { JarResolutionIPC } from './JarResolution.ipc';
+export { LoggingIPC } from './Logging.ipc';
 
 import { GitHubIPC } from './GitHub.ipc';
 import { ProcessIPC } from './Process.ipc';
@@ -23,6 +24,7 @@ import { SystemIPC } from './System.ipc';
 import { WindowIPC } from './Window.ipc';
 import { DevIPC } from './Dev.ipc';
 import { JarResolutionIPC } from './JarResolution.ipc';
+import { LoggingIPC } from './Logging.ipc';
 import type { InferAPI } from '../IPCController';
 
 export const allRoutes = [
@@ -33,6 +35,7 @@ export const allRoutes = [
   WindowIPC,
   DevIPC,
   JarResolutionIPC,
+  LoggingIPC,
 ] as const;
 
 export type API = InferAPI<
@@ -42,7 +45,8 @@ export type API = InferAPI<
     typeof SystemIPC &
     typeof WindowIPC &
     typeof DevIPC &
-    typeof JarResolutionIPC
+    typeof JarResolutionIPC &
+    typeof LoggingIPC
 >;
 
 export type Environment = InferAPI<typeof EnvironmentIPC>;

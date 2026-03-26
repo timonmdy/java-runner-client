@@ -32,6 +32,12 @@ export function ConsoleSection({ draft, set }: Props) {
           onChange={(v) => set({ consoleLineNumbers: v })}
         />
       </Row>
+      <Row label="Show timestamps" hint="Display a timestamp for each console line">
+        <Toggle
+          checked={draft.consoleTimestamps}
+          onChange={(v) => set({ consoleTimestamps: v })}
+        />
+      </Row>
       <Row label="Word wrap" hint="Wrap long lines instead of horizontal scrolling">
         <Toggle checked={draft.consoleWordWrap} onChange={(v) => set({ consoleWordWrap: v })} />
       </Row>

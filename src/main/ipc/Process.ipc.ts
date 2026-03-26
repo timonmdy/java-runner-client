@@ -1,7 +1,9 @@
+import { shell } from 'electron';
 import type { RouteMap } from '../IPCController';
 import { processManager } from '../ProcessManager';
 import { Profile } from '../shared/types/Profile.types';
 import { ConsoleLine, ProcessState } from '../shared/types/Process.types';
+import { getAllProfiles } from '../Store';
 
 export const ProcessIPC = {
   startProcess: {
@@ -13,6 +15,11 @@ export const ProcessIPC = {
     type: 'invoke',
     channel: 'process:stop',
     handler: (_e: any, id: string) => processManager.stop(id),
+  },
+  forceStopProcess: {
+    type: 'invoke',
+    channel: 'process:forceStop',
+    handler: (_e: any, id: string) => processManager.forceStop(id),
   },
   sendInput: {
     type: 'invoke',
@@ -49,9 +56,20 @@ export const ProcessIPC = {
     channel: 'process:killAllJava',
     handler: () => processManager.killAllJava(),
   },
+  openWorkingDir: {
+    type: 'invoke',
+    channel: 'process:openWorkingDir',
+    handler: (_e: any, profileId: string) => {
+      const profile = getAllProfiles().find((p) => p.id === profileId);
+      if (!profile) return { ok: false, error: 'Profile not found' };
+      const dir = profile.workingDir || (profile.jarPath ? require('path').dirname(profile.jarPath) : '');
+      if (!dir) return { ok: false, error: 'No working directory configured' };
+      shell.openPath(dir);
+      return { ok: true };
+    },
+  },
 
-  // Push events (main → renderer via webContents.send)
-  // The _types field is a phantom used only for TypeScript inference — never called at runtime.
+  // Push events (main -> renderer via webContents.send)
   consoleLine: {
     type: 'on',
     channel: 'console:line',

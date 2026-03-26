@@ -12,8 +12,10 @@ import {
 import { Profile } from './shared/types/Profile.types';
 import { ProcessIPC } from './ipc/Process.ipc';
 import { DEFAULT_JAR_RESOLUTION } from './shared/config/JarResolution.config';
+import { processChunk, stripAnsi } from './shared/utils/AnsiParser';
+import { gracefulStop } from './GracefulStop';
+import { startLogSession, writeLogLine, stopLogSession } from './FileLogger';
 
-// Inline resolution to avoid circular IPC dependency
 import fs from 'fs';
 import { patternToRegex } from './shared/config/JarResolution.config';
 import type { JarResolutionConfig } from './shared/types/JarResolution.types';
@@ -31,7 +33,8 @@ type SystemMessageType =
   | 'error-runtime'
   | 'info-pid'
   | 'info-workdir'
-  | 'info-restart';
+  | 'info-restart'
+  | 'info-stop-phase';
 
 interface ManagedProcess {
   process: ChildProcess;
@@ -40,6 +43,8 @@ interface ManagedProcess {
   jarPath: string;
   startedAt: number;
   intentionallyStopped: boolean;
+  stdoutPartial: string;
+  stderrPartial: string;
 }
 
 function parseVersion(str: string): number[] {
@@ -92,6 +97,7 @@ function resolveJarPath(profile: Profile): { jarPath: string; error?: string } {
     return { jarPath: '', error: 'Dynamic JAR: no files matched the pattern.' };
   }
 
+  const candidates = matched.map((e) => e.name);
   let chosen: string;
 
   if (res.strategy === 'latest-modified') {
@@ -105,12 +111,13 @@ function resolveJarPath(profile: Profile): { jarPath: string; error?: string } {
     });
     chosen = withMtime.sort((a, b) => b.mtime - a.mtime)[0].name;
   } else if (res.strategy === 'regex') {
-    chosen = matched[0].name;
+    chosen = candidates[0];
   } else {
     const versionRegex = patternToRegex(res.pattern);
     const withVersions = matched.map((e) => {
       const m = versionRegex.exec(e.name);
-      return { name: e.name, version: parseVersion(m?.[1] ?? '') };
+      const vStr = m?.[1] ?? '';
+      return { name: e.name, version: parseVersion(vStr) };
     });
     withVersions.sort((a, b) => compareVersionArrays(a.version, b.version));
     chosen = withVersions[0].name;
@@ -120,20 +127,23 @@ function resolveJarPath(profile: Profile): { jarPath: string; error?: string } {
 }
 
 class ProcessManager {
-  private processes = new Map<string, ManagedProcess>();
-  private activityLog: ProcessLogEntry[] = [];
   private window: BrowserWindow | null = null;
-  private restartTimers = new Map<string, ReturnType<typeof setTimeout>>();
-  private profileSnapshots = new Map<string, Profile>();
+  private processes = new Map<string, ManagedProcess>();
   private lineCounters = new Map<string, number>();
-  private seenLineIds = new Map<string, Set<string | number>>();
-  private onTrayUpdate?: () => void;
+  private seenLineIds = new Map<string, Set<number | string>>();
+  private activityLog: ProcessLogEntry[] = [];
+  private profileSnapshots = new Map<string, Profile>();
+  private restartTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private onTrayUpdate: (() => void) | null = null;
 
-  setWindow(win: BrowserWindow): void {
+  setWindow(win: BrowserWindow) {
     this.window = win;
   }
 
-  private buildArgs(profile: Profile, resolvedJarPath: string): { cmd: string; args: string[] } {
+  private buildArgs(
+    profile: Profile,
+    resolvedJarPath: string
+  ): { cmd: string; args: string[] } {
     const cmd = profile.javaPath || 'java';
     const args: string[] = [];
     for (const a of profile.jvmArgs) if (a.enabled && a.value.trim()) args.push(a.value.trim());
@@ -143,6 +153,17 @@ class ProcessManager {
     args.push('-jar', resolvedJarPath);
     for (const a of profile.programArgs) if (a.enabled && a.value.trim()) args.push(a.value.trim());
     return { cmd, args };
+  }
+
+  private buildEnv(profile: Profile): NodeJS.ProcessEnv {
+    const env = { ...process.env };
+    const vars = profile.envVars ?? [];
+    for (const v of vars) {
+      if (v.enabled && v.key.trim()) {
+        env[v.key.trim()] = v.value;
+      }
+    }
+    return env;
   }
 
   start(profile: Profile): { ok: boolean; error?: string } {
@@ -157,15 +178,21 @@ class ProcessManager {
 
     const { cmd, args } = this.buildArgs(profile, jarPath);
     const cwd = profile.workingDir || path.dirname(jarPath);
+    const env = this.buildEnv(profile);
 
     this.pushSystem('start', profile.id, 'pending', `Starting: ${cmd} ${args.join(' ')}`);
     this.pushSystem('info-workdir', profile.id, 'pending', `Working dir: ${cwd}`);
+
+    // Start file logging if enabled
+    if (profile.fileLogging) {
+      startLogSession(profile.id);
+    }
 
     let proc: ChildProcess;
     try {
       proc = spawn(cmd, args, {
         cwd,
-        env: process.env,
+        env,
         shell: false,
         detached: false,
         stdio: ['pipe', 'pipe', 'pipe'],
@@ -173,6 +200,7 @@ class ProcessManager {
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       this.pushSystem('error-starting', profile.id, 'pending', `Failed to start: ${msg}`);
+      stopLogSession(profile.id);
       return { ok: false, error: msg };
     }
 
@@ -183,6 +211,8 @@ class ProcessManager {
       jarPath,
       startedAt: Date.now(),
       intentionallyStopped: false,
+      stdoutPartial: '',
+      stderrPartial: '',
     };
     this.processes.set(profile.id, managed);
 
@@ -217,6 +247,10 @@ class ProcessManager {
       this.pushSystem('error-runtime', profile.id, String(pid), `Error: ${err.message}`)
     );
     proc.on('exit', (code, signal) => {
+      // Flush any remaining partial lines
+      this.flushPartial(profile.id, 'stdout', managed);
+      this.flushPartial(profile.id, 'stderr', managed);
+
       this.processes.delete(profile.id);
       this.pushSystem(
         'stopped',
@@ -224,6 +258,10 @@ class ProcessManager {
         String(pid),
         `Process stopped (${signal ? `signal ${signal}` : `exit code ${code ?? '?'}`})`
       );
+
+      // Stop file logging
+      stopLogSession(profile.id);
+
       const entry = this.activityLog.find((e) => e.profileId === profile.id && !e.stoppedAt);
       if (entry) {
         entry.stoppedAt = Date.now();
@@ -265,7 +303,37 @@ class ProcessManager {
     m.intentionallyStopped = true;
     this.cancelRestartTimer(profileId);
 
-    this.pushSystem('stopping', profileId, String(m.process.pid ?? 0), 'Stopping process...');
+    this.pushSystem('stopping', profileId, String(m.process.pid ?? 0), 'Stopping process gracefully...');
+
+    gracefulStop(
+      m.process,
+      profileId,
+      (phase) => {
+        const messages: Record<string, string> = {
+          sigint: 'Sending interrupt signal (Ctrl+C)...',
+          sigterm: 'Process did not exit cleanly. Sending terminate signal...',
+          sigkill: 'Force killing process...',
+        };
+        this.pushSystem('info-stop-phase', profileId, String(m.process.pid ?? 0), messages[phase]);
+      },
+      () => {
+        // Cleanup handled by the 'exit' handler above
+      }
+    );
+
+    this.updateTray();
+    return { ok: true };
+  }
+
+  /** Force-kill a process immediately (bypasses graceful shutdown). */
+  forceStop(profileId: string): { ok: boolean; error?: string } {
+    const m = this.processes.get(profileId);
+    if (!m) return { ok: false, error: 'Not running' };
+
+    m.intentionallyStopped = true;
+    this.cancelRestartTimer(profileId);
+    this.pushSystem('stopping', profileId, String(m.process.pid ?? 0), 'Force stopping process...');
+
     const pid = m.process.pid;
     if (process.platform === 'win32' && pid) {
       try {
@@ -279,18 +347,10 @@ class ProcessManager {
       }
     } else {
       try {
-        m.process.kill('SIGTERM');
+        m.process.kill('SIGKILL');
       } catch {
         /* ignore */
       }
-      setTimeout(() => {
-        if (this.processes.has(profileId))
-          try {
-            m.process.kill('SIGKILL');
-          } catch {
-            /* ignore */
-          }
-      }, 5000);
     }
 
     this.updateTray();
@@ -396,23 +456,23 @@ class ProcessManager {
       const raw = JSON.parse(jsonLine.trim());
       const procs = Array.isArray(raw) ? raw : [raw];
       return procs
-        .map((p: Record<string, unknown>) => {
-          const pid = Number(p.Id);
-          const name = String(p.Name ?? '');
-          const cmd = String(p.Cmd ?? name);
-          if (isNaN(pid) || pid <= 0) return null;
+        .map((p: any) => {
+          const pid = p.Id ?? p.id;
+          const name = p.Name ?? p.name ?? '';
+          const cmd = (p.Cmd ?? p.cmd ?? name).slice(0, 400);
+          if (typeof pid !== 'number' || isNaN(pid)) return null;
           if (this.isSelf(name, cmd)) return null;
           const isJava = /java/i.test(name) || /java/i.test(cmd);
           return {
             pid,
             name,
-            command: (cmd.length > 2 ? cmd : name).slice(0, 400),
+            command: cmd || name,
             isJava,
             managed: managedPids.has(pid),
             protected: this.isProtected(name, cmd),
-            memoryMB: typeof p.MemMB === 'number' ? p.MemMB : undefined,
-            threads: typeof p.Threads === 'number' ? p.Threads : undefined,
-            startTime: p.Start ? String(p.Start) : undefined,
+            memoryMB: p.MemMB ?? p.memMB,
+            startTime: p.Start ?? p.start,
+            threads: p.Threads ?? p.threads,
             jarName: this.parseJarName(cmd),
           } as JavaProcessInfo;
         })
@@ -425,28 +485,29 @@ class ProcessManager {
 
   private scanAllWindowsTasklist(managedPids: Set<number>): JavaProcessInfo[] {
     try {
-      const out = execSync('tasklist /fo csv /nh', { encoding: 'utf8', timeout: 8000 });
-      const results: JavaProcessInfo[] = [];
-      for (const line of out.split('\n')) {
-        const t = line.trim();
-        if (!t) continue;
-        const parts = t.replace(/"/g, '').split(',');
-        if (parts.length < 2) continue;
-        const name = parts[0].trim();
-        const pid = parseInt(parts[1].trim(), 10);
-        if (isNaN(pid) || pid <= 0) continue;
-        if (this.isSelf(name, name)) continue;
-        const isJava = /java/i.test(name);
-        results.push({
-          pid,
-          name,
-          command: name,
-          isJava,
-          managed: managedPids.has(pid),
-          protected: this.isProtected(name, name),
-        });
-      }
-      return results.sort((a, b) => (b.isJava ? 1 : 0) - (a.isJava ? 1 : 0));
+      const out = execSync('tasklist /FO CSV /NH', { encoding: 'utf8', timeout: 10000 });
+      return out
+        .split('\n')
+        .filter(Boolean)
+        .map((line) => {
+          const parts = line.split('","').map((p) => p.replace(/"/g, ''));
+          const name = parts[0] ?? '';
+          const pid = parseInt(parts[1], 10);
+          if (isNaN(pid)) return null;
+          if (this.isSelf(name, name)) return null;
+          const isJava = /java/i.test(name);
+          return {
+            pid,
+            name,
+            command: name,
+            isJava,
+            managed: managedPids.has(pid),
+            protected: this.isProtected(name, name),
+            jarName: undefined,
+          } as JavaProcessInfo;
+        })
+        .filter((x): x is JavaProcessInfo => x !== null)
+        .sort((a, b) => (b.isJava ? 1 : 0) - (a.isJava ? 1 : 0));
     } catch {
       return [];
     }
@@ -515,12 +576,33 @@ class ProcessManager {
     type: 'stdout' | 'stderr',
     m: ManagedProcess
   ) {
-    for (const [i, text] of chunk.split(/\r?\n/).entries()) {
-      if (i === chunk.split(/\r?\n/).length - 1 && text === '') continue;
+    const partialKey = type === 'stdout' ? 'stdoutPartial' : 'stderrPartial';
+    const { lines, partial } = processChunk(chunk, m[partialKey]);
+    m[partialKey] = partial;
+
+    for (const processed of lines) {
       const counter = (this.lineCounters.get(profileId) ?? 0) + 1;
       this.lineCounters.set(profileId, counter);
-      this.pushLine(profileId, text, type, counter);
+      this.pushLine(profileId, processed.text, type, counter);
     }
+  }
+
+  private flushPartial(
+    profileId: string,
+    type: 'stdout' | 'stderr',
+    m: ManagedProcess
+  ) {
+    const partialKey = type === 'stdout' ? 'stdoutPartial' : 'stderrPartial';
+    const text = m[partialKey].trim();
+    if (!text) return;
+    m[partialKey] = '';
+
+    const stripped = stripAnsi(text);
+    if (!stripped) return;
+
+    const counter = (this.lineCounters.get(profileId) ?? 0) + 1;
+    this.lineCounters.set(profileId, counter);
+    this.pushLine(profileId, stripped, type, counter);
   }
 
   private pushLine(
@@ -539,11 +621,16 @@ class ProcessManager {
         this.seenLineIds.set(profileId, new Set([id]));
       }
     }
+    const timestamp = Date.now();
+
+    // Write to file log if active
+    writeLogLine(profileId, text, type, timestamp);
+
     this.window?.webContents.send(ProcessIPC.consoleLine.channel, profileId, {
       id,
       text,
       type,
-      timestamp: Date.now(),
+      timestamp,
     });
   }
 

@@ -4,13 +4,14 @@ import { useApp } from '../../AppProvider';
 import { ArgList } from '../common/ArgList';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
+import { EnvVarList } from '../common/EnvVarList';
 import { Input } from '../common/Input';
 import { PropList } from '../common/PropList';
 import { Toggle } from '../common/Toggle';
 import { FolderBtn } from './jar/FolderBtn';
 import { JarSelector } from './jar/JarSelector';
 
-type Section = 'general' | 'files' | 'jvm' | 'props' | 'args';
+type Section = 'general' | 'files' | 'jvm' | 'props' | 'args' | 'env';
 
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'general', label: 'General' },
@@ -18,13 +19,13 @@ const SECTIONS: { id: Section; label: string }[] = [
   { id: 'jvm', label: 'JVM Args' },
   { id: 'props', label: 'Properties (-D)' },
   { id: 'args', label: 'Program Args' },
+  { id: 'env', label: 'Environment' },
 ];
 
 export function ConfigTab() {
   const { activeProfile, saveProfile, isRunning, startProcess, stopProcess } = useApp();
 
   const [draft, setDraft] = useState<Profile | null>(null);
-  // savedSnapshot holds what was last persisted — used for dirty detection
   const [savedSnapshot, setSavedSnapshot] = useState<Profile | null>(null);
   const [saved, setSaved] = useState(false);
   const [section, setSection] = useState<Section>('general');
@@ -33,8 +34,8 @@ export function ConfigTab() {
 
   useEffect(() => {
     if (activeProfile) {
-      setDraft({ ...activeProfile });
-      setSavedSnapshot({ ...activeProfile });
+      setDraft({ ...activeProfile, envVars: activeProfile.envVars ?? [] });
+      setSavedSnapshot({ ...activeProfile, envVars: activeProfile.envVars ?? [] });
       setSaved(false);
       setPendingArg(false);
     }
@@ -48,7 +49,6 @@ export function ConfigTab() {
   const handleSave = useCallback(async () => {
     if (!draft) return;
     await saveProfile(draft);
-    // Update the saved snapshot so dirty detection resets correctly
     setSavedSnapshot({ ...draft });
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
@@ -178,6 +178,18 @@ export function ConfigTab() {
               />
             </ArgSection>
           )}
+          {section === 'env' && (
+            <ArgSection
+              title="Environment Variables"
+              hint="Injected into the process environment. Overrides system env vars with the same key."
+            >
+              <EnvVarList
+                items={draft.envVars ?? []}
+                onChange={(envVars) => update({ envVars })}
+                onPendingChange={setPendingArg}
+              />
+            </ArgSection>
+          )}
 
           <div className="rounded-lg bg-base-950 border border-surface-border p-3">
             <p className="text-xs text-text-muted font-mono uppercase tracking-widest mb-2">
@@ -279,6 +291,22 @@ function GeneralSection({
             </div>
           </div>
         )}
+      </div>
+
+      <div className="space-y-3">
+        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">Logging</h3>
+        <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
+          <div>
+            <p className="text-xs text-text-primary font-medium">Save session logs to file</p>
+            <p className="text-xs text-text-muted mt-0.5">
+              Write console output to .log files in the config directory per session
+            </p>
+          </div>
+          <Toggle
+            checked={draft.fileLogging ?? false}
+            onChange={(v) => update({ fileLogging: v })}
+          />
+        </div>
       </div>
 
       {running && (
