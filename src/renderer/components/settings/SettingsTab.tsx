@@ -1,26 +1,36 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../../AppProvider';
 import { Button } from '../common/Button';
-import { Toggle } from '../common/Toggle';
-import { VersionChecker } from './VersionChecker';
-import { REST_API_CONFIG } from '../../../main/shared/config/API.config';
-import { version } from '../../../../package.json';
+import { SidebarLayout } from '../layout/SidebarLayout';
+import { SETTINGS_TOPICS } from '../../../main/shared/config/Settings.config';
+import { StartupSection } from './sections/StartupSection';
+import { ConsoleSection } from './sections/ConsoleSection';
+import { DeveloperSection } from './sections/DeveloperSection';
+import { AboutSection } from './sections/AboutSection';
 import { AppSettings } from '../../../main/shared/types/App.types';
+
+const SECTION_COMPONENTS: Record<string, React.FC<{ draft: AppSettings; set: SetFn }> | React.FC> =
+  {
+    startup: StartupSection,
+    console: ConsoleSection,
+    developer: DeveloperSection,
+    about: AboutSection,
+  };
+
+type SetFn = (patch: Partial<AppSettings>) => void;
 
 export function SettingsTab() {
   const { state, saveSettings } = useApp();
   const [draft, setDraft] = useState<AppSettings | null>(null);
   const [saved, setSaved] = useState(false);
-  // Track whether the draft was initialized so we don't overwrite user edits
+  const [activeTopic, setActiveTopic] = useState(SETTINGS_TOPICS[0].id);
   const initializedRef = useRef(false);
 
-  const set = (patch: Partial<AppSettings>) => {
+  const set: SetFn = (patch) => {
     setSaved(false);
     setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
   };
 
-  // Initialize draft from store once on mount, then only sync fields the user
-  // hasn't touched (devModeEnabled) when the env changes externally.
   useEffect(() => {
     if (!state.settings) return;
     if (!initializedRef.current) {
@@ -28,7 +38,6 @@ export function SettingsTab() {
       initializedRef.current = true;
       return;
     }
-    // Only sync devModeEnabled from outside — everything else is user-controlled
     setDraft((prev) => {
       if (!prev) return state.settings;
       if (prev.devModeEnabled === state.settings!.devModeEnabled) return prev;
@@ -36,7 +45,6 @@ export function SettingsTab() {
     });
   }, [state.settings]);
 
-  // Listen for dev-mode toggled externally (via the DevModeGate shortcut)
   useEffect(() => {
     const unsub = window.env.onChange((env) => {
       setDraft((prev) => {
@@ -61,6 +69,8 @@ export function SettingsTab() {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  const ActiveSection = SECTION_COMPONENTS[activeTopic];
+
   return (
     <div className="flex flex-col h-full min-h-0">
       {(isDirty || saved) && (
@@ -74,214 +84,17 @@ export function SettingsTab() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto min-h-0">
-        <div className="px-5 py-5 max-w-2xl space-y-8">
-          <Section title="Startup">
-            <Row
-              label="Launch on Windows startup"
-              hint="Java Runner Client starts automatically when you log in"
-            >
-              <Toggle
-                checked={draft.launchOnStartup}
-                onChange={(v) => set({ launchOnStartup: v })}
-              />
-            </Row>
-            <Row
-              label="Start minimized to tray"
-              hint="Window won't appear on startup — only the system tray icon"
-              sub
-            >
-              <Toggle
-                checked={draft.startMinimized}
-                onChange={(v) => set({ startMinimized: v })}
-                disabled={!draft.launchOnStartup}
-              />
-            </Row>
-            <Row
-              label="Minimize to tray on close"
-              hint="Closing the window keeps the app and running JARs alive in the background"
-            >
-              <Toggle checked={draft.minimizeToTray} onChange={(v) => set({ minimizeToTray: v })} />
-            </Row>
-          </Section>
-
-          <Divider />
-
-          <Section title="Console">
-            <Row label="Font size" hint="Console output font size in pixels">
-              <div className="flex items-center gap-2.5">
-                <input
-                  type="range"
-                  min={10}
-                  max={20}
-                  value={draft.consoleFontSize}
-                  onChange={(e) => set({ consoleFontSize: Number(e.target.value) })}
-                  className="w-24 accent-accent cursor-pointer"
-                />
-                <span className="text-sm font-mono text-text-secondary w-10 text-right tabular-nums">
-                  {draft.consoleFontSize}px
-                </span>
-              </div>
-            </Row>
-            <Row label="Show line numbers" hint="Display a line number gutter in console output">
-              <Toggle
-                checked={draft.consoleLineNumbers}
-                onChange={(v) => set({ consoleLineNumbers: v })}
-              />
-            </Row>
-            <Row label="Word wrap" hint="Wrap long lines instead of horizontal scrolling">
-              <Toggle
-                checked={draft.consoleWordWrap}
-                onChange={(v) => set({ consoleWordWrap: v })}
-              />
-            </Row>
-            <Row
-              label="Max lines in buffer"
-              hint="Older lines are discarded when the limit is reached"
-            >
-              <NumInput
-                value={draft.consoleMaxLines}
-                min={500}
-                max={50000}
-                step={500}
-                onChange={(v) => set({ consoleMaxLines: v })}
-              />
-            </Row>
-            <Row
-              label="Command history size"
-              hint="Commands stored per session (Up/Down to navigate)"
-            >
-              <NumInput
-                value={draft.consoleHistorySize}
-                min={10}
-                max={2000}
-                step={10}
-                onChange={(v) => set({ consoleHistorySize: v })}
-              />
-            </Row>
-          </Section>
-
-          <Divider />
-
-          <Section title="Developer Options">
-            <Row
-              label="Toggle Developer Mode (Right-Shift + 7)"
-              hint="Enables the Developer tab and DevTools. Use with caution."
-            >
-              <Toggle checked={draft.devModeEnabled} onChange={(v) => set({ devModeEnabled: v })} />
-            </Row>
-            <Row
-              label="Enable REST API"
-              hint={`Exposes a local HTTP API for automation (default port ${REST_API_CONFIG.defaultPort})`}
-            >
-              <Toggle checked={draft.restApiEnabled} onChange={(v) => set({ restApiEnabled: v })} />
-            </Row>
-            {draft.restApiEnabled && (
-              <Row label="Port" hint="Restart required to change the port" sub>
-                <NumInput
-                  value={draft.restApiPort}
-                  min={1024}
-                  max={65535}
-                  step={1}
-                  onChange={(v) => set({ restApiPort: v })}
-                />
-              </Row>
-            )}
-            {draft.restApiEnabled && (
-              <div className="rounded-lg border border-surface-border bg-base-900/50 px-3 py-2.5 pl-5">
-                <p className="text-xs text-text-muted font-mono">
-                  Listening on{' '}
-                  <span className="text-accent">
-                    http://{REST_API_CONFIG.host}:{draft.restApiPort}/api
-                  </span>
-                </p>
-                <p className="text-xs text-text-muted font-mono mt-0.5">
-                  Endpoints: /status · /profiles · /processes · /settings
-                </p>
-              </div>
-            )}
-          </Section>
-
-          <Divider />
-
-          <Section title="About">
-            <VersionChecker currentVersion={version} />
-            <Row label="Stack">
-              <span className="font-mono text-xs text-text-secondary">
-                Electron · React · TypeScript
-              </span>
-            </Row>
-            <Row label="Config">
-              <span className="font-mono text-xs text-text-muted">
-                %APPDATA%\java-runner-client
-              </span>
-            </Row>
-          </Section>
+      <SidebarLayout
+        topics={SETTINGS_TOPICS}
+        activeTopicId={activeTopic}
+        onTopicChange={setActiveTopic}
+      >
+        <div className="px-5 py-5 max-w-2xl">
+          {ActiveSection && (
+            <ActiveSection draft={draft} set={set} />
+          )}
         </div>
-      </div>
+      </SidebarLayout>
     </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest mb-4">{title}</h3>
-      <div className="space-y-0 divide-y divide-surface-border/50">{children}</div>
-    </div>
-  );
-}
-
-function Row({
-  label,
-  hint,
-  sub,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  sub?: boolean;
-  children?: React.ReactNode;
-}) {
-  return (
-    <div
-      className={['flex items-center justify-between gap-6 py-3.5', sub ? 'pl-5' : ''].join(' ')}
-    >
-      <div className="flex-1 min-w-0">
-        <p className={sub ? 'text-sm text-text-secondary' : 'text-sm text-text-primary'}>{label}</p>
-        {hint && <p className="text-xs text-text-muted mt-0.5 leading-4">{hint}</p>}
-      </div>
-      {children && <div className="shrink-0">{children}</div>}
-    </div>
-  );
-}
-
-function Divider() {
-  return <div className="border-t border-surface-border" />;
-}
-
-function NumInput({
-  value,
-  min,
-  max,
-  step,
-  onChange,
-}: {
-  value: number;
-  min: number;
-  max: number;
-  step: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <input
-      type="number"
-      value={value}
-      min={min}
-      max={max}
-      step={step}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="w-24 bg-transparent border border-surface-border rounded-md px-2.5 py-1.5 text-sm font-mono text-text-primary text-right focus:outline-none focus:border-accent/40 transition-colors"
-    />
   );
 }

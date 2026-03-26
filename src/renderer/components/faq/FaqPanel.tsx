@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { FAQ_TOPICS } from '../../../main/shared/config/FAQ.config';
-import type { FaqItem, FaqTopic } from '../../../main/shared/config/FAQ.config';
+import type { FaqItem } from '../../../main/shared/config/FAQ.config';
+import { SidebarLayout } from '../layout/SidebarLayout';
 
 export function FaqPanel() {
   const [search, setSearch] = useState('');
@@ -20,6 +21,12 @@ export function FaqPanel() {
   const activeTopic_ = FAQ_TOPICS.find((t) => t.id === activeTopic) ?? FAQ_TOPICS[0];
   const displayItems = searchTrimmed ? searchResults : (activeTopic_?.items ?? []);
 
+  const handleTopicChange = (id: string) => {
+    setActiveTopic(id);
+    setExpandedIdx(null);
+    setSearch('');
+  };
+
   return (
     <div className="flex flex-col h-full min-h-0">
       <div className="px-4 py-3 border-b border-surface-border bg-base-900 shrink-0">
@@ -35,64 +42,62 @@ export function FaqPanel() {
         />
       </div>
 
-      <div className="flex flex-1 overflow-hidden min-h-0">
-        {!searchTrimmed && (
-          <div className="w-36 shrink-0 border-r border-surface-border bg-base-900/60 overflow-y-auto py-2">
-            {FAQ_TOPICS.map((topic) => (
-              <TopicButton
-                key={topic.id}
-                topic={topic}
-                active={activeTopic === topic.id}
-                onClick={() => {
-                  setActiveTopic(topic.id);
-                  setExpandedIdx(null);
-                  setSearch('');
-                }}
-              />
-            ))}
-          </div>
-        )}
+      {searchTrimmed ? (
         <div className="flex-1 overflow-y-auto min-h-0 px-4 py-3 space-y-2">
-          {displayItems.length === 0 && (
-            <p className="text-xs text-text-muted font-mono py-8 text-center">
-              {searchTrimmed ? 'No results found.' : 'No items in this topic.'}
-            </p>
-          )}
-          {displayItems.map((item, i) => (
-            <FaqEntry
-              key={i}
-              item={item}
-              open={expandedIdx === i}
-              onToggle={() => setExpandedIdx(expandedIdx === i ? null : i)}
-            />
-          ))}
+          <FaqList
+            items={displayItems}
+            expandedIdx={expandedIdx}
+            onToggle={(i) => setExpandedIdx(expandedIdx === i ? null : i)}
+            emptyLabel="No results found."
+          />
         </div>
-      </div>
+      ) : (
+        <SidebarLayout
+          topics={FAQ_TOPICS}
+          activeTopicId={activeTopic}
+          onTopicChange={handleTopicChange}
+        >
+          <div className="px-4 py-3 space-y-2">
+            <FaqList
+              items={displayItems}
+              expandedIdx={expandedIdx}
+              onToggle={(i) => setExpandedIdx(expandedIdx === i ? null : i)}
+              emptyLabel="No items in this topic."
+            />
+          </div>
+        </SidebarLayout>
+      )}
     </div>
   );
 }
 
-function TopicButton({
-  topic,
-  active,
-  onClick,
+function FaqList({
+  items,
+  expandedIdx,
+  onToggle,
+  emptyLabel,
 }: {
-  topic: FaqTopic;
-  active: boolean;
-  onClick: () => void;
+  items: FaqItem[];
+  expandedIdx: number | null;
+  onToggle: (i: number) => void;
+  emptyLabel: string;
 }) {
+  if (items.length === 0) {
+    return (
+      <p className="text-xs text-text-muted font-mono py-8 text-center">{emptyLabel}</p>
+    );
+  }
   return (
-    <button
-      onClick={onClick}
-      className={[
-        'w-full text-left px-3 py-2 text-xs transition-colors',
-        active
-          ? 'text-text-primary bg-surface-raised font-medium border-r-2 border-accent'
-          : 'text-text-muted hover:text-text-primary hover:bg-surface-raised/50',
-      ].join(' ')}
-    >
-      {topic.label}
-    </button>
+    <>
+      {items.map((item, i) => (
+        <FaqEntry
+          key={i}
+          item={item}
+          open={expandedIdx === i}
+          onToggle={() => onToggle(i)}
+        />
+      ))}
+    </>
   );
 }
 
