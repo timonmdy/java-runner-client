@@ -174,9 +174,18 @@ export function LogsTab() {
                   Copy
                 </Button>
                 <button
-                  onClick={() => setDeleteTarget(selectedFile)}
+                  onClick={(e) => {
+                    if (e.shiftKey) {
+                      window.api.deleteLogFile(selectedFile.filePath);
+                      setSelectedFile(null);
+                      setLogContent(null);
+                      refresh();
+                    } else {
+                      setDeleteTarget(selectedFile);
+                    }
+                  }}
                   className="text-text-muted hover:text-red-400 transition-colors p-1"
-                  title="Delete log file"
+                  title="Delete log file (hold Shift to skip confirmation)"
                 >
                   <VscTrash size={12} />
                 </button>

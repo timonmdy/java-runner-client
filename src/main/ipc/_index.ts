@@ -1,12 +1,4 @@
 import { EnvironmentIPC } from './Environment.ipc';
-/**
- * Central IPC registry.
- *
- * To add a new route:
- *   1. Add it to the appropriate *.ipc.ts file (or create a new one)
- *   2. If it's a new file, add it to `allRoutes` below
- *   3. That's it — main, preload, and types all update automatically
- */
 
 export { GitHubIPC } from './GitHub.ipc';
 export { ProcessIPC } from './Process.ipc';
@@ -16,6 +8,7 @@ export { WindowIPC, initWindowIPC } from './Window.ipc';
 export { DevIPC, initDevIPC } from './Dev.ipc';
 export { JarResolutionIPC } from './JarResolution.ipc';
 export { LoggingIPC } from './Logging.ipc';
+export { AssetIPC } from './Asset.ipc';
 
 import { GitHubIPC } from './GitHub.ipc';
 import { ProcessIPC } from './Process.ipc';
@@ -25,6 +18,7 @@ import { WindowIPC } from './Window.ipc';
 import { DevIPC } from './Dev.ipc';
 import { JarResolutionIPC } from './JarResolution.ipc';
 import { LoggingIPC } from './Logging.ipc';
+import { AssetIPC } from './Asset.ipc';
 import type { InferAPI } from '../IPCController';
 
 export const allRoutes = [
@@ -36,6 +30,7 @@ export const allRoutes = [
   DevIPC,
   JarResolutionIPC,
   LoggingIPC,
+  AssetIPC,
 ] as const;
 
 export type API = InferAPI<
@@ -46,7 +41,8 @@ export type API = InferAPI<
     typeof WindowIPC &
     typeof DevIPC &
     typeof JarResolutionIPC &
-    typeof LoggingIPC
+    typeof LoggingIPC &
+    typeof AssetIPC
 >;
 
 export type Environment = InferAPI<typeof EnvironmentIPC>;

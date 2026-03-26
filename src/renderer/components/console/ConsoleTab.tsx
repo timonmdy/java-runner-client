@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useCallback, useMemo, KeyboardEvent
 import { useApp } from '../../AppProvider';
 import { Button } from '../common/Button';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
-import { VscSearch, VscChevronUp, VscChevronDown, VscClose, VscFolderOpened } from 'react-icons/vsc';
+import { VscSearch, VscChevronUp, VscChevronDown, VscClose, VscFolderOpened, VscClearAll } from 'react-icons/vsc';
 import { ConsoleLine } from '../../../main/shared/types/Process.types';
 import { hasJarConfigured } from '../../../main/shared/types/Profile.types';
 
@@ -280,13 +280,13 @@ export function ConsoleTab() {
 
         <button
           onClick={() => clearConsole(profileId)}
-          className="text-xs text-text-muted hover:text-text-primary font-mono transition-colors"
+          className="text-text-muted hover:text-text-primary transition-colors p-1"
           title="Clear (Ctrl+L)"
         >
-          Clear
+          <VscClearAll size={13} />
         </button>
 
-        <span className="text-xs text-text-muted font-mono tabular-nums">
+        <span className="text-xs text-text-muted font-mono tabular-nums ml-1">
           {lines.length.toLocaleString()} lines
         </span>
       </div>

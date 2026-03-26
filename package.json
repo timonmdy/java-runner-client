@@ -1,6 +1,6 @@
 {
   "name": "java-runner-client",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Run and manage Java processes with profiles, console I/O, and system tray support",
   "main": "dist/main/main.js",
   "scripts": {

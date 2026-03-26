@@ -3,19 +3,13 @@ import { useApp } from '../../AppProvider';
 import { Button } from '../common/Button';
 import { SidebarLayout } from '../layout/SidebarLayout';
 import { SETTINGS_TOPICS } from '../../../main/shared/config/Settings.config';
-import { StartupSection } from './sections/StartupSection';
+import { GeneralSection } from './sections/GeneralSection';
 import { ConsoleSection } from './sections/ConsoleSection';
-import { DeveloperSection } from './sections/DeveloperSection';
+import { AppearanceSection } from './sections/AppearanceSection';
+import { AdvancedSection } from './sections/AdvancedSection';
+import { UpdatesSection } from './sections/UpdatesSection';
 import { AboutSection } from './sections/AboutSection';
 import { AppSettings } from '../../../main/shared/types/App.types';
-
-const SECTION_COMPONENTS: Record<string, React.FC<{ draft: AppSettings; set: SetFn }> | React.FC> =
-  {
-    startup: StartupSection,
-    console: ConsoleSection,
-    developer: DeveloperSection,
-    about: AboutSection,
-  };
 
 type SetFn = (patch: Partial<AppSettings>) => void;
 
@@ -69,7 +63,8 @@ export function SettingsTab() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const ActiveSection = SECTION_COMPONENTS[activeTopic];
+  // Sections that don't need draft/set props
+  const isStandaloneSection = activeTopic === 'appearance' || activeTopic === 'updates' || activeTopic === 'about';
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -89,10 +84,13 @@ export function SettingsTab() {
         activeTopicId={activeTopic}
         onTopicChange={setActiveTopic}
       >
-        <div className="px-5 py-5 max-w-2xl">
-          {ActiveSection && (
-            <ActiveSection draft={draft} set={set} />
-          )}
+        <div className="px-5 py-5 max-w-2xl space-y-6">
+          {activeTopic === 'general' && <GeneralSection draft={draft} set={set} />}
+          {activeTopic === 'console' && <ConsoleSection draft={draft} set={set} />}
+          {activeTopic === 'appearance' && <AppearanceSection />}
+          {activeTopic === 'advanced' && <AdvancedSection draft={draft} set={set} />}
+          {activeTopic === 'updates' && <UpdatesSection />}
+          {activeTopic === 'about' && <AboutSection />}
         </div>
       </SidebarLayout>
     </div>

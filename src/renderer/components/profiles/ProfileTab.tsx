@@ -26,6 +26,7 @@ export function ProfileTab() {
   const update = (patch: Partial<Profile>) =>
     setDraft((prev) => (prev ? { ...prev, ...patch } : prev));
   const color = draft.color || PROFILE_COLORS[0];
+  const isCustomColor = !PROFILE_COLORS.includes(draft.color);
 
   const handleSave = async () => {
     await saveProfile(draft);
@@ -61,7 +62,7 @@ export function ProfileTab() {
             title="Accent Colour"
             hint="Used in the sidebar and as the tab highlight colour."
           >
-            <div className="flex flex-wrap gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5">
               {PROFILE_COLORS.map((c) => (
                 <button
                   key={c}
@@ -74,6 +75,29 @@ export function ProfileTab() {
                   }}
                 />
               ))}
+              <label
+                className="w-7 h-7 rounded-full transition-all duration-150 hover:scale-110 cursor-pointer overflow-hidden border-2 border-dashed border-surface-border relative"
+                style={{
+                  backgroundColor: isCustomColor ? draft.color : 'transparent',
+                  boxShadow: isCustomColor
+                    ? `0 0 0 2px #08090d, 0 0 0 4px ${draft.color}`
+                    : 'none',
+                  transform: isCustomColor ? 'scale(1.15)' : undefined,
+                }}
+                title="Pick custom colour"
+              >
+                <input
+                  type="color"
+                  value={draft.color}
+                  onChange={(e) => update({ color: e.target.value })}
+                  className="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                />
+                {!isCustomColor && (
+                  <span className="absolute inset-0 flex items-center justify-center text-text-muted text-[10px] font-bold">
+                    +
+                  </span>
+                )}
+              </label>
             </div>
           </Section>
 
@@ -83,12 +107,19 @@ export function ProfileTab() {
                 <p className="text-xs font-medium text-text-primary">Delete profile</p>
                 <p className="text-xs text-text-muted mt-0.5">
                   Permanently removes this profile and all its configuration.
+                  Hold Shift to skip confirmation.
                 </p>
               </div>
               <Button
                 variant="danger"
                 size="sm"
-                onClick={() => setShowDelete(true)}
+                onClick={(e) => {
+                  if ((e as React.MouseEvent).shiftKey) {
+                    deleteProfile(draft.id);
+                  } else {
+                    setShowDelete(true);
+                  }
+                }}
                 className="shrink-0"
               >
                 Delete

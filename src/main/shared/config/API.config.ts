@@ -57,12 +57,33 @@ export const routeConfig = {
   processes_stop: {
     method: 'POST',
     path: '/api/processes/:id/stop',
-    description: 'Stop process',
+    description: 'Graceful stop process',
+  },
+  processes_force_stop: {
+    method: 'POST',
+    path: '/api/processes/:id/force-stop',
+    description: 'Force kill process',
   },
   processes_clear: {
     method: 'POST',
     path: '/api/processes/:id/console/clear',
     description: 'Clear console',
+  },
+
+  logs_list: {
+    method: 'GET',
+    path: '/api/logs/:id',
+    description: 'List log files for profile',
+  },
+  logs_read: {
+    method: 'GET',
+    path: '/api/logs/:id/:filename',
+    description: 'Read a log file',
+  },
+  logs_delete: {
+    method: 'DELETE',
+    path: '/api/logs/:id/:filename',
+    description: 'Delete a log file',
   },
 
   settings_get: {

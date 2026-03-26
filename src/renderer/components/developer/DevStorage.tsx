@@ -40,13 +40,14 @@ export function DevStorage() {
   }, []);
 
   const totalSessionBytes = sessionEntries.reduce((a, b) => a + b.sizeBytes, 0);
+  const profilesWithLogging = state.profiles.filter((p) => p.fileLogging).length;
 
   return (
     <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-5">
       <StorageSection title="Electron Store (Persistent)">
         <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
           <StoreRow label="Profiles" value={String(state.profiles.length)} />
-          <StoreRow label="Active profile ID" value={state.activeProfileId || '—'} mono />
+          <StoreRow label="Active profile ID" value={state.activeProfileId || '---'} mono />
           <StoreRow
             label="REST API"
             value={
@@ -57,7 +58,15 @@ export function DevStorage() {
           />
           <StoreRow
             label="Console max lines"
-            value={String(state.settings?.consoleMaxLines ?? '—')}
+            value={String(state.settings?.consoleMaxLines ?? '---')}
+          />
+          <StoreRow
+            label="Console timestamps"
+            value={state.settings?.consoleTimestamps ? 'Enabled' : 'Disabled'}
+          />
+          <StoreRow
+            label="File logging profiles"
+            value={`${profilesWithLogging} / ${state.profiles.length}`}
           />
         </div>
         <Button variant="danger" size="sm" onClick={() => setConfirmReset('electron-store')}>
@@ -156,10 +165,10 @@ function StorageSection({ title, children }: { title: string; children: React.Re
 function StoreRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex items-center justify-between gap-4 px-3 py-2">
-      <span className="text-xs text-text-muted font-mono w-40 shrink-0">{label}</span>
+      <span className="text-xs text-text-muted">{label}</span>
       <span
         className={[
-          'text-xs flex-1 truncate text-right',
+          'text-xs',
           mono ? 'font-mono text-text-secondary' : 'text-text-secondary',
         ].join(' ')}
       >

@@ -1,8 +1,10 @@
 import type { SidebarTopic } from '../types/Sidebar.types';
 
 export const SETTINGS_TOPICS: SidebarTopic[] = [
-  { id: 'startup', label: 'Startup' },
+  { id: 'general', label: 'General' },
   { id: 'console', label: 'Console' },
-  { id: 'developer', label: 'Developer' },
+  { id: 'appearance', label: 'Appearance' },
+  { id: 'advanced', label: 'Advanced' },
+  { id: 'updates', label: 'Updates' },
   { id: 'about', label: 'About' },
 ];

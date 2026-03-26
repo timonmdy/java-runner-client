@@ -2,6 +2,8 @@ export const GITHUB_CONFIG = {
   owner: 'timonmdy',
   repo: 'java-runner-client',
   templatesPath: 'profile-templates',
+  themesPath: 'themes',
+  languagesPath: 'languages',
   templateMinVersion: 1,
   apiBase: 'https://api.github.com',
 } as const;

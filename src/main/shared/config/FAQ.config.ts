@@ -53,11 +53,71 @@ export const FAQ_TOPICS: FaqTopic[] = [
       },
       {
         q: 'How can I quickly delete a profile?',
-        a: 'Right-click a profile and press Delete. Hold Shift while clicking Delete to skip the confirmation and remove it instantly.',
+        a: 'Right-click a profile and press Delete. Hold Shift while clicking Delete to skip the confirmation and remove it instantly. The same Shift shortcut works on the Profile tab\'s Delete button.',
       },
       {
         q: 'How do I use "dynamic" JAR resolution?',
         a: 'In Configure -> Files & Paths, select "Dynamic" as the JAR selection method. This enables automatic JAR detection in the working directory and lets you customize the search pattern. This is useful for projects that produce versioned JARs or have changing filenames. Change the "app" part in the filename pattern to the (static) prefix of your app and select the type of versioning to be used. You can also use regular expressions (RegExp) to gain full control over file discovery.',
+      },
+      {
+        q: 'How do I set environment variables for a profile?',
+        a: 'Go to Configure -> Environment. Add key=value pairs that will be injected into the process environment when it starts. These override system environment variables with the same key. Each variable can be individually toggled on or off.',
+      },
+      {
+        q: 'How do I use a custom colour for my profile?',
+        a: 'On the Profile tab, click the "+" button at the end of the colour palette to open a native colour picker. Any hex colour is supported.',
+      },
+    ],
+  },
+  {
+    id: 'console',
+    label: 'Console',
+    items: [
+      {
+        q: 'How do I send commands to a running process?',
+        a: 'On the Console tab, type in the input bar at the bottom and press Enter. Press Up/Down to navigate command history. Ctrl+L clears the output. Ctrl+F opens search.',
+      },
+      {
+        q: 'How do I copy a single console line?',
+        a: 'Right-click any line in the console to open a context menu with "Copy line" and "Copy all output" options.',
+      },
+      {
+        q: 'How do I enable timestamps on console lines?',
+        a: 'Go to Settings -> Console and enable "Show timestamps". Each line will show an HH:MM:SS.mmm timestamp.',
+      },
+      {
+        q: 'What is the difference between Stop and Force Kill?',
+        a: 'Stop sends a graceful shutdown signal (like pressing Ctrl+C in a terminal). The process gets a chance to save data and clean up. If it does not exit within a few seconds, it escalates to a forced termination.\n\nForce Kill immediately terminates the process without giving it any chance to shut down. Use this only if Stop is not working.',
+      },
+      {
+        q: 'How do I open the working directory of a running process?',
+        a: 'Click the folder icon in the console toolbar. This opens the profile\'s working directory (or the JAR directory if none is set) in your system file explorer.',
+      },
+      {
+        q: 'Why does console output look garbled with special characters?',
+        a: 'JRC processes ANSI escape sequences from terminal output. Most sequences (colours, cursor movement, progress bars) are handled automatically. If a tool uses very unusual terminal sequences, some characters may still leak through.',
+      },
+    ],
+  },
+  {
+    id: 'logging',
+    label: 'Logging',
+    items: [
+      {
+        q: 'How do I save console output to a file?',
+        a: 'Go to Configure -> General and enable "Save session logs to file". Each time a process starts and stops, a .log file is written to the config directory under logs/<profileId>/.',
+      },
+      {
+        q: 'Where are log files stored?',
+        a: 'Log files are stored at:\nWindows: %APPDATA%\\java-runner-client\\logs\\<profileId>\\\nLinux: ~/.config/java-runner-client/logs/<profileId>/\n\nFilenames include start and stop timestamps.',
+      },
+      {
+        q: 'How do I view past session logs?',
+        a: 'Go to the Logs tab (next to Console and Configure). Select a session from the sidebar to view its contents. You can also copy the full log or delete old files.',
+      },
+      {
+        q: 'Can I delete old log files?',
+        a: 'Yes. In the Logs tab, select a log file and click the trash icon. Hold Shift to skip the confirmation dialog. You can also click the folder icon to open the logs directory and manage files manually.',
       },
     ],
   },
@@ -65,10 +125,6 @@ export const FAQ_TOPICS: FaqTopic[] = [
     id: 'usage',
     label: 'Usage',
     items: [
-      {
-        q: 'How do I send commands to a running process?',
-        a: 'On the Console tab, type in the input bar at the bottom and press Enter. Press Up/Down to navigate command history. Ctrl+L clears the output. Ctrl+F opens search.',
-      },
       {
         q: 'How do I keep JARs running after closing the window?',
         a: 'Enable "Minimize to tray on close" in Settings. Closing the window hides it to the system tray instead of stopping processes.',
@@ -98,6 +154,10 @@ export const FAQ_TOPICS: FaqTopic[] = [
       {
         q: 'How do I use a profile template?',
         a: 'Click "From Template" in the sidebar. Browse templates loaded from the GitHub repository, select one, and click "Create Profile". The new profile will have sensible defaults pre-filled for that use case.',
+      },
+      {
+        q: 'How do I inject environment variables like JAVA_HOME?',
+        a: 'Go to Configure -> Environment and add a row with key JAVA_HOME and the value pointing to your JDK installation. Toggle it on/off as needed without removing it.',
       },
     ],
   },
