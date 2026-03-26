@@ -1,25 +1,28 @@
-import React, { useState } from 'react';
-import { Section, Row } from '../SettingsRow';
+import React, { useState, useEffect } from 'react';
+import { Section } from '../SettingsRow';
 import { useTheme } from '../../../hooks/ThemeProvider';
 import { useTranslation } from '../../../i18n/I18nProvider';
-import { useDevMode } from '../../../hooks/useDevMode';
 import { VscSync, VscCheck } from 'react-icons/vsc';
-import { LuDownload } from 'react-icons/lu';
 import type { ThemeDefinition } from '../../../../main/shared/types/Theme.types';
 import type { LanguageDefinition } from '../../../../main/shared/types/Language.types';
+import type { JRCEnvironment } from '../../../../main/shared/types/App.types';
 
 type FetchState = 'idle' | 'loading' | 'done' | 'error';
 
 export function AppearanceSection() {
   const { theme, setTheme, availableThemes, refreshThemes } = useTheme();
   const { language, setLanguage, availableLanguages, refreshLanguages } = useTranslation();
-  const devMode = useDevMode();
 
   const [remoteThemes, setRemoteThemes] = useState<ThemeDefinition[]>([]);
   const [remoteLangs, setRemoteLangs] = useState<LanguageDefinition[]>([]);
   const [themeFetch, setThemeFetch] = useState<FetchState>('idle');
   const [langFetch, setLangFetch] = useState<FetchState>('idle');
+  const [isDev, setIsDev] = useState(false);
   const [devSynced, setDevSynced] = useState(false);
+
+  useEffect(() => {
+    window.env.get().then((env: JRCEnvironment) => setIsDev(env.type === 'dev'));
+  }, []);
 
   const fetchThemes = async () => {
     setThemeFetch('loading');
@@ -35,13 +38,15 @@ export function AppearanceSection() {
     else setLangFetch('error');
   };
 
-  const installTheme = async (t: ThemeDefinition) => {
+  const selectTheme = async (t: ThemeDefinition) => {
     await window.api.installTheme(t);
+    await window.api.setActiveTheme(t.id);
     await refreshThemes();
   };
 
-  const installLang = async (l: LanguageDefinition) => {
+  const selectLang = async (l: LanguageDefinition) => {
     await window.api.installLanguage(l);
+    await window.api.setActiveLanguage(l.id);
     await refreshLanguages();
   };
 
@@ -53,27 +58,42 @@ export function AppearanceSection() {
     setTimeout(() => setDevSynced(false), 2000);
   };
 
+  const allThemes = mergeById(availableThemes, remoteThemes, (t) => t.id);
+  const allLangs = mergeById(availableLanguages, remoteLangs, (l) => l.id);
+
   return (
     <>
       <Section title="Theme">
-        <div className="space-y-1.5 py-1">
-          {availableThemes.map((t) => (
+        <div className="flex items-center justify-between py-1">
+          <p className="text-xs text-text-muted">Select a visual theme</p>
+          <button
+            onClick={fetchThemes}
+            disabled={themeFetch === 'loading'}
+            className="flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors disabled:opacity-40"
+          >
+            <VscSync size={11} className={themeFetch === 'loading' ? 'animate-spin' : ''} />
+            {themeFetch === 'done' ? 'Refresh' : 'Load from GitHub'}
+          </button>
+        </div>
+        {themeFetch === 'error' && (
+          <p className="text-xs text-red-400 font-mono py-1">Failed to fetch themes.</p>
+        )}
+        <div className="space-y-1 py-1">
+          {allThemes.map((t) => (
             <button
               key={t.id}
-              onClick={() => setTheme(t.id)}
+              onClick={() => theme.id === t.id ? undefined : selectTheme(t)}
               className={[
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors',
-                theme.id === t.id
-                  ? 'bg-surface-raised'
-                  : 'hover:bg-surface-raised/50',
+                theme.id === t.id ? 'bg-surface-raised' : 'hover:bg-surface-raised/50 cursor-pointer',
               ].join(' ')}
             >
               <div className="flex gap-1 shrink-0">
-                {['accent', 'base-900', 'surface-raised', 'text-primary'].map((key) => (
+                {(['accent', 'base-900', 'surface-raised', 'text-primary'] as const).map((key) => (
                   <span
                     key={key}
                     className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: t.colors[key as keyof typeof t.colors] }}
+                    style={{ backgroundColor: t.colors[key] }}
                   />
                 ))}
               </div>
@@ -82,41 +102,31 @@ export function AppearanceSection() {
             </button>
           ))}
         </div>
-        <div className="py-1">
-          <button
-            onClick={fetchThemes}
-            disabled={themeFetch === 'loading'}
-            className="flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors disabled:opacity-40"
-          >
-            <VscSync size={11} className={themeFetch === 'loading' ? 'animate-spin' : ''} />
-            Browse themes from GitHub
-          </button>
-          <RemoteList
-            state={themeFetch}
-            items={remoteThemes}
-            installed={availableThemes}
-            onInstall={installTheme}
-            getId={(t) => t.id}
-            getVersion={(t) => t.version}
-            getName={(t) => t.name}
-            getAuthor={(t) => t.author}
-            emptyLabel="No themes found on GitHub."
-            errorLabel="Failed to fetch themes."
-          />
-        </div>
       </Section>
 
       <Section title="Language">
-        <div className="space-y-1.5 py-1">
-          {availableLanguages.map((l) => (
+        <div className="flex items-center justify-between py-1">
+          <p className="text-xs text-text-muted">Select a display language</p>
+          <button
+            onClick={fetchLangs}
+            disabled={langFetch === 'loading'}
+            className="flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors disabled:opacity-40"
+          >
+            <VscSync size={11} className={langFetch === 'loading' ? 'animate-spin' : ''} />
+            {langFetch === 'done' ? 'Refresh' : 'Load from GitHub'}
+          </button>
+        </div>
+        {langFetch === 'error' && (
+          <p className="text-xs text-red-400 font-mono py-1">Failed to fetch languages.</p>
+        )}
+        <div className="space-y-1 py-1">
+          {allLangs.map((l) => (
             <button
               key={l.id}
-              onClick={() => setLanguage(l.id)}
+              onClick={() => language.id === l.id ? undefined : selectLang(l)}
               className={[
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors',
-                language.id === l.id
-                  ? 'bg-surface-raised'
-                  : 'hover:bg-surface-raised/50',
+                language.id === l.id ? 'bg-surface-raised' : 'hover:bg-surface-raised/50 cursor-pointer',
               ].join(' ')}
             >
               <span className="text-xs text-text-primary flex-1">{l.name}</span>
@@ -124,36 +134,17 @@ export function AppearanceSection() {
             </button>
           ))}
         </div>
-        <div className="py-1">
-          <button
-            onClick={fetchLangs}
-            disabled={langFetch === 'loading'}
-            className="flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors disabled:opacity-40"
-          >
-            <VscSync size={11} className={langFetch === 'loading' ? 'animate-spin' : ''} />
-            Browse languages from GitHub
-          </button>
-          <RemoteList
-            state={langFetch}
-            items={remoteLangs}
-            installed={availableLanguages}
-            onInstall={installLang}
-            getId={(l) => l.id}
-            getVersion={(l) => l.version}
-            getName={(l) => l.name}
-            getAuthor={(l) => l.author}
-            emptyLabel="No languages found on GitHub."
-            errorLabel="Failed to fetch languages."
-          />
-        </div>
       </Section>
 
-      {devMode && (
+      {isDev && (
         <Section title="Development">
-          <Row
-            label="Sync local files"
-            hint="Load themes and languages from project /themes and /languages directories"
-          >
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <p className="text-xs text-text-primary">Sync local project files</p>
+              <p className="text-xs text-text-muted mt-0.5">
+                Load themes and languages from /themes and /languages in the project root
+              </p>
+            </div>
             <button
               onClick={handleDevSync}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono text-text-muted hover:text-text-primary transition-colors"
@@ -161,71 +152,17 @@ export function AppearanceSection() {
               {devSynced ? <VscCheck size={11} className="text-accent" /> : <VscSync size={11} />}
               {devSynced ? 'Synced' : 'Sync'}
             </button>
-          </Row>
+          </div>
         </Section>
       )}
     </>
   );
 }
 
-function RemoteList<T>({
-  state,
-  items,
-  installed,
-  onInstall,
-  getId,
-  getVersion,
-  getName,
-  getAuthor,
-  emptyLabel,
-  errorLabel,
-}: {
-  state: FetchState;
-  items: T[];
-  installed: T[];
-  onInstall: (item: T) => void;
-  getId: (item: T) => string;
-  getVersion: (item: T) => number;
-  getName: (item: T) => string;
-  getAuthor: (item: T) => string;
-  emptyLabel: string;
-  errorLabel: string;
-}) {
-  if (state !== 'done' && state !== 'error') return null;
-  if (state === 'error') return <p className="mt-2 text-xs text-red-400 font-mono">{errorLabel}</p>;
-  if (items.length === 0) return <p className="mt-2 text-xs text-text-muted font-mono">{emptyLabel}</p>;
-
-  return (
-    <div className="mt-2 space-y-1">
-      {items.map((item) => {
-        const inst = installed.find((i) => getId(i) === getId(item));
-        const isNewer = inst ? getVersion(item) > getVersion(inst) : true;
-        return (
-          <div
-            key={getId(item)}
-            className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-base-900/50"
-          >
-            <div className="min-w-0">
-              <p className="text-xs font-mono text-text-primary truncate">{getName(item)}</p>
-              <p className="text-[10px] text-text-muted font-mono">
-                v{getVersion(item)} by {getAuthor(item)}
-              </p>
-            </div>
-            {inst && !isNewer ? (
-              <span className="text-[10px] text-accent font-mono flex items-center gap-1">
-                <VscCheck size={10} /> Installed
-              </span>
-            ) : (
-              <button
-                onClick={() => onInstall(item)}
-                className="flex items-center gap-1 text-xs font-mono text-accent hover:text-text-primary transition-colors"
-              >
-                <LuDownload size={11} /> {inst ? 'Update' : 'Install'}
-              </button>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
+/** Merge local + remote lists by ID, preferring remote version if newer */
+function mergeById<T>(local: T[], remote: T[], getId: (item: T) => string): T[] {
+  const map = new Map<string, T>();
+  for (const item of local) map.set(getId(item), item);
+  for (const item of remote) map.set(getId(item), item);
+  return Array.from(map.values());
 }
