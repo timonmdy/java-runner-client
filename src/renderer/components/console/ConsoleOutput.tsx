@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useCallback, useMemo } from 'react';
 import type { ConsoleLine } from '../../../main/shared/types/Process.types';
+import { parseAnsi, hasAnsi, AnsiSpan } from '../../utils/ansi';
 
 interface Props {
   lines: ConsoleLine[];
@@ -45,14 +46,12 @@ export function ConsoleOutput({
       ? ((searchIdx % matchIndices.length) + matchIndices.length) % matchIndices.length
       : 0;
 
-  // Auto-scroll to bottom when new lines arrive
   useEffect(() => {
     if (autoScroll && !searchOpen) {
       bottomRef.current?.scrollIntoView({ behavior: 'instant' });
     }
   }, [lines.length, autoScroll, searchOpen]);
 
-  // Scroll to current match
   useEffect(() => {
     if (matchIndices.length > 0) {
       matchRefs.current[clampedIdx]?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -132,8 +131,6 @@ const ConsoleLineRow = React.forwardRef<
   }
 >(({ line, lineNum, showLineNum, wordWrap, searchTerm, isCurrentMatch, isAnyMatch }, ref) => {
   const text = line.text || ' ';
-  const content =
-    searchTerm && isAnyMatch ? renderHighlighted(text, searchTerm, isCurrentMatch) : text;
 
   return (
     <div
@@ -159,12 +156,60 @@ const ConsoleLineRow = React.forwardRef<
           wordWrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre',
         ].join(' ')}
       >
-        {content}
+        {renderContent(text, searchTerm, isCurrentMatch, isAnyMatch)}
       </span>
     </div>
   );
 });
 ConsoleLineRow.displayName = 'ConsoleLineRow';
+
+function renderContent(
+  text: string,
+  searchTerm: string,
+  isCurrentMatch: boolean,
+  isAnyMatch: boolean
+): React.ReactNode {
+  if (hasAnsi(text)) {
+    const spans = parseAnsi(text);
+    if (!searchTerm || !isAnyMatch) {
+      return spans.map((span, i) => <AnsiSpanNode key={i} span={span} />);
+    }
+    return spans.map((span, i) => (
+      <AnsiSpanNode key={i} span={span} searchTerm={searchTerm} isCurrent={isCurrentMatch} />
+    ));
+  }
+
+  if (searchTerm && isAnyMatch) {
+    return renderHighlighted(text, searchTerm, isCurrentMatch);
+  }
+
+  return text;
+}
+
+function AnsiSpanNode({
+  span,
+  searchTerm,
+  isCurrent,
+}: {
+  span: AnsiSpan;
+  searchTerm?: string;
+  isCurrent?: boolean;
+}) {
+  const style: React.CSSProperties = {};
+  if (span.color) style.color = span.color;
+  if (span.bgColor) style.backgroundColor = span.bgColor;
+  if (span.bold) style.fontWeight = 'bold';
+  if (span.dim) style.opacity = 0.6;
+  if (span.italic) style.fontStyle = 'italic';
+  if (span.underline) style.textDecoration = 'underline';
+
+  const content =
+    searchTerm && span.text.toLowerCase().includes(searchTerm.toLowerCase())
+      ? renderHighlighted(span.text, searchTerm, isCurrent ?? false)
+      : span.text;
+
+  return <span style={Object.keys(style).length ? style : undefined}>{content}</span>;
+}
 
 function renderHighlighted(text: string, term: string, isCurrent: boolean): React.ReactNode {
   const parts: React.ReactNode[] = [];
@@ -172,6 +217,7 @@ function renderHighlighted(text: string, term: string, isCurrent: boolean): Reac
   let last = 0;
   let idx = lower.indexOf(term);
   let key = 0;
+
   while (idx !== -1) {
     if (idx > last) parts.push(text.slice(last, idx));
     parts.push(

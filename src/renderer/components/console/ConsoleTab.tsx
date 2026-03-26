@@ -4,6 +4,7 @@ import { Button } from '../common/Button';
 import { VscSearch, VscChevronUp, VscChevronDown, VscClose } from 'react-icons/vsc';
 import { ConsoleLine } from '../../../main/shared/types/Process.types';
 import { hasJarConfigured } from '../../../main/shared/types/Profile.types';
+import { parseAnsi, hasAnsi, AnsiSpan } from '../../utils/ansi';
 
 export function ConsoleTab() {
   const { state, activeProfile, startProcess, stopProcess, sendInput, clearConsole, isRunning } =
@@ -165,6 +166,13 @@ export function ConsoleTab() {
     return () => window.removeEventListener('keydown', handler);
   }, [openSearch, closeSearch, searchOpen]);
 
+  // Focus input on click only if nothing is being selected
+  const handleOutputClick = useCallback(() => {
+    const sel = window.getSelection();
+    if (sel && sel.toString().length > 0) return;
+    if (!searchOpen) inputRef.current?.focus();
+  }, [searchOpen]);
+
   const fontSize = settings?.consoleFontSize ?? 13;
   const wordWrap = settings?.consoleWordWrap ?? false;
   const lineNums = settings?.consoleLineNumbers ?? false;
@@ -304,7 +312,7 @@ export function ConsoleTab() {
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        onClick={() => !searchOpen && inputRef.current?.focus()}
+        onClick={handleOutputClick}
         className="flex-1 overflow-y-auto overflow-x-auto bg-base-950 select-text"
         style={{ fontSize, lineHeight: 1.6, fontFamily: 'monospace' }}
       >
@@ -385,8 +393,6 @@ const ConsoleLineRow = React.forwardRef<
   }
 >(({ line, lineNum, showLineNum, wordWrap, searchTerm, isCurrentMatch, isAnyMatch }, ref) => {
   const text = line.text || ' ';
-  const content =
-    searchTerm && isAnyMatch ? renderHighlighted(text, searchTerm, isCurrentMatch) : text;
 
   return (
     <div
@@ -412,12 +418,61 @@ const ConsoleLineRow = React.forwardRef<
           wordWrap ? 'whitespace-pre-wrap break-all' : 'whitespace-pre',
         ].join(' ')}
       >
-        {content}
+        {renderContent(text, searchTerm, isCurrentMatch, isAnyMatch)}
       </span>
     </div>
   );
 });
 ConsoleLineRow.displayName = 'ConsoleLineRow';
+
+function renderContent(
+  text: string,
+  searchTerm: string,
+  isCurrentMatch: boolean,
+  isAnyMatch: boolean
+): React.ReactNode {
+  if (hasAnsi(text)) {
+    const spans = parseAnsi(text);
+    if (!searchTerm || !isAnyMatch) {
+      return spans.map((span, i) => <AnsiSpanNode key={i} span={span} />);
+    }
+    // Search highlighting within ANSI spans
+    return spans.map((span, i) => (
+      <AnsiSpanNode key={i} span={span} searchTerm={searchTerm} isCurrent={isCurrentMatch} />
+    ));
+  }
+
+  if (searchTerm && isAnyMatch) {
+    return renderHighlighted(text, searchTerm, isCurrentMatch);
+  }
+
+  return text;
+}
+
+function AnsiSpanNode({
+  span,
+  searchTerm,
+  isCurrent,
+}: {
+  span: AnsiSpan;
+  searchTerm?: string;
+  isCurrent?: boolean;
+}) {
+  const style: React.CSSProperties = {};
+  if (span.color) style.color = span.color;
+  if (span.bgColor) style.backgroundColor = span.bgColor;
+  if (span.bold) style.fontWeight = 'bold';
+  if (span.dim) style.opacity = 0.6;
+  if (span.italic) style.fontStyle = 'italic';
+  if (span.underline) style.textDecoration = 'underline';
+
+  const content =
+    searchTerm && span.text.toLowerCase().includes(searchTerm.toLowerCase())
+      ? renderHighlighted(span.text, searchTerm, isCurrent ?? false)
+      : span.text;
+
+  return <span style={Object.keys(style).length ? style : undefined}>{content}</span>;
+}
 
 function renderHighlighted(text: string, term: string, isCurrent: boolean): React.ReactNode {
   const parts: React.ReactNode[] = [];
