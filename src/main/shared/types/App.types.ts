@@ -6,6 +6,7 @@ export interface AppSettings {
   consoleMaxLines: number;
   consoleWordWrap: boolean;
   consoleLineNumbers: boolean;
+  consoleTimestamps: boolean;
   consoleHistorySize: number;
   theme: 'dark';
   restApiEnabled: boolean;

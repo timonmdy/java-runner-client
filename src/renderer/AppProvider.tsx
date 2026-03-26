@@ -121,6 +121,7 @@ interface AppContextValue {
   reorderProfiles: (profiles: Profile[]) => Promise<void>;
   startProcess: (p: Profile) => Promise<{ ok: boolean; error?: string }>;
   stopProcess: (id: string) => Promise<{ ok: boolean; error?: string }>;
+  forceStopProcess: (id: string) => Promise<{ ok: boolean; error?: string }>;
   sendInput: (profileId: string, input: string) => Promise<void>;
   clearConsole: (profileId: string) => void;
   saveSettings: (s: AppSettings) => Promise<void>;
@@ -207,6 +208,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         jvmArgs: overrides.jvmArgs ?? [{ value: '-Xmx1g', enabled: true }],
         systemProperties: overrides.systemProperties ?? [],
         programArgs: overrides.programArgs ?? [],
+        envVars: overrides.envVars ?? [],
         javaPath: overrides.javaPath ?? '',
         autoStart: overrides.autoStart ?? false,
         autoRestart: overrides.autoRestart ?? false,
@@ -230,6 +232,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const startProcess = useCallback((p: Profile) => window.api.startProcess(p), []);
   const stopProcess = useCallback((id: string) => window.api.stopProcess(id), []);
+  const forceStopProcess = useCallback((id: string) => window.api.forceStopProcess(id), []);
 
   const sendInput = useCallback(async (profileId: string, input: string) => {
     await window.api.sendInput(profileId, input);
@@ -264,6 +267,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         reorderProfiles,
         startProcess,
         stopProcess,
+        forceStopProcess,
         sendInput,
         clearConsole,
         saveSettings,

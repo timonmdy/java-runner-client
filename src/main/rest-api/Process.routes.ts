@@ -20,6 +20,10 @@ export const ProcessRoutes: RouteMap = {
     ok(res, processManager.stop(params.id))
   ),
 
+  processes_force_stop: defineRoute('processes_force_stop', ({ res, params }) =>
+    ok(res, processManager.forceStop(params.id))
+  ),
+
   processes_clear: defineRoute('processes_clear', ({ res, params }) => {
     processManager.clearConsoleForProfile(params.id);
     ok(res);

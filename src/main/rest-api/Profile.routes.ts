@@ -24,6 +24,7 @@ export const ProfileRoutes: RouteMap = {
       jvmArgs: b.jvmArgs ?? [],
       systemProperties: b.systemProperties ?? [],
       programArgs: b.programArgs ?? [],
+      envVars: b.envVars ?? [],
       javaPath: b.javaPath ?? '',
       autoStart: b.autoStart ?? false,
       autoRestart: b.autoRestart ?? false,

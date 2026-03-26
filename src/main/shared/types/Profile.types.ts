@@ -14,6 +14,12 @@ export interface ProgramArgument {
   enabled: boolean;
 }
 
+export interface EnvVariable {
+  key: string;
+  value: string;
+  enabled: boolean;
+}
+
 export interface Profile {
   id: string;
   name: string;
@@ -22,6 +28,7 @@ export interface Profile {
   jvmArgs: JvmArgument[];
   systemProperties: SystemProperty[];
   programArgs: ProgramArgument[];
+  envVars: EnvVariable[];
   javaPath: string;
   autoStart: boolean;
   color: string;
@@ -31,6 +38,7 @@ export interface Profile {
   autoRestartInterval: number;
   order?: number;
   jarResolution?: JarResolutionConfig;
+  fileLogging?: boolean;
 }
 
 export const hasJarConfigured = (p: Profile) =>

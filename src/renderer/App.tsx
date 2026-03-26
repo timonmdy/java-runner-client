@@ -1,6 +1,8 @@
 import React from 'react';
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppProvider } from './AppProvider';
+import { ThemeProvider } from './hooks/ThemeProvider';
+import { I18nProvider } from './i18n/I18nProvider';
 import { TitleBar } from './components/layout/TitleBar';
 import { MainLayout } from './components/MainLayout';
 import { DevModeGate } from './components/developer/DevModeGate';
@@ -28,21 +30,23 @@ export default function App() {
   if (!window.api) return <Fallback />;
 
   return (
-    <AppProvider>
-      <HashRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
-        {/* Root: full viewport, flex column, no overflow */}
-        <div className="flex flex-col h-screen bg-base-900 text-text-primary select-none overflow-hidden">
-          <TitleBar />
-          {/* Content area: takes remaining height, no overflow — children manage their own */}
-          <div className="flex flex-1 min-h-0 overflow-hidden">
-            <Routes>
-              <Route path="/" element={<Navigate to="/console" replace />} />
-              <Route path="/*" element={<MainLayout />} />
-            </Routes>
-          </div>
-        </div>
-        <DevModeGate />
-      </HashRouter>
-    </AppProvider>
+    <ThemeProvider>
+      <I18nProvider>
+        <AppProvider>
+          <HashRouter future={{ v7_startTransition: false, v7_relativeSplatPath: false }}>
+            <div className="flex flex-col h-screen bg-base-900 text-text-primary select-none overflow-hidden">
+              <TitleBar />
+              <div className="flex flex-1 min-h-0 overflow-hidden">
+                <Routes>
+                  <Route path="/" element={<Navigate to="/console" replace />} />
+                  <Route path="/*" element={<MainLayout />} />
+                </Routes>
+              </div>
+            </div>
+            <DevModeGate />
+          </HashRouter>
+        </AppProvider>
+      </I18nProvider>
+    </ThemeProvider>
   );
 }

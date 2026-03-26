@@ -282,7 +282,7 @@ function ProfileItem({
       className={[
         'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors',
         active ? 'bg-surface-raised' : 'hover:bg-surface-raised/50',
-        isDragging ? 'cursor-grabbing opacity-70' : 'cursor-default',
+        isDragging ? 'cursor-grabbing opacity-70' : 'cursor-pointer',
       ].join(' ')}
     >
       <span className="relative shrink-0">
@@ -333,7 +333,7 @@ function FooterButton({
     <button
       onClick={onClick}
       className={[
-        'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors',
+        'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs transition-colors cursor-pointer',
         active
           ? accent
             ? 'bg-accent/10 text-accent'

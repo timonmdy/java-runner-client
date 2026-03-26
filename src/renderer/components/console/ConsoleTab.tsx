@@ -1,13 +1,21 @@
 import React, { useRef, useEffect, useState, useCallback, useMemo, KeyboardEvent } from 'react';
 import { useApp } from '../../AppProvider';
 import { Button } from '../common/Button';
-import { VscSearch, VscChevronUp, VscChevronDown, VscClose } from 'react-icons/vsc';
+import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
+import { VscSearch, VscChevronUp, VscChevronDown, VscClose, VscFolderOpened, VscClearAll } from 'react-icons/vsc';
 import { ConsoleLine } from '../../../main/shared/types/Process.types';
 import { hasJarConfigured } from '../../../main/shared/types/Profile.types';
 
+function formatTimestamp(ts: number): string {
+  const d = new Date(ts);
+  return d.toLocaleTimeString('en-GB', { hour12: false }) + '.' + String(d.getMilliseconds()).padStart(3, '0');
+}
+
 export function ConsoleTab() {
-  const { state, activeProfile, startProcess, stopProcess, sendInput, clearConsole, isRunning } =
-    useApp();
+  const {
+    state, activeProfile, startProcess, stopProcess, forceStopProcess,
+    sendInput, clearConsole, isRunning,
+  } = useApp();
 
   const profileId = activeProfile?.id ?? '';
   const running = isRunning(profileId);
@@ -26,6 +34,7 @@ export function ConsoleTab() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchIdx, setSearchIdx] = useState(0);
+  const [lineCtxMenu, setLineCtxMenu] = useState<{ x: number; y: number; text: string } | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -109,6 +118,16 @@ export function ConsoleTab() {
     }
   }, [activeProfile, running, profileId, stopProcess, startProcess]);
 
+  const handleForceStop = useCallback(async () => {
+    if (!profileId) return;
+    await forceStopProcess(profileId);
+  }, [profileId, forceStopProcess]);
+
+  const handleOpenWorkDir = useCallback(async () => {
+    if (!profileId) return;
+    await window.api.openWorkingDir(profileId);
+  }, [profileId]);
+
   const handleSend = useCallback(async () => {
     const cmd = inputValue.trim();
     if (!cmd || !running) return;
@@ -165,9 +184,15 @@ export function ConsoleTab() {
     return () => window.removeEventListener('keydown', handler);
   }, [openSearch, closeSearch, searchOpen]);
 
+  const handleLineContextMenu = useCallback((e: React.MouseEvent, text: string) => {
+    e.preventDefault();
+    setLineCtxMenu({ x: e.clientX, y: e.clientY, text });
+  }, []);
+
   const fontSize = settings?.consoleFontSize ?? 13;
   const wordWrap = settings?.consoleWordWrap ?? false;
   const lineNums = settings?.consoleLineNumbers ?? false;
+  const showTimestamps = settings?.consoleTimestamps ?? false;
 
   if (!activeProfile) {
     return (
@@ -178,6 +203,20 @@ export function ConsoleTab() {
   }
 
   matchRefs.current = new Array(matchIndices.length).fill(null);
+
+  const lineCtxItems: ContextMenuItem[] = lineCtxMenu
+    ? [
+        {
+          label: 'Copy line',
+          onClick: () => navigator.clipboard.writeText(lineCtxMenu.text),
+        },
+        {
+          label: 'Copy all output',
+          onClick: () =>
+            navigator.clipboard.writeText(lines.map((l) => l.text).join('\n')),
+        },
+      ]
+    : [];
 
   return (
     <div className="flex flex-col h-full">
@@ -192,6 +231,12 @@ export function ConsoleTab() {
           {running ? 'Stop' : 'Run'}
         </Button>
 
+        {running && (
+          <Button variant="ghost" size="sm" onClick={handleForceStop} title="Force kill (skip graceful shutdown)">
+            Force Kill
+          </Button>
+        )}
+
         {running && pid && (
           <span className="flex items-center gap-1.5 text-xs font-mono text-text-muted animate-fade-in">
             <span
@@ -203,6 +248,14 @@ export function ConsoleTab() {
         )}
 
         <div className="flex-1" />
+
+        <button
+          onClick={handleOpenWorkDir}
+          className="text-text-muted hover:text-text-primary transition-colors p-1"
+          title="Open working directory"
+        >
+          <VscFolderOpened size={13} />
+        </button>
 
         {!autoScroll && !searchOpen && (
           <button
@@ -227,13 +280,13 @@ export function ConsoleTab() {
 
         <button
           onClick={() => clearConsole(profileId)}
-          className="text-xs text-text-muted hover:text-text-primary font-mono transition-colors"
+          className="text-text-muted hover:text-text-primary transition-colors p-1"
           title="Clear (Ctrl+L)"
         >
-          Clear
+          <VscClearAll size={13} />
         </button>
 
-        <span className="text-xs text-text-muted font-mono tabular-nums">
+        <span className="text-xs text-text-muted font-mono tabular-nums ml-1">
           {lines.length.toLocaleString()} lines
         </span>
       </div>
@@ -325,10 +378,12 @@ export function ConsoleTab() {
                 line={line}
                 lineNum={i + 1}
                 showLineNum={lineNums}
+                showTimestamp={showTimestamps}
                 wordWrap={wordWrap}
                 searchTerm={searchTerm}
                 isCurrentMatch={isCurrentMatch}
                 isAnyMatch={isAnyMatch}
+                onContextMenu={handleLineContextMenu}
                 ref={
                   matchPos !== -1
                     ? (el: HTMLDivElement | null) => {
@@ -344,7 +399,7 @@ export function ConsoleTab() {
       </div>
 
       <div className="flex items-center gap-2 px-3 py-2 border-t border-surface-border bg-base-900 shrink-0">
-        <span className="text-text-muted font-mono text-xs">›</span>
+        <span className="text-text-muted font-mono text-xs">&rsaquo;</span>
         <input
           ref={inputRef}
           type="text"
@@ -361,9 +416,20 @@ export function ConsoleTab() {
           style={{ fontSize }}
         />
       </div>
+
+      {lineCtxMenu && lineCtxItems.length > 0 && (
+        <ContextMenu
+          x={lineCtxMenu.x}
+          y={lineCtxMenu.y}
+          items={lineCtxItems}
+          onClose={() => setLineCtxMenu(null)}
+        />
+      )}
     </div>
   );
 }
+
+// ─── Line row ─────────────────────────────────────────────────────────────────
 
 const LINE_COLORS: Record<ConsoleLine['type'], string> = {
   stdout: 'text-text-primary',
@@ -378,12 +444,14 @@ const ConsoleLineRow = React.forwardRef<
     line: ConsoleLine;
     lineNum: number;
     showLineNum: boolean;
+    showTimestamp: boolean;
     wordWrap: boolean;
     searchTerm: string;
     isCurrentMatch: boolean;
     isAnyMatch: boolean;
+    onContextMenu: (e: React.MouseEvent, text: string) => void;
   }
->(({ line, lineNum, showLineNum, wordWrap, searchTerm, isCurrentMatch, isAnyMatch }, ref) => {
+>(({ line, lineNum, showLineNum, showTimestamp, wordWrap, searchTerm, isCurrentMatch, isAnyMatch, onContextMenu }, ref) => {
   const text = line.text || ' ';
   const content =
     searchTerm && isAnyMatch ? renderHighlighted(text, searchTerm, isCurrentMatch) : text;
@@ -391,6 +459,7 @@ const ConsoleLineRow = React.forwardRef<
   return (
     <div
       ref={ref}
+      onContextMenu={(e) => onContextMenu(e, line.text)}
       className={[
         'flex gap-0 px-2',
         LINE_COLORS[line.type],
@@ -404,6 +473,11 @@ const ConsoleLineRow = React.forwardRef<
       {showLineNum && (
         <span className="w-10 shrink-0 text-right pr-3 text-text-muted/40 select-none font-mono text-[0.7em] leading-[1.6] pt-px">
           {lineNum}
+        </span>
+      )}
+      {showTimestamp && (
+        <span className="shrink-0 pr-3 text-text-muted/50 select-none font-mono text-[0.7em] leading-[1.6] pt-px">
+          {formatTimestamp(line.timestamp)}
         </span>
       )}
       <span

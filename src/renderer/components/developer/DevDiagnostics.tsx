@@ -38,6 +38,13 @@ export function DevDiagnostics() {
       profiles: state.profiles.length,
       runningProcesses: state.processStates.filter((s) => s.running).length,
       settings: state.settings,
+      profileMeta: state.profiles.map((p) => ({
+        id: p.id,
+        name: p.name,
+        envVars: (p.envVars ?? []).length,
+        fileLogging: p.fileLogging ?? false,
+        autoRestart: p.autoRestart,
+      })),
       consoleLogCounts: Object.fromEntries(
         Object.entries(state.consoleLogs).map(([id, lines]) => [id, lines.length])
       ),
@@ -50,6 +57,9 @@ export function DevDiagnostics() {
 
   const latest = perfSamples[perfSamples.length - 1];
   const maxMem = Math.max(...perfSamples.map((s) => s.memMB), 1);
+
+  const profilesWithLogging = state.profiles.filter((p) => p.fileLogging).length;
+  const totalEnvVars = state.profiles.reduce((sum, p) => sum + (p.envVars ?? []).length, 0);
 
   return (
     <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-5">
@@ -71,7 +81,7 @@ export function DevDiagnostics() {
             )}
           </div>
           <div className="flex items-center justify-between text-xs font-mono text-text-muted">
-            <span>{latest ? `${latest.memMB} MB used` : '—'}</span>
+            <span>{latest ? `${latest.memMB} MB used` : '---'}</span>
             <span>max {maxMem} MB</span>
           </div>
         </div>
@@ -79,7 +89,7 @@ export function DevDiagnostics() {
 
       <DiagSection title="Renderer State">
         <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
-          <DiagRow label="Active profile ID" value={state.activeProfileId || '—'} mono />
+          <DiagRow label="Active profile ID" value={state.activeProfileId || '---'} mono />
           <DiagRow label="Profiles loaded" value={String(state.profiles.length)} />
           <DiagRow label="Process states" value={String(state.processStates.length)} />
           <DiagRow
@@ -91,6 +101,17 @@ export function DevDiagnostics() {
             value={String(Object.values(state.consoleLogs).reduce((a, b) => a + b.length, 0))}
           />
           <DiagRow label="Settings loaded" value={state.settings ? 'Yes' : 'No'} />
+        </div>
+      </DiagSection>
+
+      <DiagSection title="Feature Usage">
+        <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
+          <DiagRow label="Console timestamps" value={state.settings?.consoleTimestamps ? 'On' : 'Off'} />
+          <DiagRow label="File logging (profiles)" value={`${profilesWithLogging} / ${state.profiles.length}`} />
+          <DiagRow label="Total env vars" value={String(totalEnvVars)} />
+          <DiagRow label="REST API" value={state.settings?.restApiEnabled ? `Port ${state.settings.restApiPort}` : 'Off'} />
+          <DiagRow label="Word wrap" value={state.settings?.consoleWordWrap ? 'On' : 'Off'} />
+          <DiagRow label="Line numbers" value={state.settings?.consoleLineNumbers ? 'On' : 'Off'} />
         </div>
       </DiagSection>
 
@@ -110,6 +131,10 @@ export function DevDiagnostics() {
                   />
                   <span className="text-xs font-mono text-text-primary flex-1 truncate">
                     {p.name}
+                  </span>
+                  <span className="text-[10px] font-mono text-text-muted">
+                    {(p.envVars ?? []).length > 0 ? `${(p.envVars ?? []).length} env` : ''}
+                    {p.fileLogging ? ' log' : ''}
                   </span>
                   <span className="text-xs font-mono text-text-muted">
                     {lines.toLocaleString()} lines

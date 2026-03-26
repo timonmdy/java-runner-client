@@ -1,0 +1,22 @@
+{
+  "id": "en",
+  "name": "English",
+  "version": 1,
+  "author": "JRC",
+  "strings": {
+    "general.save": "Save",
+    "general.saved": "Saved",
+    "general.cancel": "Cancel",
+    "general.delete": "Delete",
+    "general.close": "Close",
+    "general.noProfileSelected": "No profile selected",
+    "sidebar.newProfile": "New Profile",
+    "sidebar.fromTemplate": "From Template",
+    "sidebar.settings": "Settings",
+    "console.run": "Run",
+    "console.stop": "Stop",
+    "console.forceKill": "Force Kill",
+    "console.notRunning": "Process not running. Press Run to start.",
+    "settings.title": "Application Settings"
+  }
+}

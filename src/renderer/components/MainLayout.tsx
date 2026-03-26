@@ -4,6 +4,7 @@ import { ProfileSidebar } from './profiles/ProfileSidebar';
 import { ConsoleTab } from './console/ConsoleTab';
 import { ConfigTab } from './profiles/ConfigTab';
 import { ProfileTab } from './profiles/ProfileTab';
+import { LogsTab } from './logs/LogsTab';
 import { SettingsTab } from './settings/SettingsTab';
 import { UtilitiesTab } from './utils/UtilitiesTab';
 import { FaqPanel } from './faq/FaqPanel';
@@ -12,7 +13,7 @@ import { PanelHeader } from './layout/PanelHeader';
 import { useApp } from '../AppProvider';
 import { useDevMode } from '../hooks/useDevMode';
 import { VscTerminal, VscAccount } from 'react-icons/vsc';
-import { LuList } from 'react-icons/lu';
+import { LuList, LuScrollText } from 'react-icons/lu';
 
 // Panels rendered in the side-panel view (replace main tabs area)
 const SIDE_PANELS = ['settings', 'faq', 'utilities', 'developer'] as const;
@@ -33,6 +34,7 @@ function isSidePanel(seg: string): seg is SidePanel {
 const PROFILE_TABS = [
   { path: 'console', label: 'Console', Icon: VscTerminal },
   { path: 'config', label: 'Configure', Icon: LuList },
+  { path: 'logs', label: 'Logs', Icon: LuScrollText },
   { path: 'profile', label: 'Profile', Icon: VscAccount },
 ] as const;
 
@@ -126,6 +128,7 @@ export function MainLayout() {
               <Routes>
                 <Route path="console" element={<ConsoleTab />} />
                 <Route path="config" element={<ConfigTab />} />
+                <Route path="logs" element={<LogsTab />} />
                 <Route path="profile" element={<ProfileTab />} />
                 <Route path="*" element={<Navigate to="/console" replace />} />
               </Routes>

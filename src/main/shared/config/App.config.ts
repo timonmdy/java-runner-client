@@ -9,6 +9,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   consoleMaxLines: 5000,
   consoleWordWrap: false,
   consoleLineNumbers: false,
+  consoleTimestamps: false,
   consoleHistorySize: 200,
   theme: 'dark',
   restApiEnabled: false,
