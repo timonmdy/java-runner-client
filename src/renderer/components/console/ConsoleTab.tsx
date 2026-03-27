@@ -11,6 +11,7 @@ import {
   VscClose,
   VscFolderOpened,
   VscClearAll,
+  VscCopy,
 } from 'react-icons/vsc';
 import { ConsoleLine } from '../../../main/shared/types/Process.types';
 import { hasJarConfigured } from '../../../main/shared/types/Profile.types';
@@ -237,10 +238,12 @@ export function ConsoleTab() {
     ? [
         {
           label: t('console.copyLine'),
+          icon: <VscCopy size={12} />,
           onClick: () => navigator.clipboard.writeText(lineCtxMenu.text),
         },
         {
           label: t('console.copyAll'),
+          icon: <VscCopy size={12} />,
           onClick: () => navigator.clipboard.writeText(lines.map((l) => l.text).join('\n')),
         },
       ]

@@ -11,6 +11,7 @@
     "general.close": "Schließen",
     "general.retry": "Erneut versuchen",
     "general.copy": "Kopieren",
+    "general.copyAll": "Alles kopieren",
     "general.cut": "Ausschneiden",
     "general.paste": "Einfügen",
     "general.selectAll": "Alles auswählen",

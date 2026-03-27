@@ -9,6 +9,7 @@ const ENGLISH_STRINGS = {
   'general.close': 'Close',
   'general.retry': 'Retry',
   'general.copy': 'Copy',
+  'general.copyAll': 'Copy All',
   'general.cut': 'Cut',
   'general.paste': 'Paste',
   'general.selectAll': 'Select All',

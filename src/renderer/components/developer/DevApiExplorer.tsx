@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { VscCheck, VscCopy, VscPlay, VscEdit, VscCode } from 'react-icons/vsc';
 import { routeConfig, REST_API_CONFIG } from '../../../main/shared/config/API.config';
 import { useApp } from '../../AppProvider';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
 import { RouteDefinition } from '../../..//main/shared/types/RestAPI.types';
@@ -104,6 +105,7 @@ function JsonHighlight({ text }: { text: string }) {
 
 export function DevApiExplorer() {
   const { state } = useApp();
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<RouteDefinition | null>(null);
   const [pathParams, setPathParams] = useState<Record<string, string>>({});
   const [body, setBody] = useState('');
@@ -182,7 +184,7 @@ export function DevApiExplorer() {
       y: e.clientY,
       items: [
         {
-          label: 'Copy',
+          label: t('general.copy'),
           icon: <VscCopy size={12} />,
           disabled: !sel,
           onClick: () => navigator.clipboard.writeText(sel),
@@ -198,7 +200,7 @@ export function DevApiExplorer() {
         ? [
             { type: 'separator' },
             {
-              label: 'Copy all',
+              label: t('general.copyAll'),
               icon: <VscCopy size={12} />,
               onClick: () => navigator.clipboard.writeText(response),
             },
