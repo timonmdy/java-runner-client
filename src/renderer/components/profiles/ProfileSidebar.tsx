@@ -16,6 +16,7 @@ import {
 } from 'react-icons/vsc';
 import { useApp, PROFILE_COLORS } from '../../AppProvider';
 import { useDevMode } from '../../hooks/useDevMode';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { Dialog } from '../common/Dialog';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
 import { TemplateModal } from './TemplateModal';
@@ -46,6 +47,7 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
     reorderProfiles,
   } = useApp();
   const devMode = useDevMode();
+  const { t } = useTranslation();
 
   const [ctxMenu, setCtxMenu] = useState<CtxState | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Profile | null>(null);
@@ -66,13 +68,13 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
   const handleStart = useCallback(
     async (profile: Profile) => {
       if (!hasJarConfigured(profile)) {
-        setActionError(`"${profile.name}" has no JAR configured.`);
+        setActionError(`"${profile.name}" ${t('console.noJar')}`);
         return;
       }
       const res = await startProcess(profile);
       if (!res.ok) setActionError(res.error ?? 'Failed to start');
     },
-    [startProcess]
+    [startProcess, t],
   );
 
   const handleStop = useCallback(
@@ -80,27 +82,27 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
       const res = await stopProcess(profile.id);
       if (!res.ok) setActionError(res.error ?? 'Failed to stop');
     },
-    [stopProcess]
+    [stopProcess],
   );
 
   const ctxItems: ContextMenuItem[] = ctxProfile
     ? [
         ctxRunning
           ? {
-              label: 'Stop',
+              label: t('console.stop'),
               icon: <VscDebugStop size={11} />,
               danger: true,
               onClick: () => handleStop(ctxProfile),
             }
           : {
-              label: 'Start',
+              label: t('console.run'),
               icon: <VscPlay size={11} />,
               disabled: !hasJarConfigured(ctxProfile),
               onClick: () => handleStart(ctxProfile),
             },
         { type: 'separator' },
         {
-          label: 'Select',
+          label: t('ctx.select'),
           icon: <VscCheck size={12} />,
           onClick: () => {
             setActiveProfile(ctxProfile.id);
@@ -108,13 +110,13 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
           },
         },
         {
-          label: 'Clear Console',
+          label: t('ctx.clearConsole'),
           icon: <VscClearAll size={12} />,
           onClick: () => clearConsole(ctxProfile.id),
         },
         { type: 'separator' },
         {
-          label: 'Delete',
+          label: t('general.delete'),
           icon: <VscTrash size={12} />,
           danger: true,
           disabled: !canDelete,
@@ -139,13 +141,13 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
             onClick={() => createProfile()}
             className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-text-muted hover:text-accent hover:bg-surface-raised transition-colors border border-dashed border-surface-border hover:border-accent/40"
           >
-            <VscAdd size={11} /> New Profile
+            <VscAdd size={11} /> {t('sidebar.newProfile')}
           </button>
           <button
             onClick={() => setTemplateOpen(true)}
             className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-text-muted hover:text-text-primary hover:bg-surface-raised/50 transition-colors"
           >
-            <VscLayout size={11} /> From Template
+            <VscLayout size={11} /> {t('sidebar.fromTemplate')}
           </button>
         </div>
 
@@ -157,7 +159,7 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
         >
           {state.profiles.length === 0 && (
             <p className="px-2 py-4 text-xs text-text-muted font-mono text-center">
-              No profiles yet.
+              {t('sidebar.noProfiles')}
             </p>
           )}
           {state.profiles.map((profile) => (
@@ -185,26 +187,26 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
 
         <div className="px-2 pt-1 pb-2 border-t border-surface-border space-y-0.5 shrink-0">
           <FooterButton
-            label="Utilities"
+            label={t('sidebar.utilities')}
             active={activeSidePanel === 'utilities'}
             onClick={() => openPanel('/utilities')}
             icon={<VscTools size={13} />}
           />
           <FooterButton
-            label="FAQ"
+            label={t('sidebar.faq')}
             active={activeSidePanel === 'faq'}
             onClick={() => openPanel('/faq')}
             icon={<VscQuestion size={13} />}
           />
           <FooterButton
-            label="Settings"
+            label={t('sidebar.settings')}
             active={activeSidePanel === 'settings'}
             onClick={() => openPanel('/settings')}
             icon={<VscSettings size={13} />}
           />
           {devMode && (
             <FooterButton
-              label="Developer"
+              label={t('sidebar.developer')}
               active={activeSidePanel === 'developer'}
               onClick={() => openPanel('/developer')}
               icon={<VscCode size={13} />}
@@ -227,18 +229,18 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
 
       <Dialog
         open={!!actionError}
-        title="Error"
+        title={t('ctx.error')}
         message={actionError ?? ''}
-        confirmLabel="OK"
+        confirmLabel={t('general.close')}
         onConfirm={() => setActionError(null)}
         onCancel={() => setActionError(null)}
       />
 
       <Dialog
         open={!!deleteTarget}
-        title="Delete profile?"
-        message={`"${deleteTarget?.name}" will be permanently removed.`}
-        confirmLabel="Delete"
+        title={t('profile.deleteConfirmTitle')}
+        message={t('profile.deleteConfirmMessage', { name: deleteTarget?.name ?? '' })}
+        confirmLabel={t('general.delete')}
         danger
         onConfirm={async () => {
           if (deleteTarget) await deleteProfile(deleteTarget.id);
@@ -311,7 +313,9 @@ function ProfileItem({
           </span>
         )}
       </span>
-      {running && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />}
+      {running && (
+        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+      )}
     </button>
   );
 }

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Toggle } from '../../common/Toggle';
 import { Section, Row, NumInput } from '../SettingsRow';
+import { useTranslation } from '../../../i18n/I18nProvider';
 import { AppSettings } from '../../../../main/shared/types/App.types';
 
 interface Props {
@@ -9,9 +10,11 @@ interface Props {
 }
 
 export function ConsoleSection({ draft, set }: Props) {
+  const { t } = useTranslation();
+
   return (
-    <Section title="Console">
-      <Row label="Font size" hint="Console output font size in pixels">
+    <Section title={t('settings.console')}>
+      <Row label={t('settings.fontSize')} hint={t('settings.fontSizeHint')}>
         <div className="flex items-center gap-2.5">
           <input
             type="range"
@@ -26,22 +29,22 @@ export function ConsoleSection({ draft, set }: Props) {
           </span>
         </div>
       </Row>
-      <Row label="Show line numbers" hint="Display a line number gutter in console output">
+      <Row label={t('settings.lineNumbers')} hint={t('settings.lineNumbersHint')}>
         <Toggle
           checked={draft.consoleLineNumbers}
           onChange={(v) => set({ consoleLineNumbers: v })}
         />
       </Row>
-      <Row label="Show timestamps" hint="Display a timestamp for each console line">
+      <Row label={t('settings.timestamps')} hint={t('settings.timestampsHint')}>
         <Toggle
           checked={draft.consoleTimestamps}
           onChange={(v) => set({ consoleTimestamps: v })}
         />
       </Row>
-      <Row label="Word wrap" hint="Wrap long lines instead of horizontal scrolling">
+      <Row label={t('settings.wordWrap')} hint={t('settings.wordWrapHint')}>
         <Toggle checked={draft.consoleWordWrap} onChange={(v) => set({ consoleWordWrap: v })} />
       </Row>
-      <Row label="Max lines in buffer" hint="Older lines are discarded when the limit is reached">
+      <Row label={t('settings.maxLines')} hint={t('settings.maxLinesHint')}>
         <NumInput
           value={draft.consoleMaxLines}
           min={500}
@@ -50,7 +53,7 @@ export function ConsoleSection({ draft, set }: Props) {
           onChange={(v) => set({ consoleMaxLines: v })}
         />
       </Row>
-      <Row label="Command history size" hint="Commands stored per session (Up/Down to navigate)">
+      <Row label={t('settings.historySize')} hint={t('settings.historySizeHint')}>
         <NumInput
           value={draft.consoleHistorySize}
           min={10}

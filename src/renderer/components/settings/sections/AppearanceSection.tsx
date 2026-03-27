@@ -11,7 +11,7 @@ type FetchState = 'idle' | 'loading' | 'done' | 'error';
 
 export function AppearanceSection() {
   const { theme, setTheme, availableThemes, refreshThemes } = useTheme();
-  const { language, setLanguage, availableLanguages, refreshLanguages } = useTranslation();
+  const { language, t, setLanguage, availableLanguages, refreshLanguages } = useTranslation();
 
   const [remoteThemes, setRemoteThemes] = useState<ThemeDefinition[]>([]);
   const [remoteLangs, setRemoteLangs] = useState<LanguageDefinition[]>([]);
@@ -27,26 +27,30 @@ export function AppearanceSection() {
   const fetchThemes = async () => {
     setThemeFetch('loading');
     const res = await window.api.fetchRemoteThemes();
-    if (res.ok && res.themes) { setRemoteThemes(res.themes); setThemeFetch('done'); }
-    else setThemeFetch('error');
+    if (res.ok && res.themes) {
+      setRemoteThemes(res.themes);
+      setThemeFetch('done');
+    } else setThemeFetch('error');
   };
 
   const fetchLangs = async () => {
     setLangFetch('loading');
     const res = await window.api.fetchRemoteLanguages();
-    if (res.ok && res.languages) { setRemoteLangs(res.languages); setLangFetch('done'); }
-    else setLangFetch('error');
+    if (res.ok && res.languages) {
+      setRemoteLangs(res.languages);
+      setLangFetch('done');
+    } else setLangFetch('error');
   };
 
-  const selectTheme = async (t: ThemeDefinition) => {
-    await window.api.installTheme(t);
-    await window.api.setActiveTheme(t.id);
+  const selectTheme = async (th: ThemeDefinition) => {
+    await window.api.installTheme(th);
+    await window.api.setActiveTheme(th.id);
     await refreshThemes();
   };
 
   const selectLang = async (l: LanguageDefinition) => {
     await window.api.installLanguage(l);
-    await window.api.setActiveLanguage(l.id);
+    await setLanguage(l.id);
     await refreshLanguages();
   };
 
@@ -58,34 +62,38 @@ export function AppearanceSection() {
     setTimeout(() => setDevSynced(false), 2000);
   };
 
-  const allThemes = mergeById(availableThemes, remoteThemes, (t) => t.id);
+  const allThemes = mergeById(availableThemes, remoteThemes, (th) => th.id);
   const allLangs = mergeById(availableLanguages, remoteLangs, (l) => l.id);
 
   return (
     <>
-      <Section title="Theme">
+      <Section title={t('settings.theme')}>
         <div className="flex items-center justify-between py-1">
-          <p className="text-xs text-text-muted">Select a visual theme</p>
+          <p className="text-xs text-text-muted">{t('settings.themeHint')}</p>
           <button
             onClick={fetchThemes}
             disabled={themeFetch === 'loading'}
             className="flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors disabled:opacity-40"
           >
             <VscSync size={11} className={themeFetch === 'loading' ? 'animate-spin' : ''} />
-            {themeFetch === 'done' ? 'Refresh' : 'Load from GitHub'}
+            {themeFetch === 'done' ? t('appearance.refresh') : t('appearance.loadFromGithub')}
           </button>
         </div>
         {themeFetch === 'error' && (
-          <p className="text-xs text-red-400 font-mono py-1">Failed to fetch themes.</p>
+          <p className="text-xs text-red-400 font-mono py-1">
+            {t('appearance.fetchThemesFailed')}
+          </p>
         )}
         <div className="space-y-1 py-1">
-          {allThemes.map((t) => (
+          {allThemes.map((th) => (
             <button
-              key={t.id}
-              onClick={() => theme.id === t.id ? undefined : selectTheme(t)}
+              key={th.id}
+              onClick={() => (theme.id === th.id ? undefined : selectTheme(th))}
               className={[
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors',
-                theme.id === t.id ? 'bg-surface-raised' : 'hover:bg-surface-raised/50 cursor-pointer',
+                theme.id === th.id
+                  ? 'bg-surface-raised'
+                  : 'hover:bg-surface-raised/50 cursor-pointer',
               ].join(' ')}
             >
               <div className="flex gap-1 shrink-0">
@@ -93,40 +101,44 @@ export function AppearanceSection() {
                   <span
                     key={key}
                     className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: t.colors[key] }}
+                    style={{ backgroundColor: th.colors[key] }}
                   />
                 ))}
               </div>
-              <span className="text-xs text-text-primary flex-1">{t.name}</span>
-              {theme.id === t.id && <VscCheck size={12} className="text-accent shrink-0" />}
+              <span className="text-xs text-text-primary flex-1">{th.name}</span>
+              {theme.id === th.id && <VscCheck size={12} className="text-accent shrink-0" />}
             </button>
           ))}
         </div>
       </Section>
 
-      <Section title="Language">
+      <Section title={t('settings.language')}>
         <div className="flex items-center justify-between py-1">
-          <p className="text-xs text-text-muted">Select a display language</p>
+          <p className="text-xs text-text-muted">{t('settings.languageHint')}</p>
           <button
             onClick={fetchLangs}
             disabled={langFetch === 'loading'}
             className="flex items-center gap-1.5 text-xs font-mono text-text-muted hover:text-text-primary transition-colors disabled:opacity-40"
           >
             <VscSync size={11} className={langFetch === 'loading' ? 'animate-spin' : ''} />
-            {langFetch === 'done' ? 'Refresh' : 'Load from GitHub'}
+            {langFetch === 'done' ? t('appearance.refresh') : t('appearance.loadFromGithub')}
           </button>
         </div>
         {langFetch === 'error' && (
-          <p className="text-xs text-red-400 font-mono py-1">Failed to fetch languages.</p>
+          <p className="text-xs text-red-400 font-mono py-1">
+            {t('appearance.fetchLangsFailed')}
+          </p>
         )}
         <div className="space-y-1 py-1">
           {allLangs.map((l) => (
             <button
               key={l.id}
-              onClick={() => language.id === l.id ? undefined : selectLang(l)}
+              onClick={() => (language.id === l.id ? undefined : selectLang(l))}
               className={[
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-colors',
-                language.id === l.id ? 'bg-surface-raised' : 'hover:bg-surface-raised/50 cursor-pointer',
+                language.id === l.id
+                  ? 'bg-surface-raised'
+                  : 'hover:bg-surface-raised/50 cursor-pointer',
               ].join(' ')}
             >
               <span className="text-xs text-text-primary flex-1">{l.name}</span>
@@ -137,20 +149,22 @@ export function AppearanceSection() {
       </Section>
 
       {isDev && (
-        <Section title="Development">
+        <Section title={t('appearance.development')}>
           <div className="flex items-center justify-between py-2">
             <div>
-              <p className="text-xs text-text-primary">Sync local project files</p>
-              <p className="text-xs text-text-muted mt-0.5">
-                Load themes and languages from /themes and /languages in the project root
-              </p>
+              <p className="text-xs text-text-primary">{t('appearance.syncTitle')}</p>
+              <p className="text-xs text-text-muted mt-0.5">{t('appearance.syncHint')}</p>
             </div>
             <button
               onClick={handleDevSync}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono text-text-muted hover:text-text-primary transition-colors"
             >
-              {devSynced ? <VscCheck size={11} className="text-accent" /> : <VscSync size={11} />}
-              {devSynced ? 'Synced' : 'Sync'}
+              {devSynced ? (
+                <VscCheck size={11} className="text-accent" />
+              ) : (
+                <VscSync size={11} />
+              )}
+              {devSynced ? t('appearance.synced') : t('appearance.sync')}
             </button>
           </div>
         </Section>
@@ -159,7 +173,6 @@ export function AppearanceSection() {
   );
 }
 
-/** Merge local + remote lists by ID, preferring remote version if newer */
 function mergeById<T>(local: T[], remote: T[], getId: (item: T) => string): T[] {
   const map = new Map<string, T>();
   for (const item of local) map.set(getId(item), item);

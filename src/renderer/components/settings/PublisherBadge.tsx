@@ -1,13 +1,16 @@
 import React from 'react';
 import { VscVerified, VscWarning } from 'react-icons/vsc';
 import { LuBot } from 'react-icons/lu';
-import { getPublisherTrust, TrustLevel } from '../../../main/shared/config/TrustedPublishers.config';
+import { getPublisherTrust, TrustLevel } from '../../../main/shared/config/GitHub.config';
 
 interface Props {
   login: string;
 }
 
-const BADGE_STYLES: Record<TrustLevel, { bg: string; border: string; text: string; icon: React.ReactNode }> = {
+const BADGE_STYLES: Record<
+  TrustLevel,
+  { bg: string; border: string; text: string; icon: React.ReactNode }
+> = {
   trusted: {
     bg: 'bg-green-500/10',
     border: 'border-green-500/30',
