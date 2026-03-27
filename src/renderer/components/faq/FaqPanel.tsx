@@ -12,7 +12,7 @@ export function FaqPanel() {
   const searchTrimmed = search.trim().toLowerCase();
 
   useEffect(() => {
-    window.api.getLanguageState().then(s => {
+    window.api.getLanguageState().then((s) => {
       const topics = getFAQ(s.activeLanguageId);
       setFaqTopics(topics);
       if (topics.length > 0) setActiveTopic(topics[0].id);
@@ -21,10 +21,15 @@ export function FaqPanel() {
 
   const searchResults = useMemo<FaqItem[]>(() => {
     if (!searchTrimmed) return [];
-    return faqTopics?.flatMap((t) => t.items).filter(
-      (item) =>
-        item.q.toLowerCase().includes(searchTrimmed) || item.a.toLowerCase().includes(searchTrimmed)
-    ) ?? [];
+    return (
+      faqTopics
+        ?.flatMap((t) => t.items)
+        .filter(
+          (item) =>
+            item.q.toLowerCase().includes(searchTrimmed) ||
+            item.a.toLowerCase().includes(searchTrimmed)
+        ) ?? []
+    );
   }, [searchTrimmed, faqTopics]);
 
   const activeTopic_ = faqTopics?.find((t) => t.id === activeTopic) ?? faqTopics?.[0];
@@ -94,19 +99,12 @@ function FaqList({
   emptyLabel: string;
 }) {
   if (items.length === 0) {
-    return (
-      <p className="text-xs text-text-muted font-mono py-8 text-center">{emptyLabel}</p>
-    );
+    return <p className="text-xs text-text-muted font-mono py-8 text-center">{emptyLabel}</p>;
   }
   return (
     <>
       {items.map((item, i) => (
-        <FaqEntry
-          key={i}
-          item={item}
-          open={expandedIdx === i}
-          onToggle={() => onToggle(i)}
-        />
+        <FaqEntry key={i} item={item} open={expandedIdx === i} onToggle={() => onToggle(i)} />
       ))}
     </>
   );

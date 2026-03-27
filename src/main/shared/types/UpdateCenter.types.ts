@@ -1,4 +1,11 @@
-export type UpdateStatus = 'idle' | 'checking' | 'up-to-date' | 'update-available' | 'updating' | 'done' | 'error';
+export type UpdateStatus =
+  | 'idle'
+  | 'checking'
+  | 'up-to-date'
+  | 'update-available'
+  | 'updating'
+  | 'done'
+  | 'error';
 
 export interface UpdateCheckResult {
   hasUpdate: boolean;

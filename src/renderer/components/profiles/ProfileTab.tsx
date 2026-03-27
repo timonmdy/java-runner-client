@@ -79,9 +79,7 @@ export function ProfileTab() {
                 className="w-7 h-7 rounded-full transition-all duration-150 hover:scale-110 cursor-pointer overflow-hidden border-2 border-dashed border-surface-border relative"
                 style={{
                   backgroundColor: isCustomColor ? draft.color : 'transparent',
-                  boxShadow: isCustomColor
-                    ? `0 0 0 2px #08090d, 0 0 0 4px ${draft.color}`
-                    : 'none',
+                  boxShadow: isCustomColor ? `0 0 0 2px #08090d, 0 0 0 4px ${draft.color}` : 'none',
                   transform: isCustomColor ? 'scale(1.15)' : undefined,
                 }}
                 title="Pick custom colour"
@@ -106,8 +104,8 @@ export function ProfileTab() {
               <div>
                 <p className="text-xs font-medium text-text-primary">Delete profile</p>
                 <p className="text-xs text-text-muted mt-0.5">
-                  Permanently removes this profile and all its configuration.
-                  Hold Shift to skip confirmation.
+                  Permanently removes this profile and all its configuration. Hold Shift to skip
+                  confirmation.
                 </p>
               </div>
               <Button

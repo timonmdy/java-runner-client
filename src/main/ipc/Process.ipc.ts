@@ -62,7 +62,8 @@ export const ProcessIPC = {
     handler: (_e: any, profileId: string) => {
       const profile = getAllProfiles().find((p) => p.id === profileId);
       if (!profile) return { ok: false, error: 'Profile not found' };
-      const dir = profile.workingDir || (profile.jarPath ? require('path').dirname(profile.jarPath) : '');
+      const dir =
+        profile.workingDir || (profile.jarPath ? require('path').dirname(profile.jarPath) : '');
       if (!dir) return { ok: false, error: 'No working directory configured' };
       shell.openPath(dir);
       return { ok: true };

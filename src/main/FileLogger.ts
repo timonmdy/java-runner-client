@@ -114,8 +114,18 @@ export function getLogFiles(profileId: string): LogFileInfo[] {
         filename,
         filePath,
         size: stat.size,
-        startedAt: match?.[1]?.replace(/_/g, ' ').replace(/-/g, ':').replace(/^(\d{4}):/, '$1-').replace(/:(\d{2}):/, '-$1 ') ?? '',
-        stoppedAt: match?.[2]?.replace(/_/g, ' ').replace(/-/g, ':').replace(/^(\d{4}):/, '$1-').replace(/:(\d{2}):/, '-$1 ') ?? undefined,
+        startedAt:
+          match?.[1]
+            ?.replace(/_/g, ' ')
+            .replace(/-/g, ':')
+            .replace(/^(\d{4}):/, '$1-')
+            .replace(/:(\d{2}):/, '-$1 ') ?? '',
+        stoppedAt:
+          match?.[2]
+            ?.replace(/_/g, ' ')
+            .replace(/-/g, ':')
+            .replace(/^(\d{4}):/, '$1-')
+            .replace(/:(\d{2}):/, '-$1 ') ?? undefined,
       };
     })
     .sort((a, b) => b.filename.localeCompare(a.filename));

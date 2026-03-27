@@ -1,4 +1,4 @@
-import { FaqTopic } from "./_index";
+import { FaqTopic } from './_index';
 
 export const FAQ_EN: FaqTopic[] = [
   {
@@ -45,7 +45,7 @@ export const FAQ_EN: FaqTopic[] = [
       },
       {
         q: 'How can I quickly delete a profile?',
-        a: 'Right-click a profile and press Delete. Hold Shift while clicking Delete to skip the confirmation and remove it instantly. The same Shift shortcut works on the Profile tab\'s Delete button.',
+        a: "Right-click a profile and press Delete. Hold Shift while clicking Delete to skip the confirmation and remove it instantly. The same Shift shortcut works on the Profile tab's Delete button.",
       },
       {
         q: 'How do I use "dynamic" JAR resolution?',
@@ -83,7 +83,7 @@ export const FAQ_EN: FaqTopic[] = [
       },
       {
         q: 'How do I open the working directory of a running process?',
-        a: 'Click the folder icon in the console toolbar. This opens the profile\'s working directory (or the JAR directory if none is set) in your system file explorer.',
+        a: "Click the folder icon in the console toolbar. This opens the profile's working directory (or the JAR directory if none is set) in your system file explorer.",
       },
       {
         q: 'Why does console output look garbled with special characters?',

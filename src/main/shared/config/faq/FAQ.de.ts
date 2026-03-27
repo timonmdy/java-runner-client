@@ -1,4 +1,4 @@
-import { FaqTopic } from "./_index";
+import { FaqTopic } from './_index';
 
 export const FAQ_DE: FaqTopic[] = [
   {

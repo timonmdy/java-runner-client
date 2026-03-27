@@ -126,11 +126,7 @@ export function LogsTab() {
                   ? 'bg-surface-raised border-r-2'
                   : 'hover:bg-surface-raised/50',
               ].join(' ')}
-              style={
-                selectedFile?.filePath === file.filePath
-                  ? { borderRightColor: color }
-                  : {}
-              }
+              style={selectedFile?.filePath === file.filePath ? { borderRightColor: color } : {}}
             >
               <p className="text-xs font-mono text-text-primary truncate">
                 {file.startedAt || file.filename}

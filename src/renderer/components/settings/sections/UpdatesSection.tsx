@@ -1,6 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { useUpdateRegistry } from '../../../hooks/useUpdateRegistry';
-import type { UpdateStatus, UpdateCheckResult } from '../../../../main/shared/types/UpdateCenter.types';
+import type {
+  UpdateStatus,
+  UpdateCheckResult,
+} from '../../../../main/shared/types/UpdateCenter.types';
 import { Button } from '../../common/Button';
 import { Section } from '../SettingsRow';
 import { VscSync, VscCheck, VscWarning, VscCircleSlash, VscCloudDownload } from 'react-icons/vsc';
@@ -23,33 +26,39 @@ export function UpdatesSection() {
     setItems((prev) => ({ ...prev, [id]: { ...prev[id], ...patch } }));
   };
 
-  const checkOne = useCallback(async (id: string) => {
-    const updatable = registry.find((u) => u.id === id);
-    if (!updatable) return;
-    updateItem(id, { status: 'checking' });
-    try {
-      const result = await updatable.check();
-      updateItem(id, {
-        status: result.hasUpdate ? 'update-available' : 'up-to-date',
-        result,
-        error: result.error,
-      });
-    } catch (e) {
-      updateItem(id, { status: 'error', error: String(e) });
-    }
-  }, [registry]);
+  const checkOne = useCallback(
+    async (id: string) => {
+      const updatable = registry.find((u) => u.id === id);
+      if (!updatable) return;
+      updateItem(id, { status: 'checking' });
+      try {
+        const result = await updatable.check();
+        updateItem(id, {
+          status: result.hasUpdate ? 'update-available' : 'up-to-date',
+          result,
+          error: result.error,
+        });
+      } catch (e) {
+        updateItem(id, { status: 'error', error: String(e) });
+      }
+    },
+    [registry]
+  );
 
-  const applyOne = useCallback(async (id: string) => {
-    const updatable = registry.find((u) => u.id === id);
-    if (!updatable) return;
-    updateItem(id, { status: 'updating' });
-    try {
-      const res = await updatable.apply();
-      updateItem(id, { status: res.ok ? 'done' : 'error', error: res.error });
-    } catch (e) {
-      updateItem(id, { status: 'error', error: String(e) });
-    }
-  }, [registry]);
+  const applyOne = useCallback(
+    async (id: string) => {
+      const updatable = registry.find((u) => u.id === id);
+      if (!updatable) return;
+      updateItem(id, { status: 'updating' });
+      try {
+        const res = await updatable.apply();
+        updateItem(id, { status: res.ok ? 'done' : 'error', error: res.error });
+      } catch (e) {
+        updateItem(id, { status: 'error', error: String(e) });
+      }
+    },
+    [registry]
+  );
 
   const checkAll = useCallback(async () => {
     setGlobalChecking(true);
@@ -141,12 +150,16 @@ function UpdateItem({
 
   return (
     <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-base-900/50">
-      <div className="shrink-0"><StatusIcon /></div>
+      <div className="shrink-0">
+        <StatusIcon />
+      </div>
       <div className="flex-1 min-w-0">
         <p className="text-xs font-medium text-text-primary">{label}</p>
         <p className="text-[10px] text-text-muted font-mono mt-0.5">
           {status === 'up-to-date' && result && `v${result.currentVersion} -- latest`}
-          {status === 'update-available' && result && `v${result.currentVersion} -> v${result.remoteVersion}`}
+          {status === 'update-available' &&
+            result &&
+            `v${result.currentVersion} -> v${result.remoteVersion}`}
           {status === 'done' && 'Updated successfully'}
           {status === 'error' && (error ?? 'Check failed')}
           {status === 'idle' && description}

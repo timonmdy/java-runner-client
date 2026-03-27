@@ -14,9 +14,7 @@ export const GITHUB_CONFIG = {
   templateMinVersion: 1,
   apiBase: 'https://api.github.com',
 
-  trustedPublishers: [
-    { login: 'timonmdy', label: 'Lead Developer' },
-  ] as TrustedPublisher[],
+  trustedPublishers: [{ login: 'timonmdy', label: 'Lead Developer' }] as TrustedPublisher[],
 
   automationAccounts: ['github-actions[bot]', 'github-actions'],
 } as const;
@@ -39,13 +37,11 @@ export function rawTemplateUrl(filename: string): string {
 
 export function getPublisherTrust(login: string): { level: TrustLevel; label: string } {
   const trusted = GITHUB_CONFIG.trustedPublishers.find(
-    (p) => p.login.toLowerCase() === login.toLowerCase(),
+    (p) => p.login.toLowerCase() === login.toLowerCase()
   );
   if (trusted) return { level: 'trusted', label: trusted.label };
 
-  if (
-    GITHUB_CONFIG.automationAccounts.some((a) => a.toLowerCase() === login.toLowerCase())
-  ) {
+  if (GITHUB_CONFIG.automationAccounts.some((a) => a.toLowerCase() === login.toLowerCase())) {
     return { level: 'automation', label: 'GitHub Actions' };
   }
 

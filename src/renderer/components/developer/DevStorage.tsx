@@ -167,10 +167,9 @@ function StoreRow({ label, value, mono }: { label: string; value: string; mono?:
     <div className="flex items-center justify-between gap-4 px-3 py-2">
       <span className="text-xs text-text-muted">{label}</span>
       <span
-        className={[
-          'text-xs',
-          mono ? 'font-mono text-text-secondary' : 'text-text-secondary',
-        ].join(' ')}
+        className={['text-xs', mono ? 'font-mono text-text-secondary' : 'text-text-secondary'].join(
+          ' '
+        )}
       >
         {value}
       </span>

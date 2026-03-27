@@ -1,5 +1,5 @@
-import { FAQ_DE } from "./FAQ.de";
-import { FAQ_EN } from "./FAQ.en";
+import { FAQ_DE } from './FAQ.de';
+import { FAQ_EN } from './FAQ.en';
 
 export interface FaqItem {
   q: string;
@@ -13,12 +13,12 @@ export interface FaqTopic {
 }
 
 export function getFAQ(languageId: string) {
-    switch(languageId) {
-        case 'en':
-            return FAQ_EN;
-        case 'de':
-            return FAQ_DE;
-        default:
-            return FAQ_EN;
-    }
+  switch (languageId) {
+    case 'en':
+      return FAQ_EN;
+    case 'de':
+      return FAQ_DE;
+    default:
+      return FAQ_EN;
+  }
 }

@@ -362,7 +362,9 @@ function FilesSection({
   return (
     <div className="space-y-5">
       <div className="rounded-xl border border-surface-border bg-base-900/40 p-4 space-y-3">
-        <h4 className="text-xs font-mono text-text-muted uppercase tracking-widest">JAR Selection</h4>
+        <h4 className="text-xs font-mono text-text-muted uppercase tracking-widest">
+          JAR Selection
+        </h4>
         <JarSelector
           jarPath={draft.jarPath}
           resolution={draft.jarResolution}
