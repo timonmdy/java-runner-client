@@ -1,14 +1,6 @@
-export interface FaqItem {
-  q: string;
-  a: string;
-}
-export interface FaqTopic {
-  id: string;
-  label: string;
-  items: FaqItem[];
-}
+import { FaqTopic } from "./_index";
 
-export const FAQ_TOPICS: FaqTopic[] = [
+export const FAQ_EN: FaqTopic[] = [
   {
     id: 'general',
     label: 'General',

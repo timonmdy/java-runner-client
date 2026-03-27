@@ -1,24 +1,33 @@
-import React, { useMemo, useState } from 'react';
-import { FAQ_TOPICS } from '../../../main/shared/config/FAQ.config';
-import type { FaqItem } from '../../../main/shared/config/FAQ.config';
+import React, { useEffect, useMemo, useState } from 'react';
+import type { FaqItem } from '../../../main/shared/config/faq/_index';
 import { SidebarLayout } from '../layout/SidebarLayout';
+import { FaqTopic, getFAQ } from '../../../main/shared/config/faq/_index';
 
 export function FaqPanel() {
+  const [faqTopics, setFaqTopics] = useState<FaqTopic[] | null>(null);
   const [search, setSearch] = useState('');
-  const [activeTopic, setActiveTopic] = useState<string>(FAQ_TOPICS[0]?.id ?? '');
+  const [activeTopic, setActiveTopic] = useState<string>('');
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   const searchTrimmed = search.trim().toLowerCase();
 
+  useEffect(() => {
+    window.api.getLanguageState().then(s => {
+      const topics = getFAQ(s.activeLanguageId);
+      setFaqTopics(topics);
+      if (topics.length > 0) setActiveTopic(topics[0].id);
+    });
+  }, []);
+
   const searchResults = useMemo<FaqItem[]>(() => {
     if (!searchTrimmed) return [];
-    return FAQ_TOPICS.flatMap((t) => t.items).filter(
+    return faqTopics?.flatMap((t) => t.items).filter(
       (item) =>
         item.q.toLowerCase().includes(searchTrimmed) || item.a.toLowerCase().includes(searchTrimmed)
-    );
-  }, [searchTrimmed]);
+    ) ?? [];
+  }, [searchTrimmed, faqTopics]);
 
-  const activeTopic_ = FAQ_TOPICS.find((t) => t.id === activeTopic) ?? FAQ_TOPICS[0];
+  const activeTopic_ = faqTopics?.find((t) => t.id === activeTopic) ?? faqTopics?.[0];
   const displayItems = searchTrimmed ? searchResults : (activeTopic_?.items ?? []);
 
   const handleTopicChange = (id: string) => {
@@ -26,6 +35,8 @@ export function FaqPanel() {
     setExpandedIdx(null);
     setSearch('');
   };
+
+  if (!faqTopics) return null;
 
   return (
     <div className="flex flex-col h-full min-h-0">
@@ -53,7 +64,7 @@ export function FaqPanel() {
         </div>
       ) : (
         <SidebarLayout
-          topics={FAQ_TOPICS}
+          topics={faqTopics}
           activeTopicId={activeTopic}
           onTopicChange={handleTopicChange}
         >
