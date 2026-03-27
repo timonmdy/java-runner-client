@@ -17,6 +17,14 @@ const ENGLISH_STRINGS = {
   'general.no': 'No',
   'general.add': 'Add',
   'general.noProfileSelected': 'No profile selected',
+  'general.back': 'Back',
+  'general.confirm': 'Confirm',
+  'general.loading': 'Loading...',
+  'general.load': 'Load',
+  'general.refresh': 'Refresh',
+  'general.error': 'Error',
+  'general.clear': 'Clear',
+  'general.none': 'none',
 
   // Sidebar
   'sidebar.newProfile': 'New Profile',
@@ -36,7 +44,6 @@ const ENGLISH_STRINGS = {
   // Context menu
   'ctx.select': 'Select',
   'ctx.clearConsole': 'Clear Console',
-  'ctx.error': 'Error',
 
   // Console
   'console.run': 'Run',
@@ -93,6 +100,44 @@ const ENGLISH_STRINGS = {
     'You have text in the argument input that hasn\'t been added yet.\n\nClick "+ Add" first, otherwise it will not take effect.\n\nSwitch anyway?',
   'config.pendingArgConfirm': 'Switch',
   'config.pendingArgCancel': 'Stay',
+  'config.autoRestartIntervalHint': 'Seconds to wait before restarting',
+  'config.sec': 'sec',
+  'config.jarSelection': 'JAR Selection',
+  'config.jarSelectionMethod': 'Selection Method',
+  'config.static': 'Static',
+  'config.dynamic': 'Dynamic',
+  'config.jarFile': 'JAR File',
+  'config.jarFilePlaceholder': 'Path to your .jar file',
+  'config.jarFileHint': 'The JAR file to execute',
+  'config.workDir': 'Working Directory',
+  'config.workDirPlaceholder': 'Defaults to JAR directory',
+  'config.workDirHint': 'Leave empty to use the directory containing the JAR',
+  'config.javaExe': 'Java Executable',
+  'config.javaExePlaceholder': 'java  (uses system PATH)',
+  'config.javaExeHint': 'Leave empty to use the java found on PATH',
+  'config.baseDir': 'Base Directory',
+  'config.baseDirPlaceholder': 'Directory containing your JARs',
+  'config.baseDirHint': 'Folder to scan for matching JAR files',
+  'config.strategy': 'Strategy',
+  'config.filenamePattern': 'Filename Pattern',
+  'config.filenamePatternHint': 'Use {version} as a placeholder \u2014 e.g. "myapp-{version}.jar"',
+  'config.regex': 'Regular Expression',
+  'config.regexHint': 'Matched against filenames in the base directory (case-insensitive)',
+  'config.resolving': 'Resolving...',
+  'config.noMatchFound': 'No match found',
+  'config.autoStartTitle': 'Auto-start',
+  'config.autoRestartTitle': 'Auto-restart',
+  'config.strategyHighestVersion': 'Highest Version',
+  'config.strategyHighestVersionHint':
+    'Picks the JAR with the highest semantic or numeric version extracted from the filename.',
+  'config.strategyLatestModified': 'Latest Modified',
+  'config.strategyLatestModifiedHint':
+    'Picks the most recently modified JAR in the directory matching the pattern.',
+  'config.strategyRegex': 'Regex Match',
+  'config.strategyRegexHint':
+    'Picks the first JAR whose filename matches the custom regular expression.',
+  'config.otherSingular': '+{count} other',
+  'config.otherPlural': '+{count} others',
 
   // Profile tab
   'profile.identity': 'Profile Identity',
@@ -110,11 +155,9 @@ const ENGLISH_STRINGS = {
   // Logs tab
   'logs.title': 'Session Logs',
   'logs.files': 'files',
-  'logs.refresh': 'Refresh',
   'logs.openDir': 'Open logs directory',
   'logs.noFiles': 'No log files yet. Start and stop a process to create one.',
   'logs.selectFile': 'Select a log file to view its contents',
-  'logs.loading': 'Loading...',
   'logs.deleteHint': 'Delete log file (hold Shift to skip confirmation)',
   'logs.deleteTitle': 'Delete log file?',
   'logs.deleteMessage': '"{name}" will be permanently deleted.',
@@ -164,8 +207,6 @@ const ENGLISH_STRINGS = {
   'settings.languageCheckUpdate': 'Check for language update',
 
   // Appearance section
-  'appearance.refresh': 'Refresh',
-  'appearance.loadFromGithub': 'Load from GitHub',
   'appearance.fetchThemesFailed': 'Failed to fetch themes.',
   'appearance.fetchLangsFailed': 'Failed to fetch languages.',
   'appearance.development': 'Development',
@@ -185,6 +226,8 @@ const ENGLISH_STRINGS = {
   'settings.restApiHint': 'Exposes a local HTTP API for automation (default port {port})',
   'settings.restApiPort': 'Port',
   'settings.restApiPortHint': 'Restart required to change the port',
+  'settings.listeningOn': 'Listening on',
+  'settings.endpoints': 'Endpoints',
 
   // Settings: Updates
   'settings.updates': 'Updates',
@@ -195,6 +238,17 @@ const ENGLISH_STRINGS = {
   'settings.updateAvailable': 'Update available',
   'settings.checking': 'Checking...',
   'settings.checkFailed': 'Check failed',
+  'settings.updatesHint': 'Check for updates to the app, themes, and language packs',
+  'settings.allUpToDate': 'Everything is up to date.',
+  'settings.updatedSuccess': 'Updated successfully',
+  'settings.applyingUpdate': 'Applying update...',
+  'settings.check': 'Check',
+  'settings.update': 'Update',
+  'settings.versionCurrent': 'Current:',
+  'settings.checkForUpdates': 'Check for updates',
+  'settings.viewUpdate': 'View update',
+  'settings.upToDateTooltip': 'You are on the latest version ({version})',
+  'settings.updateAvailableTooltip': '{tag} is available — click for details',
 
   // Settings: About
   'settings.about': 'About',
@@ -215,11 +269,70 @@ const ENGLISH_STRINGS = {
   'release.otherAssets': 'Other assets',
   'release.releaseNotes': 'Release notes',
   'release.viewOnGithub': 'View on GitHub',
+  'release.allAssets': 'All Assets',
+  'release.download': 'Download',
+  'release.downloadAgain': 'Download again',
+  'release.resume': 'Resume',
+  'release.pause': 'Pause',
+  'release.cancelled': 'Cancelled',
+  'release.complete': 'Complete',
+  'release.paused': 'Paused',
 
   // Utilities
   'utilities.title': 'Utilities',
   'utilities.activityLog': 'Activity Log',
   'utilities.processScanner': 'Process Scanner',
+
+  // Activity Log
+  'activity.description': 'All processes started by JRC this session',
+  'activity.empty': 'No processes started yet this session',
+  'activity.clearTitle': 'Clear activity log?',
+  'activity.clearMessage':
+    'All recorded process entries will be removed. Running processes are not affected.',
+  'activity.stopped': 'stopped',
+  'activity.running': 'running',
+
+  // Process Scanner
+  'scanner.foundProcesses': 'Found {count} processes — {javaCount} java',
+  'scanner.killedPid': 'Killed PID {pid}',
+  'scanner.killFailed': 'Failed to kill PID {pid}: {error}',
+  'scanner.killedAll': 'Killed {killed} java process (protected skipped)',
+  'scanner.killedAllPlural': 'Killed {killed} java processes (protected skipped)',
+  'scanner.killProtectedMessage':
+    'This process is marked as protected.\n\nCommand: {command}\n\nAre you sure?',
+  'scanner.killNonJavaMessage':
+    'Warning: not a Java process.\n\nCommand: {command}\n\nForcefully terminating unknown processes can cause data loss.',
+  'scanner.killPidMessage': 'Forcefully terminate PID {pid}?\n\nCommand: {command}',
+  'scanner.javaOnly': 'Java only',
+  'scanner.all': 'All',
+  'scanner.searchPlaceholder': 'Search PID or command...',
+  'scanner.killAll': 'Kill All Java',
+  'scanner.scan': 'Scan',
+  'scanner.rescan': 'Re-scan',
+  'scanner.scanHint': 'Click "Scan" to list all running processes',
+  'scanner.scanning': 'Scanning all processes...',
+  'scanner.noJava': 'No java processes found',
+  'scanner.noProcesses': 'No processes found',
+  'scanner.killProtectedTitle': 'Kill protected process?',
+  'scanner.killNonJavaTitle': 'Kill non-Java process?',
+  'scanner.killPidTitle': 'Kill PID {pid}?',
+  'scanner.killAllTitle': 'Kill all Java processes?',
+  'scanner.killAllMessage':
+    'This forcefully terminates every non-protected java process. Protected processes will be skipped. Running servers will lose unsaved data.',
+  'scanner.killAnyway': 'Kill anyway',
+  'scanner.killProcess': 'Kill Process',
+  'scanner.killAllLabel': 'Kill All',
+  'scanner.kill': 'Kill',
+  'scanner.fullCommand': 'Full command',
+  'scanner.memory': 'Memory',
+  'scanner.threads': 'Threads',
+  'scanner.started': 'Started',
+  'scanner.managedByJrc': 'Managed by JRC',
+  'scanner.protectedLabel': 'Protected',
+  'scanner.protectedYes': 'Yes \u2014 excluded from Kill All Java',
+  'scanner.managedBadge': 'Managed',
+  'scanner.javaBadge': 'Java',
+  'scanner.nonJavaBadge': 'Non-Java',
 
   // Panel headers
   'panels.settings': 'Application Settings',
@@ -229,6 +342,21 @@ const ENGLISH_STRINGS = {
 
   // Developer
   'dev.mode': 'Developer Mode',
+  'dev.dashboard': 'Dashboard',
+  'dev.apiExplorer': 'API Explorer',
+  'dev.storage': 'Storage',
+  'dev.diagnostics': 'Diagnostics',
+
+  // Template modal
+  'template.title': 'Profile Templates',
+  'template.searchPlaceholder': 'Search templates...',
+  'template.noTemplates': 'No templates found.',
+  'template.selectHint': 'Select a template to preview its configuration',
+  'template.createProfile': 'Create Profile',
+  'template.jvmArgs': 'JVM Args',
+  'template.systemProperties': 'System Properties',
+  'template.programArgs': 'Program Args',
+  'template.versionInfo': 'Template version {version} · Requires app {appVersion}+',
 
   // FAQ
   'faq.searchPlaceholder': 'Search FAQ...',

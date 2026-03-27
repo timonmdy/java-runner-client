@@ -1,3 +1,5 @@
 node_modules/
 .vite/
 dist/
+.vscode/
+.claude/

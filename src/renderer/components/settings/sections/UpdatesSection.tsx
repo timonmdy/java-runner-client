@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from '../../../i18n/I18nProvider';
 import { useUpdateRegistry } from '../../../hooks/useUpdateRegistry';
 import type {
   UpdateStatus,
@@ -15,6 +16,7 @@ interface ItemState {
 }
 
 export function UpdatesSection() {
+  const { t } = useTranslation();
   const registry = useUpdateRegistry();
   const [items, setItems] = useState<Record<string, ItemState>>(() =>
     Object.fromEntries(registry.map((u) => [u.id, { status: 'idle' as UpdateStatus }]))
@@ -80,18 +82,16 @@ export function UpdatesSection() {
   );
 
   return (
-    <Section title="Update Center">
+    <Section title={t('settings.updateCenter')}>
       <div className="flex items-center justify-between gap-4 py-2">
-        <p className="text-xs text-text-muted">
-          Check for updates to the app, themes, and language packs
-        </p>
+        <p className="text-xs text-text-muted">{t('settings.updatesHint')}</p>
         <div className="flex items-center gap-2 shrink-0">
           <Button variant="ghost" size="sm" onClick={checkAll} loading={globalChecking}>
-            <VscSync size={11} /> Check All
+            <VscSync size={11} /> {t('settings.checkAll')}
           </Button>
           {hasAnyUpdate && (
             <Button variant="primary" size="sm" onClick={updateAll} loading={globalUpdating}>
-              <VscCloudDownload size={11} /> Update All
+              <VscCloudDownload size={11} /> {t('settings.updateAll')}
             </Button>
           )}
         </div>
@@ -116,7 +116,7 @@ export function UpdatesSection() {
       {allChecked && !hasAnyUpdate && (
         <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-accent/5 animate-fade-in">
           <VscCheck size={13} className="text-accent shrink-0" />
-          <p className="text-xs text-text-secondary font-mono">Everything is up to date.</p>
+          <p className="text-xs text-text-secondary font-mono">{t('settings.allUpToDate')}</p>
         </div>
       )}
     </Section>
@@ -136,6 +136,7 @@ function UpdateItem({
   onCheck: () => void;
   onApply: () => void;
 }) {
+  const { t } = useTranslation();
   const { status, result, error } = state;
 
   const StatusIcon = {
@@ -160,11 +161,11 @@ function UpdateItem({
           {status === 'update-available' &&
             result &&
             `v${result.currentVersion} -> v${result.remoteVersion}`}
-          {status === 'done' && 'Updated successfully'}
-          {status === 'error' && (error ?? 'Check failed')}
+          {status === 'done' && t('settings.updatedSuccess')}
+          {status === 'error' && (error ?? t('settings.checkFailed'))}
           {status === 'idle' && description}
-          {status === 'checking' && 'Checking...'}
-          {status === 'updating' && 'Applying update...'}
+          {status === 'checking' && t('settings.checking')}
+          {status === 'updating' && t('settings.applyingUpdate')}
         </p>
       </div>
       <div className="shrink-0">
@@ -174,12 +175,12 @@ function UpdateItem({
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono text-text-muted hover:text-text-primary transition-colors"
           >
             <VscSync size={11} />
-            {status === 'error' ? 'Retry' : 'Check'}
+            {status === 'error' ? t('general.retry') : t('settings.check')}
           </button>
         )}
         {status === 'update-available' && (
           <Button variant="primary" size="sm" onClick={onApply}>
-            Update
+            {t('settings.update')}
           </Button>
         )}
       </div>

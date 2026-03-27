@@ -1,6 +1,7 @@
 import React from 'react';
 import { VscCheck, VscWarning, VscSync } from 'react-icons/vsc';
 import type { JarResolutionResult } from '../../../../main/shared/types/JarResolution.types';
+import { useTranslation } from '../../../i18n/I18nProvider';
 
 interface Props {
   result: JarResolutionResult | null;
@@ -8,11 +9,13 @@ interface Props {
 }
 
 export function ResolutionPreview({ result, loading }: Props) {
+  const { t } = useTranslation();
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-surface-border bg-base-950 text-xs font-mono text-text-muted animate-fade-in">
         <VscSync size={11} className="animate-spin shrink-0" />
-        Resolving...
+        {t('config.resolving')}
       </div>
     );
   }
@@ -23,7 +26,7 @@ export function ResolutionPreview({ result, loading }: Props) {
     return (
       <div className="flex items-start gap-2 px-3 py-2 rounded-lg border border-red-500/20 bg-red-500/5 text-xs font-mono text-red-400 animate-fade-in">
         <VscWarning size={11} className="shrink-0 mt-px" />
-        {result.error ?? 'No match found'}
+        {result.error ?? t('config.noMatchFound')}
       </div>
     );
   }
@@ -40,7 +43,9 @@ export function ResolutionPreview({ result, loading }: Props) {
         </span>
         {otherCount > 0 && (
           <span className="text-text-muted shrink-0">
-            +{otherCount} other{otherCount !== 1 ? 's' : ''}
+            {t(otherCount === 1 ? 'config.otherSingular' : 'config.otherPlural', {
+              count: String(otherCount),
+            })}
           </span>
         )}
       </div>

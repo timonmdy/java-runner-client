@@ -8,7 +8,7 @@ export function TitleBar() {
 
   return (
     <div
-      className="flex items-center justify-between h-10 px-3 bg-base-950 border-b border-surface-border shrink-0"
+      className="flex items-center justify-between h-10 px-3 bg-base-950 border-b border-surface-border select-none shrink-0"
       style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
     >
       <div className="flex items-center gap-2">
@@ -60,12 +60,14 @@ export function TitleBar() {
         <button
           onClick={() => window.api.minimizeWindow()}
           className="w-7 h-7 flex items-center justify-center rounded text-text-muted hover:text-text-primary hover:bg-surface-raised transition-colors"
+          title="Minimize"
         >
           <VscChromeMinimize size={12} />
         </button>
         <button
           onClick={() => window.api.closeWindow()}
           className="w-7 h-7 flex items-center justify-center rounded text-text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors"
+          title="Close"
         >
           <VscChromeClose size={12} />
         </button>

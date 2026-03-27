@@ -43,7 +43,7 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.timonmdy.javarunnerclient",
+    "appId": "com.timonmdy.java-runner-client",
     "productName": "Java Runner Client",
     "icon": "resources/icon",
     "files": [

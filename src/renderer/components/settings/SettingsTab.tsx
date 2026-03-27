@@ -4,6 +4,7 @@ import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { SidebarLayout } from '../layout/SidebarLayout';
 import { SETTINGS_TOPICS } from '../../../main/shared/config/Settings.config';
+import type { TranslationKey } from '../../i18n/TranslationKeys';
 import { GeneralSection } from './sections/GeneralSection';
 import { ConsoleSection } from './sections/ConsoleSection';
 import { AppearanceSection } from './sections/AppearanceSection';
@@ -56,6 +57,15 @@ export function SettingsTab() {
     return JSON.stringify(draft) !== JSON.stringify(state.settings);
   }, [draft, state.settings]);
 
+  const translatedTopics = useMemo(
+    () =>
+      SETTINGS_TOPICS.map((topic) => ({
+        ...topic,
+        label: t(`settings.${topic.id}` as TranslationKey),
+      })),
+    [t]
+  );
+
   if (!draft) return null;
 
   const handleSave = async () => {
@@ -82,7 +92,7 @@ export function SettingsTab() {
       )}
 
       <SidebarLayout
-        topics={SETTINGS_TOPICS}
+        topics={translatedTopics}
         activeTopicId={activeTopic}
         onTopicChange={setActiveTopic}
       >

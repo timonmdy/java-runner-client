@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { Tooltip } from '../common/Tooltip';
 import { ReleaseModal } from './ReleaseModal';
@@ -21,6 +22,7 @@ function semverGt(a: string, b: string): boolean {
 }
 
 export function VersionChecker({ currentVersion }: Props) {
+  const { t } = useTranslation();
   const [checkState, setCheckState] = useState<CheckState>('idle');
   const [release, setRelease] = useState<GitHubRelease | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -55,13 +57,13 @@ export function VersionChecker({ currentVersion }: Props) {
     error: 'text-red-400',
   }[checkState];
   const tooltipContent = {
-    idle: 'Click to check for updates',
-    checking: 'Checking...',
-    'up-to-date': `You are on the latest version (${currentVersion})`,
+    idle: t('settings.checkForUpdates'),
+    checking: t('settings.checking'),
+    'up-to-date': t('settings.upToDateTooltip', { version: currentVersion }),
     'update-available': release
-      ? `${release.tag_name} is available — click for details`
-      : 'Update available',
-    error: errorMsg ?? 'Check failed',
+      ? t('settings.updateAvailableTooltip', { tag: release.tag_name })
+      : t('settings.updateAvailable'),
+    error: errorMsg ?? t('settings.checkFailed'),
   }[checkState];
 
   const handleClick = () => {
@@ -77,9 +79,10 @@ export function VersionChecker({ currentVersion }: Props) {
     <>
       <div className="flex items-center justify-between gap-4 py-3.5">
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-text-primary">Version</p>
+          <p className="text-sm text-text-primary">{t('settings.version')}</p>
           <p className="text-xs text-text-muted mt-0.5 leading-4">
-            Current: <span className="font-mono text-accent">{currentVersion}</span>
+            {t('settings.versionCurrent')}{' '}
+            <span className="font-mono text-accent">{currentVersion}</span>
             {checkState === 'update-available' && release && (
               <span className="ml-2 font-mono text-yellow-400">→ {release.tag_name} available</span>
             )}
@@ -91,11 +94,11 @@ export function VersionChecker({ currentVersion }: Props) {
             className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-surface-border text-xs font-mono text-text-secondary hover:text-text-primary hover:border-text-muted transition-colors"
           >
             <Icon size={12} className={iconColor} />
-            {checkState === 'idle' && 'Check for updates'}
-            {checkState === 'checking' && 'Checking...'}
-            {checkState === 'up-to-date' && 'Up to date'}
-            {checkState === 'update-available' && 'View update'}
-            {checkState === 'error' && 'Retry'}
+            {checkState === 'idle' && t('settings.checkForUpdates')}
+            {checkState === 'checking' && t('settings.checking')}
+            {checkState === 'up-to-date' && t('settings.upToDate')}
+            {checkState === 'update-available' && t('settings.viewUpdate')}
+            {checkState === 'error' && t('general.retry')}
           </button>
         </Tooltip>
       </div>

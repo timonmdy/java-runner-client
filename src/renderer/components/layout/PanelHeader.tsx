@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '../../i18n/I18nProvider';
 
 interface Props {
   title: string;
@@ -8,6 +9,7 @@ interface Props {
 
 export function PanelHeader({ title, backTo = '/console' }: Props) {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <div className="shrink-0 border-b border-surface-border bg-base-900">
       <div className="flex items-center gap-3 px-4 h-10">
@@ -26,7 +28,7 @@ export function PanelHeader({ title, backTo = '/console' }: Props) {
           >
             <path d="M8 2L4 6l4 4" />
           </svg>
-          Back
+          {t('general.back')}
         </button>
         <div className="w-px h-4 bg-surface-border" />
         <span className="text-xs font-medium text-text-secondary">{title}</span>

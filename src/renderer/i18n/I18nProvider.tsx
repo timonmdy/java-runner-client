@@ -6,16 +6,13 @@ import type { TranslationKey } from './TranslationKeys';
 interface I18nContextValue {
   language: LanguageDefinition;
   t: (key: TranslationKey, params?: Record<string, string>) => string;
-  setLanguage: (id: string) => Promise<void>;
-  availableLanguages: LanguageDefinition[];
-  refreshLanguages: () => Promise<void>;
+  setLanguage: (lang: LanguageDefinition) => Promise<void>;
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [language, setLang] = useState<LanguageDefinition>(ENGLISH);
-  const [available, setAvailable] = useState<LanguageDefinition[]>([ENGLISH]);
   const langRef = useRef<LanguageDefinition>(ENGLISH);
 
   useEffect(() => {
@@ -28,7 +25,6 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       setLang(l);
       langRef.current = l;
     });
-    window.api.getLanguageState().then((s) => setAvailable(s.languages));
   }, []);
 
   const t = useCallback(
@@ -45,28 +41,15 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     [language]
   );
 
-  const setLanguage = useCallback(async (id: string) => {
+  const setLanguage = useCallback(async (lang: LanguageDefinition) => {
     if (!window.api) return;
-    const lang = await window.api.setActiveLanguage(id);
-    langRef.current = lang;
-    setLang(lang);
-  }, []);
-
-  const refreshLanguages = useCallback(async () => {
-    if (!window.api) return;
-    const state = await window.api.getLanguageState();
-    setAvailable(state.languages);
-    const active = state.languages.find((l) => l.id === state.activeLanguageId) ?? ENGLISH;
-    langRef.current = active;
-    setLang(active);
+    const result = await window.api.setActiveLanguage(lang);
+    langRef.current = result;
+    setLang(result);
   }, []);
 
   return (
-    <I18nContext.Provider
-      value={{ language, t, setLanguage, availableLanguages: available, refreshLanguages }}
-    >
-      {children}
-    </I18nContext.Provider>
+    <I18nContext.Provider value={{ language, t, setLanguage }}>{children}</I18nContext.Provider>
   );
 }
 

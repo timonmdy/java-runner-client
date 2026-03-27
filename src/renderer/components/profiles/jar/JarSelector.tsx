@@ -3,6 +3,7 @@ import { StaticJarPicker } from './StaticJarPicker';
 import { DynamicJarConfig } from './DynamicJarConfig';
 import { DEFAULT_JAR_RESOLUTION } from '../../../../main/shared/config/JarResolution.config';
 import type { JarResolutionConfig } from '../../../../main/shared/types/JarResolution.types';
+import { useTranslation } from '../../../i18n/I18nProvider';
 
 interface Props {
   jarPath: string;
@@ -21,6 +22,7 @@ export function JarSelector({
   onPickJar,
   onPickDir,
 }: Props) {
+  const { t } = useTranslation();
   const config = resolution ?? DEFAULT_JAR_RESOLUTION;
   const isDynamic = config.enabled;
 
@@ -36,7 +38,7 @@ export function JarSelector({
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="block text-xs font-mono text-text-muted uppercase tracking-widest">
-          JAR Selection Method
+          {t('config.jarSelectionMethod')}
         </label>
         <div className="flex items-center gap-1 bg-base-950 rounded-lg p-0.5 border border-surface-border">
           {(['static', 'dynamic'] as const).map((mode) => {
@@ -52,7 +54,7 @@ export function JarSelector({
                     : 'text-text-muted hover:text-text-primary',
                 ].join(' ')}
               >
-                {mode === 'static' ? 'Static' : 'Dynamic'}
+                {mode === 'static' ? t('config.static') : t('config.dynamic')}
               </button>
             );
           })}

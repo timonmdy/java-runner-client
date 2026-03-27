@@ -145,7 +145,7 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
           </button>
           <button
             onClick={() => setTemplateOpen(true)}
-            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-text-muted hover:text-text-primary hover:bg-surface-raised/50 transition-colors"
+            className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-mono text-text-muted hover:text-text-primary hover:bg-base-800 transition-colors"
           >
             <VscLayout size={11} /> {t('sidebar.fromTemplate')}
           </button>
@@ -229,7 +229,7 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
 
       <Dialog
         open={!!actionError}
-        title={t('ctx.error')}
+        title={t('general.error')}
         message={actionError ?? ''}
         confirmLabel={t('general.close')}
         onConfirm={() => setActionError(null)}
@@ -251,8 +251,6 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
     </>
   );
 }
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function ProfileItem({
   profile,
@@ -283,7 +281,7 @@ function ProfileItem({
       }}
       className={[
         'w-full flex items-center gap-2.5 px-2.5 py-2 rounded-md text-left transition-colors',
-        active ? 'bg-surface-raised' : 'hover:bg-surface-raised/50',
+        active ? 'bg-surface-raised' : 'hover:bg-base-800',
         isDragging ? 'cursor-grabbing opacity-70' : 'cursor-pointer',
       ].join(' ')}
     >
@@ -342,7 +340,7 @@ function FooterButton({
             : 'bg-surface-raised text-text-primary'
           : accent
             ? 'text-accent/70 hover:text-accent hover:bg-accent/10'
-            : 'text-text-muted hover:text-text-primary hover:bg-surface-raised/50',
+            : 'text-text-muted hover:text-text-primary hover:bg-base-800',
       ].join(' ')}
     >
       {icon} {label}

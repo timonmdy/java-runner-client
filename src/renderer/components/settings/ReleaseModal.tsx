@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import {
@@ -54,6 +55,7 @@ function getPlatformAsset(assets?: GitHubAsset[]): GitHubAsset | undefined {
 }
 
 function ProgressBar({ progress }: { progress: DownloadProgress }) {
+  const { t } = useTranslation();
   const { status, percent, bytesWritten, totalBytes, error } = progress;
   const isDone = status === 'done';
   const isError = status === 'error';
@@ -69,13 +71,13 @@ function ProgressBar({ progress }: { progress: DownloadProgress }) {
           ? 'bg-yellow-400'
           : 'bg-accent';
   const label = isError
-    ? (error ?? 'Error')
+    ? (error ?? t('general.error'))
     : isCancelled
-      ? 'Cancelled'
+      ? t('release.cancelled')
       : isDone
-        ? 'Complete'
+        ? t('release.complete')
         : isPaused
-          ? 'Paused'
+          ? t('release.paused')
           : `${formatBytes(bytesWritten)}${totalBytes > 0 ? ` / ${formatBytes(totalBytes)}` : ''}`;
   const percentColor = isDone
     ? 'text-green-400'
@@ -102,6 +104,7 @@ function ProgressBar({ progress }: { progress: DownloadProgress }) {
 }
 
 export function ReleaseModal({ release, open, onClose }: Props) {
+  const { t } = useTranslation();
   const [downloads, setDownloads] = useState<Map<string, DownloadProgress>>(new Map());
 
   const updateDownload = useCallback((payload: DownloadProgress) => {
@@ -155,7 +158,7 @@ export function ReleaseModal({ release, open, onClose }: Props) {
             <button
               onClick={() => handlePause(asset.name)}
               className="p-1 rounded text-text-muted hover:text-accent transition-colors"
-              title={dl?.status === 'paused' ? 'Resume' : 'Pause'}
+              title={dl?.status === 'paused' ? t('release.resume') : t('release.pause')}
             >
               {dl?.status === 'paused' ? (
                 <VscDebugContinue size={14} />
@@ -166,7 +169,7 @@ export function ReleaseModal({ release, open, onClose }: Props) {
             <button
               onClick={() => handleCancel(asset.name)}
               className="p-1 rounded text-text-muted hover:text-red-400 transition-colors"
-              title="Cancel"
+              title={t('general.cancel')}
             >
               <VscClose size={14} />
             </button>
@@ -175,12 +178,12 @@ export function ReleaseModal({ release, open, onClose }: Props) {
         {dl?.status === 'done' && (
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1 text-xs text-green-400 font-mono">
-              <LuCheck size={12} /> Saved
+              <LuCheck size={12} /> {t('general.saved')}
             </span>
             <button
               onClick={() => resetDownload(asset.name)}
               className="p-1 rounded text-text-muted hover:text-accent transition-colors"
-              title="Download again"
+              title={t('release.downloadAgain')}
             >
               <LuRotateCcw size={12} />
             </button>
@@ -195,12 +198,12 @@ export function ReleaseModal({ release, open, onClose }: Props) {
               handleDownload(asset);
             }}
           >
-            Retry
+            {t('general.retry')}
           </Button>
         )}
         {!dl && !active && (
           <Button variant={variant} size="sm" onClick={() => handleDownload(asset)}>
-            {variant === 'primary' ? 'Download' : 'Save'}
+            {variant === 'primary' ? t('release.download') : t('general.save')}
           </Button>
         )}
       </div>
@@ -210,7 +213,7 @@ export function ReleaseModal({ release, open, onClose }: Props) {
   const bodyLines = (release.body ?? '').split('\n');
 
   return (
-    <Modal open={open} onClose={onClose} title="Release Details" width="xl">
+    <Modal open={open} onClose={onClose} title={t('release.title')} width="xl">
       <div className="px-5 py-4 space-y-5">
         {/* Header */}
         <div className="flex items-start gap-4">
@@ -233,12 +236,12 @@ export function ReleaseModal({ release, open, onClose }: Props) {
               {release.prerelease ? (
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-mono bg-yellow-500/10 border-yellow-500/30 text-yellow-400">
                   <VscBeaker size={10} />
-                  Pre-release
+                  {t('release.preRelease')}
                 </span>
               ) : (
                 <span className="flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs font-mono bg-green-500/10 border-green-500/30 text-green-400">
                   <VscVerified size={10} />
-                  Stable
+                  {t('release.stable')}
                 </span>
               )}
             </div>
@@ -269,7 +272,7 @@ export function ReleaseModal({ release, open, onClose }: Props) {
                   <p className="text-xs font-medium text-text-primary">{platformAsset.name}</p>
                   <p className="text-xs text-text-muted font-mono">
                     {formatBytes(platformAsset.size)} ·{' '}
-                    {platformAsset.download_count.toLocaleString()} downloads
+                    {platformAsset.download_count.toLocaleString()} {t('release.downloads')}
                   </p>
                 </div>
               </div>
@@ -283,7 +286,7 @@ export function ReleaseModal({ release, open, onClose }: Props) {
         {release.body && (
           <div>
             <p className="text-xs font-mono text-text-muted uppercase tracking-widest mb-2">
-              Release Notes
+              {t('release.releaseNotes')}
             </p>
             <div className="rounded-lg border border-surface-border bg-base-950 px-4 py-3 space-y-1 max-h-48 overflow-y-auto">
               {bodyLines.map((line, i) => {
@@ -324,7 +327,7 @@ export function ReleaseModal({ release, open, onClose }: Props) {
         {(release.assets ?? []).length > 0 && (
           <div>
             <p className="text-xs font-mono text-text-muted uppercase tracking-widest mb-2">
-              All Assets
+              {t('release.allAssets')}
             </p>
             <div className="space-y-1.5">
               {(release.assets ?? []).map((asset) => (
@@ -338,7 +341,7 @@ export function ReleaseModal({ release, open, onClose }: Props) {
                       <p className="text-xs font-mono text-text-primary truncate">{asset.name}</p>
                       <p className="text-xs text-text-muted font-mono">
                         {formatBytes(asset.size)} · {asset.download_count.toLocaleString()}{' '}
-                        downloads
+                        {t('release.downloads')}
                       </p>
                     </div>
                     {renderControls(asset, 'ghost')}
@@ -358,13 +361,13 @@ export function ReleaseModal({ release, open, onClose }: Props) {
               className="flex items-center gap-1.5 text-xs text-text-muted hover:text-accent transition-colors font-mono"
             >
               <LuExternalLink size={11} />
-              View on GitHub
+              {t('release.viewOnGithub')}
             </button>
           ) : (
             <div />
           )}
           <Button variant="ghost" size="sm" onClick={onClose}>
-            Close
+            {t('general.close')}
           </Button>
         </div>
       </div>

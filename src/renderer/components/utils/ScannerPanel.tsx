@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
 import { EmptyState } from '../common/EmptyState';
@@ -13,6 +14,7 @@ interface KillIntent {
 }
 
 export function ScannerPanel() {
+  const { t } = useTranslation();
   const [results, setResults] = useState<JavaProcessInfo[] | null>(null);
   const [scanning, setScanning] = useState(false);
   const [killIntent, setKillIntent] = useState<KillIntent | null>(null);
@@ -33,7 +35,13 @@ export function ScannerPanel() {
     setResults(found);
     setScanning(false);
     const javaCount = found.filter((p) => p.isJava).length;
-    setStatusMsg({ text: `Found ${found.length} processes — ${javaCount} java`, ok: true });
+    setStatusMsg({
+      text: t('scanner.foundProcesses', {
+        count: String(found.length),
+        javaCount: String(javaCount),
+      }),
+      ok: true,
+    });
   }, []);
 
   const handleKill = async () => {
@@ -41,9 +49,15 @@ export function ScannerPanel() {
     const res = await window.api.killPid(killIntent.proc.pid);
     if (res.ok) {
       setKilledPids((prev) => new Set([...prev, killIntent.proc.pid]));
-      setStatusMsg({ text: `Killed PID ${killIntent.proc.pid}`, ok: true });
+      setStatusMsg({
+        text: t('scanner.killedPid', { pid: String(killIntent.proc.pid) }),
+        ok: true,
+      });
     } else {
-      setStatusMsg({ text: `Failed to kill PID ${killIntent.proc.pid}: ${res.error}`, ok: false });
+      setStatusMsg({
+        text: t('scanner.killFailed', { pid: String(killIntent.proc.pid), error: res.error ?? '' }),
+        ok: false,
+      });
     }
     setKillIntent(null);
   };
@@ -51,7 +65,10 @@ export function ScannerPanel() {
   const handleKillAll = async () => {
     const res = await window.api.killAllJava();
     setStatusMsg({
-      text: `Killed ${res.killed} java process${res.killed === 1 ? '' : 'es'} (protected skipped)`,
+      text:
+        res.killed === 1
+          ? t('scanner.killedAll', { killed: String(res.killed) })
+          : t('scanner.killedAllPlural', { killed: String(res.killed) }),
       ok: true,
     });
     setKillAllConfirm(false);
@@ -87,7 +104,7 @@ export function ScannerPanel() {
                   : 'text-text-muted hover:text-text-primary',
               ].join(' ')}
             >
-              {f === 'java' ? 'Java only' : 'All'}
+              {f === 'java' ? t('scanner.javaOnly') : t('scanner.all')}
             </button>
           ))}
         </div>
@@ -96,18 +113,18 @@ export function ScannerPanel() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search PID or command..."
+            placeholder={t('scanner.searchPlaceholder')}
             className="h-7 bg-base-950 border border-surface-border rounded-md px-2.5 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 w-48"
           />
         )}
         <div className="flex-1" />
         {killableJavaVisible && (
           <Button variant="danger" size="sm" onClick={() => setKillAllConfirm(true)}>
-            Kill All Java
+            {t('scanner.killAll')}
           </Button>
         )}
         <Button variant="primary" size="sm" onClick={scan} loading={scanning}>
-          {results === null ? 'Scan' : 'Re-scan'}
+          {results === null ? t('scanner.scan') : t('scanner.rescan')}
         </Button>
       </div>
 
@@ -126,20 +143,17 @@ export function ScannerPanel() {
 
       <div className="flex-1 overflow-y-auto min-h-0 px-4 py-3">
         {results === null && !scanning && (
-          <EmptyState
-            icon={<LuScanLine size={28} />}
-            text='Click "Scan" to list all running processes'
-          />
+          <EmptyState icon={<LuScanLine size={28} />} text={t('scanner.scanHint')} />
         )}
         {scanning && (
           <p className="text-xs text-text-muted font-mono py-8 text-center animate-pulse">
-            Scanning all processes...
+            {t('scanner.scanning')}
           </p>
         )}
         {visible !== null && visible.length === 0 && !scanning && (
           <EmptyState
             icon={<VscCheck size={28} />}
-            text={filter === 'java' ? 'No java processes found' : 'No processes found'}
+            text={filter === 'java' ? t('scanner.noJava') : t('scanner.noProcesses')}
           />
         )}
         {visible !== null && visible.length > 0 && (
@@ -161,20 +175,29 @@ export function ScannerPanel() {
         open={!!killIntent}
         title={
           killIntent?.proc.protected
-            ? 'Kill protected process?'
+            ? t('scanner.killProtectedTitle')
             : killIntent?.nonJava
-              ? 'Kill non-Java process?'
-              : `Kill PID ${killIntent?.proc.pid}?`
+              ? t('scanner.killNonJavaTitle')
+              : t('scanner.killPidTitle', { pid: String(killIntent?.proc.pid ?? '') })
         }
         message={
           killIntent?.proc.protected
-            ? `This process is marked as protected.\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}\n\nAre you sure?`
+            ? t('scanner.killProtectedMessage', {
+                command: (killIntent?.proc.command ?? '').slice(0, 120),
+              })
             : killIntent?.nonJava
-              ? `Warning: not a Java process.\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}\n\nForcefully terminating unknown processes can cause data loss.`
-              : `Forcefully terminate PID ${killIntent?.proc.pid}?\n\nCommand: ${(killIntent?.proc.command ?? '').slice(0, 120)}`
+              ? t('scanner.killNonJavaMessage', {
+                  command: (killIntent?.proc.command ?? '').slice(0, 120),
+                })
+              : t('scanner.killPidMessage', {
+                  pid: String(killIntent?.proc.pid ?? ''),
+                  command: (killIntent?.proc.command ?? '').slice(0, 120),
+                })
         }
         confirmLabel={
-          killIntent?.proc.protected || killIntent?.nonJava ? 'Kill anyway' : 'Kill Process'
+          killIntent?.proc.protected || killIntent?.nonJava
+            ? t('scanner.killAnyway')
+            : t('scanner.killProcess')
         }
         danger
         onConfirm={handleKill}
@@ -183,9 +206,9 @@ export function ScannerPanel() {
 
       <Dialog
         open={killAllConfirm}
-        title="Kill all Java processes?"
-        message="This forcefully terminates every non-protected java process. Protected processes will be skipped. Running servers will lose unsaved data."
-        confirmLabel="Kill All"
+        title={t('scanner.killAllTitle')}
+        message={t('scanner.killAllMessage')}
+        confirmLabel={t('scanner.killAllLabel')}
         danger
         onConfirm={handleKillAll}
         onCancel={() => setKillAllConfirm(false)}
@@ -205,6 +228,7 @@ function ProcessRow({
   onToggle: () => void;
   onKill: () => void;
 }) {
+  const { t } = useTranslation();
   return (
     <div
       className={[
@@ -235,9 +259,13 @@ function ProcessRow({
           </svg>
         </button>
         <div className="flex items-center gap-1 shrink-0">
-          {proc.protected && <Badge label="Protected" />}
-          {proc.managed && <Badge label="Managed" accent />}
-          {proc.isJava ? <Badge label="Java" blue /> : <Badge label="Non-Java" />}
+          {proc.protected && <Badge label={t('scanner.protectedLabel')} />}
+          {proc.managed && <Badge label={t('scanner.managedBadge')} accent />}
+          {proc.isJava ? (
+            <Badge label={t('scanner.javaBadge')} blue />
+          ) : (
+            <Badge label={t('scanner.nonJavaBadge')} />
+          )}
         </div>
         <code
           className={[
@@ -257,22 +285,27 @@ function ProcessRow({
           <span className="text-xs font-mono text-text-muted shrink-0">{proc.memoryMB} MB</span>
         )}
         <Button variant="danger" size="sm" onClick={onKill}>
-          Kill
+          {t('scanner.kill')}
         </Button>
       </div>
       {expanded && (
         <div className="px-10 pb-3 pt-1 border-t border-surface-border/50 space-y-1.5 animate-fade-in">
-          <DetailRow label="Full command" value={proc.command} mono wrap />
+          <DetailRow label={t('scanner.fullCommand')} value={proc.command} mono wrap />
           {proc.jarName && <DetailRow label="JAR" value={proc.jarName} />}
           {proc.memoryMB !== undefined && (
-            <DetailRow label="Memory" value={`${proc.memoryMB} MB`} />
+            <DetailRow label={t('scanner.memory')} value={`${proc.memoryMB} MB`} />
           )}
-          {proc.threads !== undefined && <DetailRow label="Threads" value={String(proc.threads)} />}
-          {proc.startTime && <DetailRow label="Started" value={proc.startTime} />}
-          <DetailRow label="Managed by JRC" value={proc.managed ? 'Yes' : 'No'} />
+          {proc.threads !== undefined && (
+            <DetailRow label={t('scanner.threads')} value={String(proc.threads)} />
+          )}
+          {proc.startTime && <DetailRow label={t('scanner.started')} value={proc.startTime} />}
           <DetailRow
-            label="Protected"
-            value={proc.protected ? 'Yes — excluded from Kill All Java' : 'No'}
+            label={t('scanner.managedByJrc')}
+            value={proc.managed ? t('general.yes') : t('general.no')}
+          />
+          <DetailRow
+            label={t('scanner.protectedLabel')}
+            value={proc.protected ? t('scanner.protectedYes') : t('general.no')}
           />
         </div>
       )}

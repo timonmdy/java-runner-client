@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { VscListUnordered } from 'react-icons/vsc';
 import { LuScanLine } from 'react-icons/lu';
 import { ActivityLogPanel } from './ActivityLogPanel';
@@ -6,13 +7,14 @@ import { ScannerPanel } from './ScannerPanel';
 
 type Panel = 'log' | 'scanner';
 
-const PANELS = [
-  { id: 'log', label: 'Activity Log', Icon: VscListUnordered },
-  { id: 'scanner', label: 'Process Scanner', Icon: LuScanLine },
-];
-
 export function UtilitiesTab() {
+  const { t } = useTranslation();
   const [panel, setPanel] = useState<Panel>('log');
+
+  const PANELS = [
+    { id: 'log', label: t('utilities.activityLog'), Icon: VscListUnordered },
+    { id: 'scanner', label: t('utilities.processScanner'), Icon: LuScanLine },
+  ];
 
   return (
     <div className="flex flex-col h-full min-h-0">

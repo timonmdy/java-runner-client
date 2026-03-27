@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
 import { EmptyState } from '../common/EmptyState';
@@ -6,6 +7,7 @@ import { VscListUnordered } from 'react-icons/vsc';
 import { ProcessLogEntry } from '../../../main/shared/types/Process.types';
 
 export function ActivityLogPanel() {
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<ProcessLogEntry[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
@@ -24,11 +26,9 @@ export function ActivityLogPanel() {
     <>
       <div className="flex flex-col h-full min-h-0">
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900/50 shrink-0">
-          <p className="text-xs text-text-muted flex-1">
-            All processes started by JRC this session
-          </p>
+          <p className="text-xs text-text-muted flex-1">{t('activity.description')}</p>
           <Button variant="ghost" size="sm" onClick={load} loading={loading}>
-            Refresh
+            {t('general.refresh')}
           </Button>
           <Button
             variant="ghost"
@@ -36,19 +36,18 @@ export function ActivityLogPanel() {
             onClick={() => setConfirmClear(true)}
             disabled={!entries || entries.length === 0}
           >
-            Clear
+            {t('general.clear')}
           </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0 px-4 py-3">
           {loading && !entries && (
-            <p className="text-xs text-text-muted py-8 text-center font-mono">Loading...</p>
+            <p className="text-xs text-text-muted py-8 text-center font-mono">
+              {t('general.loading')}
+            </p>
           )}
           {entries && entries.length === 0 && (
-            <EmptyState
-              icon={<VscListUnordered size={28} />}
-              text="No processes started yet this session"
-            />
+            <EmptyState icon={<VscListUnordered size={28} />} text={t('activity.empty')} />
           )}
           {entries && entries.length > 0 && (
             <div className="space-y-2">
@@ -62,9 +61,9 @@ export function ActivityLogPanel() {
 
       <Dialog
         open={confirmClear}
-        title="Clear activity log?"
-        message="All recorded process entries will be removed. Running processes are not affected."
-        confirmLabel="Clear"
+        title={t('activity.clearTitle')}
+        message={t('activity.clearMessage')}
+        confirmLabel={t('general.clear')}
         danger
         onConfirm={async () => {
           await window.api.clearProcessLog();
@@ -78,6 +77,7 @@ export function ActivityLogPanel() {
 }
 
 function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
+  const { t } = useTranslation();
   const duration = entry.stoppedAt ? formatDuration(entry.stoppedAt - entry.startedAt) : null;
   const jarName = entry.jarPath.split(/[/\\]/).pop() ?? entry.jarPath;
   return (
@@ -90,11 +90,11 @@ function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
               PID {entry.pid}
             </code>
             {entry.stoppedAt ? (
-              <span className="text-xs text-text-muted">stopped</span>
+              <span className="text-xs text-text-muted">{t('activity.stopped')}</span>
             ) : (
               <span className="flex items-center gap-1 text-xs text-accent">
                 <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
-                running
+                {t('activity.running')}
               </span>
             )}
           </div>

@@ -4,9 +4,7 @@ import { BUILTIN_THEME } from '../../main/shared/config/Theme.config';
 
 interface ThemeContextValue {
   theme: ThemeDefinition;
-  setTheme: (id: string) => Promise<void>;
-  availableThemes: ThemeDefinition[];
-  refreshThemes: () => Promise<void>;
+  setTheme: (theme: ThemeDefinition) => Promise<void>;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -43,6 +41,7 @@ function buildThemeCSS(colors: ThemeColors): string {
   lines.push('}');
 
   // Override bg, text, border, divide utilities
+  const OPACITY_STEPS = [5, 10, 20, 30, 40, 50, 60, 70, 80, 90];
   for (const [key, twName] of Object.entries(map)) {
     const hex = colors[key as keyof ThemeColors];
     if (!hex) continue;
@@ -53,6 +52,31 @@ function buildThemeCSS(colors: ThemeColors): string {
     lines.push(
       `.divide-${CSS.escape(twName)} > :not([hidden]) ~ :not([hidden]) { border-color: ${v} !important; }`
     );
+    // Opacity modifier variants (e.g. bg-base-900/50, border-surface-border/30)
+    for (const op of OPACITY_STEPS) {
+      const mix = `color-mix(in srgb, ${v} ${op}%, transparent)`;
+      const esc = CSS.escape(`${twName}/${op}`);
+      lines.push(`.bg-${esc} { background-color: ${mix} !important; }`);
+      lines.push(`.border-${esc} { border-color: ${mix} !important; }`);
+      lines.push(`.text-${esc} { color: ${mix} !important; }`);
+    }
+
+    // Hover variants
+    lines.push(`.${CSS.escape(`hover:bg-${twName}`)}:hover { background-color: ${v} !important; }`);
+    lines.push(`.${CSS.escape(`hover:text-${twName}`)}:hover { color: ${v} !important; }`);
+    lines.push(`.${CSS.escape(`hover:border-${twName}`)}:hover { border-color: ${v} !important; }`);
+    for (const op of OPACITY_STEPS) {
+      const mix = `color-mix(in srgb, ${v} ${op}%, transparent)`;
+      lines.push(
+        `.${CSS.escape(`hover:bg-${twName}/${op}`)}:hover { background-color: ${mix} !important; }`
+      );
+      lines.push(
+        `.${CSS.escape(`hover:border-${twName}/${op}`)}:hover { border-color: ${mix} !important; }`
+      );
+      lines.push(
+        `.${CSS.escape(`hover:text-${twName}/${op}`)}:hover { color: ${mix} !important; }`
+      );
+    }
   }
 
   // Handle body background + color
@@ -66,9 +90,12 @@ function applyThemeToDOM(theme: ThemeDefinition) {
 
   if (theme.id === BUILTIN_THEME.id) {
     existing?.remove();
+    localStorage.removeItem('jrc:theme-bg');
+    document.documentElement.style.background = '';
     return;
   }
 
+  localStorage.setItem('jrc:theme-bg', theme.colors['base-950']);
   const css = buildThemeCSS(theme.colors);
   if (existing) {
     existing.textContent = css;
@@ -82,7 +109,6 @@ function applyThemeToDOM(theme: ThemeDefinition) {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeDefinition>(BUILTIN_THEME);
-  const [available, setAvailable] = useState<ThemeDefinition[]>([BUILTIN_THEME]);
 
   useEffect(() => {
     if (!window.api) return;
@@ -90,30 +116,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setThemeState(t);
       applyThemeToDOM(t);
     });
-    window.api.getThemeState().then((s) => setAvailable(s.themes));
   }, []);
 
-  const setTheme = useCallback(async (id: string) => {
+  const setTheme = useCallback(async (theme: ThemeDefinition) => {
     if (!window.api) return;
-    const t = await window.api.setActiveTheme(id);
+    const t = await window.api.setActiveTheme(theme);
     setThemeState(t);
     applyThemeToDOM(t);
   }, []);
 
-  const refreshThemes = useCallback(async () => {
-    if (!window.api) return;
-    const state = await window.api.getThemeState();
-    setAvailable(state.themes);
-    const active = state.themes.find((t) => t.id === state.activeThemeId) ?? BUILTIN_THEME;
-    setThemeState(active);
-    applyThemeToDOM(active);
-  }, []);
-
-  return (
-    <ThemeContext.Provider value={{ theme, setTheme, availableThemes: available, refreshThemes }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { UPDATE_ITEMS } from '../../main/shared/config/UpdateCenter.config';
 import type { UpdateCheckResult } from '../../main/shared/types/UpdateCenter.types';
 import { version } from '../../../package.json';
@@ -45,32 +44,48 @@ const LOGIC: Record<string, { check: CheckFn; apply: ApplyFn }> = {
   },
   theme: {
     check: async () => {
-      const state = await window.api.getThemeState();
-      const res = await window.api.checkThemeUpdate(state.activeThemeId);
+      const active = await window.api.getActiveTheme();
+      const res = await window.api.fetchRemoteThemes();
+      if (!res.ok || !res.themes)
+        return { hasUpdate: false, currentVersion: active.version, remoteVersion: active.version };
+      const remote = res.themes.find((t) => t.id === active.id);
       return {
-        hasUpdate: res.hasUpdate,
-        currentVersion: res.localVersion,
-        remoteVersion: res.remoteVersion,
+        hasUpdate: remote ? remote.version > active.version : false,
+        currentVersion: active.version,
+        remoteVersion: remote?.version ?? active.version,
       };
     },
     apply: async () => {
-      const state = await window.api.getThemeState();
-      return window.api.applyThemeUpdate(state.activeThemeId);
+      const active = await window.api.getActiveTheme();
+      const res = await window.api.fetchRemoteThemes();
+      if (!res.ok || !res.themes) return { ok: false, error: res.error ?? 'Fetch failed' };
+      const remote = res.themes.find((t) => t.id === active.id);
+      if (!remote) return { ok: false, error: 'Theme not found on remote' };
+      await window.api.setActiveTheme(remote);
+      return { ok: true };
     },
   },
   language: {
     check: async () => {
-      const state = await window.api.getLanguageState();
-      const res = await window.api.checkLanguageUpdate(state.activeLanguageId);
+      const active = await window.api.getActiveLanguage();
+      const res = await window.api.fetchRemoteLanguages();
+      if (!res.ok || !res.languages)
+        return { hasUpdate: false, currentVersion: active.version, remoteVersion: active.version };
+      const remote = res.languages.find((l) => l.id === active.id);
       return {
-        hasUpdate: res.hasUpdate,
-        currentVersion: res.localVersion,
-        remoteVersion: res.remoteVersion,
+        hasUpdate: remote ? remote.version > active.version : false,
+        currentVersion: active.version,
+        remoteVersion: remote?.version ?? active.version,
       };
     },
     apply: async () => {
-      const state = await window.api.getLanguageState();
-      return window.api.applyLanguageUpdate(state.activeLanguageId);
+      const active = await window.api.getActiveLanguage();
+      const res = await window.api.fetchRemoteLanguages();
+      if (!res.ok || !res.languages) return { ok: false, error: res.error ?? 'Fetch failed' };
+      const remote = res.languages.find((l) => l.id === active.id);
+      if (!remote) return { ok: false, error: 'Language not found on remote' };
+      await window.api.setActiveLanguage(remote);
+      return { ok: true };
     },
   },
 };

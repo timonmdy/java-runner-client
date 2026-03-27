@@ -28,11 +28,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #2a2d3a;
+  background: var(--tw-theme-surface-border, #2a2d3a);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #3a3d4a;
+  background: var(--tw-theme-base-800, #3a3d4a);
 }
 
 .select-text {
