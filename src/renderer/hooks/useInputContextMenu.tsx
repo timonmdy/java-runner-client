@@ -1,6 +1,7 @@
 import React, { useCallback, useState } from 'react';
 import { MdContentCopy, MdContentCut, MdContentPaste, MdSelectAll } from 'react-icons/md';
 import { ContextMenu } from '../components/common/ContextMenu';
+import { useTranslation } from '../i18n/I18nProvider';
 
 type InputEl = HTMLInputElement | HTMLTextAreaElement;
 
@@ -15,6 +16,7 @@ interface State {
 let closeActiveMenu: (() => void) | null = null;
 
 export function useInputContextMenu() {
+  const { t } = useTranslation();
   const [state, setState] = useState<State | null>(null);
 
   const onContextMenu = useCallback((e: React.MouseEvent<InputEl>) => {
@@ -42,7 +44,7 @@ export function useInputContextMenu() {
       onClose={handleClose}
       items={[
         {
-          label: 'Cut',
+          label: t('general.cut'),
           icon: <MdContentCut size={12} />,
           disabled: !state.hasSelection,
           onClick: () => {
@@ -51,7 +53,7 @@ export function useInputContextMenu() {
           },
         },
         {
-          label: 'Copy',
+          label: t('general.copy'),
           icon: <MdContentCopy size={12} />,
           disabled: !state.hasSelection,
           onClick: () => {
@@ -60,7 +62,7 @@ export function useInputContextMenu() {
           },
         },
         {
-          label: 'Paste',
+          label: t('general.paste'),
           icon: <MdContentPaste size={12} />,
           onClick: () => {
             state.el.focus();
@@ -70,7 +72,7 @@ export function useInputContextMenu() {
         { type: 'separator' as const },
         {
           icon: <MdSelectAll size={12} />,
-          label: 'Select All',
+          label: t('general.selectAll'),
           onClick: () => {
             state.el.focus();
             state.el.select();
