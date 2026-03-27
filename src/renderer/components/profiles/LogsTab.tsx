@@ -215,14 +215,14 @@ export function LogsTab() {
           onClose={() => setLogCtxMenu(null)}
           items={[
             {
-              label: 'Copy',
+              label: t('general.copy'),
               icon: <VscCopy size={12} />,
               disabled: !logCtxMenu.sel,
               onClick: () => navigator.clipboard.writeText(logCtxMenu.sel),
             },
             { type: 'separator' },
             {
-              label: 'Copy all',
+              label: t('general.copyAll'),
               icon: <VscCopy size={12} />,
               onClick: () => navigator.clipboard.writeText(logContent),
             },
