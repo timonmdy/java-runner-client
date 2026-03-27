@@ -5,6 +5,7 @@ import { useTranslation } from '../../../i18n/I18nProvider';
 import { VscSync, VscCheck } from 'react-icons/vsc';
 import type { ThemeDefinition } from '../../../../main/shared/types/Theme.types';
 import type { LanguageDefinition } from '../../../../main/shared/types/Language.types';
+import { ENGLISH } from '../../../../main/shared/config/DefaultLanguage.config';
 import type { JRCEnvironment } from '../../../../main/shared/types/App.types';
 
 type FetchState = 'idle' | 'loading' | 'done' | 'error';
@@ -85,7 +86,7 @@ export function AppearanceSection() {
 
   // Active theme/lang always shown first; session entries fill the rest
   const allThemes = [theme, ...sessionThemes.filter((th) => th.id !== theme.id)];
-  const allLangs = [language, ...sessionLangs.filter((l) => l.id !== language.id)];
+  const allLangs = mergeById([language, ENGLISH], sessionLangs, (l) => l.id);
 
   return (
     <>
