@@ -5,6 +5,7 @@ import { useApp } from '../../AppProvider';
 import { Button } from '../common/Button';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
 import { RouteDefinition } from '../../..//main/shared/types/RestAPI.types';
+import { useInputContextMenu } from '../../hooks/useInputContextMenu';
 
 const METHOD_COLORS: Record<string, string> = {
   GET: 'text-accent border-accent/30 bg-accent/10',
@@ -114,6 +115,8 @@ export function DevApiExplorer() {
   const [ctxMenu, setCtxMenu] = useState<{ x: number; y: number; items: ContextMenuItem[] } | null>(
     null
   );
+  const { onContextMenu: onInputContextMenu, contextMenu: inputContextMenu } =
+    useInputContextMenu();
 
   const port = state.settings?.restApiPort ?? 4444;
   const restEnabled = state.settings?.restApiEnabled ?? false;
@@ -288,6 +291,7 @@ export function DevApiExplorer() {
                       <input
                         value={v}
                         onChange={(e) => setPathParams((p) => ({ ...p, [k]: e.target.value }))}
+                        onContextMenu={onInputContextMenu}
                         placeholder="value"
                         className="w-32 bg-base-950 border border-surface-border rounded px-2 py-1 text-xs font-mono text-text-primary focus:outline-none focus:border-accent/40"
                       />
@@ -306,6 +310,7 @@ export function DevApiExplorer() {
                   <textarea
                     value={body}
                     onChange={(e) => setBody(e.target.value)}
+                    onContextMenu={onInputContextMenu}
                     spellCheck={false}
                     className="flex-1 bg-base-950 text-xs font-mono text-text-primary px-3 py-2 resize-none focus:outline-none select-text min-h-0"
                   />
@@ -342,7 +347,7 @@ export function DevApiExplorer() {
                   <textarea
                     value={response ?? ''}
                     onChange={(e) => setResponse(e.target.value)}
-                    onContextMenu={(e) => handleContextMenu(e, responseCtxItems())}
+                    onContextMenu={onInputContextMenu}
                     spellCheck={false}
                     className="flex-1 overflow-auto px-3 py-2 text-xs font-mono text-text-secondary bg-base-950 resize-none focus:outline-none select-text min-h-0"
                   />
@@ -374,6 +379,7 @@ export function DevApiExplorer() {
           onClose={() => setCtxMenu(null)}
         />
       )}
+      {inputContextMenu}
     </div>
   );
 }

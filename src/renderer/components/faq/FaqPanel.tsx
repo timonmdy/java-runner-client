@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from '../../i18n/I18nProvider';
 import type { FaqItem } from '../../../main/shared/config/faq/_index';
 import { SidebarLayout } from '../layout/SidebarLayout';
 import { FaqTopic, getFAQ } from '../../../main/shared/config/faq/_index';
 
 export function FaqPanel() {
+  const { t } = useTranslation();
   const [faqTopics, setFaqTopics] = useState<FaqTopic[] | null>(null);
   const [search, setSearch] = useState('');
   const [activeTopic, setActiveTopic] = useState<string>('');
@@ -12,8 +14,8 @@ export function FaqPanel() {
   const searchTrimmed = search.trim().toLowerCase();
 
   useEffect(() => {
-    window.api.getLanguageState().then((s) => {
-      const topics = getFAQ(s.activeLanguageId);
+    window.api.getActiveLanguage().then((l) => {
+      const topics = getFAQ(l.id);
       setFaqTopics(topics);
       if (topics.length > 0) setActiveTopic(topics[0].id);
     });
@@ -53,7 +55,7 @@ export function FaqPanel() {
             setSearch(e.target.value);
             setExpandedIdx(null);
           }}
-          placeholder="Search FAQ..."
+          placeholder={t('faq.searchPlaceholder')}
           className="w-full bg-base-950 border border-surface-border rounded-md px-3 py-1.5 text-xs text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 transition-colors font-mono"
         />
       </div>
@@ -64,7 +66,7 @@ export function FaqPanel() {
             items={displayItems}
             expandedIdx={expandedIdx}
             onToggle={(i) => setExpandedIdx(expandedIdx === i ? null : i)}
-            emptyLabel="No results found."
+            emptyLabel={t('faq.noResults')}
           />
         </div>
       ) : (
@@ -78,7 +80,7 @@ export function FaqPanel() {
               items={displayItems}
               expandedIdx={expandedIdx}
               onToggle={(i) => setExpandedIdx(expandedIdx === i ? null : i)}
-              emptyLabel="No items in this topic."
+              emptyLabel={t('faq.noItems')}
             />
           </div>
         </SidebarLayout>

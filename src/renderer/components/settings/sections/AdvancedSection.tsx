@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '../../../i18n/I18nProvider';
 import { Toggle } from '../../common/Toggle';
 import { Section, Row, NumInput } from '../SettingsRow';
 import { REST_API_CONFIG } from '../../../../main/shared/config/API.config';
@@ -10,26 +11,24 @@ interface Props {
 }
 
 export function AdvancedSection({ draft, set }: Props) {
+  const { t } = useTranslation();
   return (
     <>
-      <Section title="Developer Options">
-        <Row
-          label="Toggle Developer Mode (Right-Shift + 7)"
-          hint="Enables the Developer tab and DevTools. Use with caution."
-        >
+      <Section title={t('settings.devMode')}>
+        <Row label={t('settings.devModeLabel')} hint={t('settings.devModeHint')}>
           <Toggle checked={draft.devModeEnabled} onChange={(v) => set({ devModeEnabled: v })} />
         </Row>
       </Section>
 
-      <Section title="REST API">
+      <Section title={t('settings.restApi')}>
         <Row
-          label="Enable REST API"
-          hint={`Exposes a local HTTP API for automation (default port ${REST_API_CONFIG.defaultPort})`}
+          label={t('settings.restApiLabel')}
+          hint={t('settings.restApiHint', { port: String(REST_API_CONFIG.defaultPort) })}
         >
           <Toggle checked={draft.restApiEnabled} onChange={(v) => set({ restApiEnabled: v })} />
         </Row>
         {draft.restApiEnabled && (
-          <Row label="Port" hint="Restart required to change the port" sub>
+          <Row label={t('settings.restApiPort')} hint={t('settings.restApiPortHint')} sub>
             <NumInput
               value={draft.restApiPort}
               min={1024}
@@ -42,13 +41,13 @@ export function AdvancedSection({ draft, set }: Props) {
         {draft.restApiEnabled && (
           <div className="rounded-lg border border-surface-border bg-base-900/50 px-3 py-2.5 pl-5">
             <p className="text-xs text-text-muted font-mono">
-              Listening on{' '}
+              {t('settings.listeningOn')}{' '}
               <span className="text-accent">
                 http://{REST_API_CONFIG.host}:{draft.restApiPort}/api
               </span>
             </p>
             <p className="text-xs text-text-muted font-mono mt-0.5">
-              Endpoints: /status · /profiles · /processes · /logs · /settings
+              {t('settings.endpoints')}: /status · /profiles · /processes · /logs · /settings
             </p>
           </div>
         )}

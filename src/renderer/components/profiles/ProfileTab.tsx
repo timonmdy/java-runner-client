@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp, PROFILE_COLORS } from '../../AppProvider';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { Dialog } from '../common/Dialog';
@@ -7,6 +8,7 @@ import { Profile } from '../../../main/shared/types/Profile.types';
 
 export function ProfileTab() {
   const { activeProfile, saveProfile, deleteProfile } = useApp();
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<Profile | null>(null);
   const [saved, setSaved] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
@@ -18,7 +20,7 @@ export function ProfileTab() {
   if (!draft || !activeProfile) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-text-muted">
-        No profile selected
+        {t('general.noProfileSelected')}
       </div>
     );
   }
@@ -38,19 +40,19 @@ export function ProfileTab() {
     <>
       <div className="flex flex-col h-full min-h-0">
         <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0">
-          <h2 className="text-sm font-medium text-text-primary flex-1">Profile Identity</h2>
+          <h2 className="text-sm font-medium text-text-primary flex-1">{t('profile.identity')}</h2>
           <Button
-            variant="primary"
+            variant="custom"
             size="sm"
             onClick={handleSave}
             style={{ backgroundColor: color, color: '#08090d', borderColor: color }}
           >
-            {saved ? 'Saved' : 'Save'}
+            {saved ? t('general.saved') : t('general.save')}
           </Button>
         </div>
 
         <div className="flex-1 overflow-y-auto min-h-0 px-4 py-5 space-y-6">
-          <Section title="Name">
+          <Section title={t('profile.name')}>
             <Input
               value={draft.name}
               onChange={(e) => update({ name: e.target.value })}
@@ -58,10 +60,7 @@ export function ProfileTab() {
             />
           </Section>
 
-          <Section
-            title="Accent Colour"
-            hint="Used in the sidebar and as the tab highlight colour."
-          >
+          <Section title={t('profile.accentColour')} hint={t('profile.accentColourHint')}>
             <div className="flex flex-wrap items-center gap-2.5">
               {PROFILE_COLORS.map((c) => (
                 <button
@@ -82,7 +81,7 @@ export function ProfileTab() {
                   boxShadow: isCustomColor ? `0 0 0 2px #08090d, 0 0 0 4px ${draft.color}` : 'none',
                   transform: isCustomColor ? 'scale(1.15)' : undefined,
                 }}
-                title="Pick custom colour"
+                title={t('profile.customColour')}
               >
                 <input
                   type="color"
@@ -99,14 +98,13 @@ export function ProfileTab() {
             </div>
           </Section>
 
-          <Section title="Danger Zone">
+          <Section title={t('profile.dangerZone')}>
             <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 flex items-center justify-between gap-4">
               <div>
-                <p className="text-xs font-medium text-text-primary">Delete profile</p>
-                <p className="text-xs text-text-muted mt-0.5">
-                  Permanently removes this profile and all its configuration. Hold Shift to skip
-                  confirmation.
+                <p className="text-xs font-medium text-text-primary">
+                  {t('profile.deleteProfile')}
                 </p>
+                <p className="text-xs text-text-muted mt-0.5">{t('profile.deleteHint')}</p>
               </div>
               <Button
                 variant="danger"
@@ -120,7 +118,7 @@ export function ProfileTab() {
                 }}
                 className="shrink-0"
               >
-                Delete
+                {t('general.delete')}
               </Button>
             </div>
           </Section>
@@ -129,9 +127,9 @@ export function ProfileTab() {
 
       <Dialog
         open={showDelete}
-        title="Delete profile?"
-        message={`"${draft.name}" will be permanently removed. This cannot be undone.`}
-        confirmLabel="Delete"
+        title={t('profile.deleteConfirmTitle')}
+        message={t('profile.deleteConfirmMessage', { name: draft.name })}
+        confirmLabel={t('general.delete')}
         danger
         onConfirm={async () => {
           await deleteProfile(draft.id);

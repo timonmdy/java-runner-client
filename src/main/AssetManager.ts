@@ -54,36 +54,20 @@ function themeFilePath(): string {
   return path.join(dataDir(), THEME_FILE);
 }
 
-export function loadThemeState(): LocalThemeState {
+export function getActiveTheme(): ThemeDefinition {
   try {
     const raw = fs.readFileSync(themeFilePath(), 'utf8');
     const state = JSON.parse(raw) as LocalThemeState;
-    // Ensure builtin is always present
-    if (!state.themes.find((t) => t.id === BUILTIN_THEME.id)) {
-      state.themes.unshift(BUILTIN_THEME);
-    }
-    return state;
+    return state.activeTheme ?? BUILTIN_THEME;
   } catch {
-    return { activeThemeId: BUILTIN_THEME.id, themes: [BUILTIN_THEME] };
+    return BUILTIN_THEME;
   }
 }
 
-export function saveThemeState(state: LocalThemeState): void {
+export function setActiveTheme(theme: ThemeDefinition): ThemeDefinition {
+  const state: LocalThemeState = { activeThemeId: theme.id, activeTheme: theme };
   fs.writeFileSync(themeFilePath(), JSON.stringify(state, null, 2), 'utf8');
-}
-
-export function getActiveTheme(): ThemeDefinition {
-  const state = loadThemeState();
-  return state.themes.find((t) => t.id === state.activeThemeId) ?? BUILTIN_THEME;
-}
-
-export function setActiveTheme(themeId: string): ThemeDefinition {
-  const state = loadThemeState();
-  if (state.themes.find((t) => t.id === themeId)) {
-    state.activeThemeId = themeId;
-    saveThemeState(state);
-  }
-  return getActiveTheme();
+  return theme;
 }
 
 export async function fetchRemoteThemes(): Promise<{
@@ -109,51 +93,6 @@ export async function fetchRemoteThemes(): Promise<{
   }
 }
 
-export async function checkThemeUpdate(
-  themeId: string
-): Promise<{ hasUpdate: boolean; remoteVersion: number; localVersion: number }> {
-  const state = loadThemeState();
-  const local = state.themes.find((t) => t.id === themeId);
-  if (!local) return { hasUpdate: false, remoteVersion: 0, localVersion: 0 };
-
-  const result = await fetchRemoteThemes();
-  if (!result.ok || !result.themes)
-    return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
-
-  const remote = result.themes.find((t) => t.id === themeId);
-  if (!remote)
-    return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
-
-  return {
-    hasUpdate: remote.version > local.version,
-    remoteVersion: remote.version,
-    localVersion: local.version,
-  };
-}
-
-export async function applyThemeUpdate(themeId: string): Promise<{ ok: boolean; error?: string }> {
-  const result = await fetchRemoteThemes();
-  if (!result.ok || !result.themes) return { ok: false, error: result.error ?? 'Fetch failed' };
-
-  const remote = result.themes.find((t) => t.id === themeId);
-  if (!remote) return { ok: false, error: 'Theme not found on remote' };
-
-  const state = loadThemeState();
-  const idx = state.themes.findIndex((t) => t.id === themeId);
-  if (idx >= 0) state.themes[idx] = remote;
-  else state.themes.push(remote);
-  saveThemeState(state);
-  return { ok: true };
-}
-
-export function installTheme(theme: ThemeDefinition): void {
-  const state = loadThemeState();
-  const idx = state.themes.findIndex((t) => t.id === theme.id);
-  if (idx >= 0) state.themes[idx] = theme;
-  else state.themes.push(theme);
-  saveThemeState(state);
-}
-
 // ─── Languages ────────────────────────────────────────────────────────────────
 
 const LANG_FILE = 'language-state.json';
@@ -162,35 +101,20 @@ function langFilePath(): string {
   return path.join(dataDir(), LANG_FILE);
 }
 
-export function loadLanguageState(): LocalLanguageState {
+export function getActiveLanguage(): LanguageDefinition {
   try {
     const raw = fs.readFileSync(langFilePath(), 'utf8');
     const state = JSON.parse(raw) as LocalLanguageState;
-    if (!state.languages.find((l) => l.id === ENGLISH.id)) {
-      state.languages.unshift(ENGLISH);
-    }
-    return state;
+    return state.activeLanguage ?? ENGLISH;
   } catch {
-    return { activeLanguageId: ENGLISH.id, languages: [ENGLISH] };
+    return ENGLISH;
   }
 }
 
-export function saveLanguageState(state: LocalLanguageState): void {
+export function setActiveLanguage(lang: LanguageDefinition): LanguageDefinition {
+  const state: LocalLanguageState = { activeLanguageId: lang.id, activeLanguage: lang };
   fs.writeFileSync(langFilePath(), JSON.stringify(state, null, 2), 'utf8');
-}
-
-export function getActiveLanguage(): LanguageDefinition {
-  const state = loadLanguageState();
-  return state.languages.find((l) => l.id === state.activeLanguageId) ?? ENGLISH;
-}
-
-export function setActiveLanguage(langId: string): LanguageDefinition {
-  const state = loadLanguageState();
-  if (state.languages.find((l) => l.id === langId)) {
-    state.activeLanguageId = langId;
-    saveLanguageState(state);
-  }
-  return getActiveLanguage();
+  return lang;
 }
 
 export async function fetchRemoteLanguages(): Promise<{
@@ -218,60 +142,13 @@ export async function fetchRemoteLanguages(): Promise<{
   }
 }
 
-export async function checkLanguageUpdate(
-  langId: string
-): Promise<{ hasUpdate: boolean; remoteVersion: number; localVersion: number }> {
-  const state = loadLanguageState();
-  const local = state.languages.find((l) => l.id === langId);
-  if (!local) return { hasUpdate: false, remoteVersion: 0, localVersion: 0 };
-
-  const result = await fetchRemoteLanguages();
-  if (!result.ok || !result.languages)
-    return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
-
-  const remote = result.languages.find((l) => l.id === langId);
-  if (!remote)
-    return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
-
-  return {
-    hasUpdate: remote.version > local.version,
-    remoteVersion: remote.version,
-    localVersion: local.version,
-  };
-}
-
-export async function applyLanguageUpdate(
-  langId: string
-): Promise<{ ok: boolean; error?: string }> {
-  const result = await fetchRemoteLanguages();
-  if (!result.ok || !result.languages) return { ok: false, error: result.error ?? 'Fetch failed' };
-
-  const remote = result.languages.find((l) => l.id === langId);
-  if (!remote) return { ok: false, error: 'Language not found on remote' };
-
-  const state = loadLanguageState();
-  const idx = state.languages.findIndex((l) => l.id === langId);
-  if (idx >= 0) state.languages[idx] = remote;
-  else state.languages.push(remote);
-  saveLanguageState(state);
-  return { ok: true };
-}
-
-export function installLanguage(lang: LanguageDefinition): void {
-  const state = loadLanguageState();
-  const idx = state.languages.findIndex((l) => l.id === lang.id);
-  if (idx >= 0) state.languages[idx] = lang;
-  else state.languages.push(lang);
-  saveLanguageState(state);
-}
-
 // ─── Dev mode: load from local project directories ────────────────────────────
 
 function projectRoot(): string {
   return path.join(__dirname, '..', '..');
 }
 
-export function loadLocalDevThemes(): ThemeDefinition[] {
+function loadLocalDevThemes(): ThemeDefinition[] {
   const dir = path.join(projectRoot(), 'themes');
   if (!fs.existsSync(dir)) return [];
   return fs
@@ -290,7 +167,7 @@ export function loadLocalDevThemes(): ThemeDefinition[] {
     .filter((t): t is ThemeDefinition => t !== null);
 }
 
-export function loadLocalDevLanguages(): LanguageDefinition[] {
+function loadLocalDevLanguages(): LanguageDefinition[] {
   const dir = path.join(projectRoot(), 'languages');
   if (!fs.existsSync(dir)) return [];
   return fs
@@ -309,16 +186,9 @@ export function loadLocalDevLanguages(): LanguageDefinition[] {
     .filter((l): l is LanguageDefinition => l !== null);
 }
 
-export function syncLocalDevAssets(): { themes: number; languages: number } {
-  let tc = 0;
-  let lc = 0;
-  for (const theme of loadLocalDevThemes()) {
-    installTheme(theme);
-    tc++;
-  }
-  for (const lang of loadLocalDevLanguages()) {
-    installLanguage(lang);
-    lc++;
-  }
-  return { themes: tc, languages: lc };
+export function loadDevAssets(): { themes: ThemeDefinition[]; languages: LanguageDefinition[] } {
+  return {
+    themes: loadLocalDevThemes(),
+    languages: loadLocalDevLanguages(),
+  };
 }

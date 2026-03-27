@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { VscDashboard, VscPlug, VscDatabase, VscBeaker } from 'react-icons/vsc';
 import { DevDashboard } from './DevDashboard';
 import { DevApiExplorer } from './DevApiExplorer';
@@ -7,22 +8,23 @@ import { DevDiagnostics } from './DevDiagnostics';
 
 type Panel = 'dashboard' | 'api' | 'storage' | 'diagnostics';
 
-const PANELS: { id: Panel; label: string; Icon: React.ElementType }[] = [
-  { id: 'dashboard', label: 'Dashboard', Icon: VscDashboard },
-  { id: 'api', label: 'API Explorer', Icon: VscPlug },
-  { id: 'storage', label: 'Storage', Icon: VscDatabase },
-  { id: 'diagnostics', label: 'Diagnostics', Icon: VscBeaker },
-];
-
 export function DeveloperTab() {
+  const { t } = useTranslation();
   const [panel, setPanel] = useState<Panel>('dashboard');
+
+  const PANELS: { id: Panel; label: string; Icon: React.ElementType }[] = [
+    { id: 'dashboard', label: t('dev.dashboard'), Icon: VscDashboard },
+    { id: 'api', label: t('dev.apiExplorer'), Icon: VscPlug },
+    { id: 'storage', label: t('dev.storage'), Icon: VscDatabase },
+    { id: 'diagnostics', label: t('dev.diagnostics'), Icon: VscBeaker },
+  ];
 
   return (
     <div className="flex flex-col h-full min-h-0 bg-base-800">
       <div className="shrink-0 px-4 py-2 bg-accent/5 border-b border-accent/20 flex items-center gap-2">
         <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
         <span className="text-xs font-mono text-accent tracking-widest uppercase">
-          Developer Mode
+          {t('dev.mode')}
         </span>
       </div>
 

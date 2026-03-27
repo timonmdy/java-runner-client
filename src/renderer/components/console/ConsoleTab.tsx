@@ -3,6 +3,7 @@ import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
+import { useInputContextMenu } from '../../hooks/useInputContextMenu';
 import {
   VscSearch,
   VscChevronUp,
@@ -40,10 +41,10 @@ export function ConsoleTab() {
   const running = isRunning(profileId);
   const lines = state.consoleLogs[profileId] ?? [];
   const settings = state.settings;
-  const color = activeProfile?.color ?? '#4ade80';
   const processState = state.processStates.find((s) => s.profileId === profileId);
   const pid = processState?.pid;
 
+  const [color, setColor] = useState(activeProfile?.color ?? '#4ade80');
   const [inputValue, setInputValue] = useState('');
   const [historyIdx, setHistoryIdx] = useState(-1);
   const [cmdHistory, setCmdHistory] = useState<string[]>([]);
@@ -56,6 +57,7 @@ export function ConsoleTab() {
   const [lineCtxMenu, setLineCtxMenu] = useState<{ x: number; y: number; text: string } | null>(
     null
   );
+  const { onContextMenu: inputContextMenu, contextMenu: inputCtxMenuEl } = useInputContextMenu();
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -70,7 +72,13 @@ export function ConsoleTab() {
     setSearchOpen(false);
     setSearchQuery('');
     setSearchIdx(0);
+    setColor(activeProfile?.color ?? '#4ade80');
   }, [profileId]);
+
+  useEffect(() => {
+    setColor(activeProfile?.color ?? '#4ade80');
+    console.log(activeProfile?.color);
+  }, [activeProfile]);
 
   useEffect(() => {
     if (autoScroll && !searchOpen) bottomRef.current?.scrollIntoView({ behavior: 'instant' });
@@ -242,7 +250,7 @@ export function ConsoleTab() {
     <div className="flex flex-col h-full">
       <div className="flex items-center gap-2 px-3 py-2 border-b border-surface-border bg-base-900 shrink-0">
         <Button
-          variant={running ? 'danger' : 'primary'}
+          variant={running ? 'danger' : 'custom'}
           size="sm"
           onClick={handleToggle}
           loading={starting}
@@ -333,6 +341,7 @@ export function ConsoleTab() {
               }
               if (e.key === 'Escape') closeSearch();
             }}
+            onContextMenu={inputContextMenu}
             placeholder={t('console.searchPlaceholder')}
             className="flex-1 bg-base-950 border border-surface-border rounded-md px-2.5 py-1 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 transition-colors"
             style={{ fontSize: Math.max(fontSize - 1, 11) }}
@@ -421,6 +430,7 @@ export function ConsoleTab() {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           onKeyDown={handleKeyDown}
+          onContextMenu={inputContextMenu}
           disabled={!running}
           placeholder={running ? t('console.inputPlaceholder') : t('console.inputDisabled')}
           className="flex-1 bg-transparent text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none disabled:opacity-40"
@@ -436,6 +446,7 @@ export function ConsoleTab() {
           onClose={() => setLineCtxMenu(null)}
         />
       )}
+      {inputCtxMenuEl}
     </div>
   );
 }

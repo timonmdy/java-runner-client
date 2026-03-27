@@ -8,5 +8,5 @@ export interface LanguageDefinition {
 
 export interface LocalLanguageState {
   activeLanguageId: string;
-  languages: LanguageDefinition[];
+  activeLanguage: LanguageDefinition;
 }

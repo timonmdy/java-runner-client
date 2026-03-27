@@ -4,7 +4,7 @@ import { ProfileSidebar } from './profiles/ProfileSidebar';
 import { ConsoleTab } from './console/ConsoleTab';
 import { ConfigTab } from './profiles/ConfigTab';
 import { ProfileTab } from './profiles/ProfileTab';
-import { LogsTab } from './logs/LogsTab';
+import { LogsTab } from './profiles/LogsTab';
 import { SettingsTab } from './settings/SettingsTab';
 import { UtilitiesTab } from './utils/UtilitiesTab';
 import { FaqPanel } from './faq/FaqPanel';
@@ -13,13 +13,14 @@ import { PanelHeader } from './layout/PanelHeader';
 import { useApp } from '../AppProvider';
 import { useDevMode } from '../hooks/useDevMode';
 import { useTranslation } from '../i18n/I18nProvider';
+import type { TranslationKey } from '../i18n/TranslationKeys';
 import { VscTerminal, VscAccount } from 'react-icons/vsc';
 import { LuList, LuScrollText } from 'react-icons/lu';
 
 const SIDE_PANELS = ['settings', 'faq', 'utilities', 'developer'] as const;
 type SidePanel = (typeof SIDE_PANELS)[number];
 
-const PANEL_LABEL_KEYS: Record<SidePanel, string> = {
+const PANEL_LABEL_KEYS: Record<SidePanel, TranslationKey> = {
   settings: 'panels.settings',
   faq: 'panels.faq',
   utilities: 'panels.utilities',

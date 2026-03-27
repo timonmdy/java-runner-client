@@ -24,5 +24,5 @@ export interface ThemeDefinition {
 
 export interface LocalThemeState {
   activeThemeId: string;
-  themes: ThemeDefinition[];
+  activeTheme: ThemeDefinition;
 }

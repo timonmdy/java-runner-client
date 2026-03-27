@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
 import { Button } from '../common/Button';
 import { useApp } from '../../AppProvider';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { VscPackage, VscTag, VscRefresh, VscAdd } from 'react-icons/vsc';
 import { LuShield } from 'react-icons/lu';
 import { ProfileTemplate } from '../../../main/shared/types/GitHub.types';
@@ -24,6 +25,7 @@ function isCompatible(t: ProfileTemplate): boolean {
 
 export function TemplateModal({ open, onClose }: Props) {
   const { createProfile } = useApp();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [templates, setTemplates] = useState<TemplateEntry[] | null>(null);
@@ -69,7 +71,7 @@ export function TemplateModal({ open, onClose }: Props) {
         filter === '' ||
         e.template.name.toLowerCase().includes(filter.toLowerCase()) ||
         e.template.category.toLowerCase().includes(filter.toLowerCase()) ||
-        e.template.tags.some((t) => t.toLowerCase().includes(filter.toLowerCase()))
+        e.template.tags.some((tag) => tag.toLowerCase().includes(filter.toLowerCase()))
     ) ?? [];
 
   const grouped = filtered.reduce<Record<string, TemplateEntry[]>>((acc, e) => {
@@ -80,14 +82,14 @@ export function TemplateModal({ open, onClose }: Props) {
   }, {});
 
   return (
-    <Modal open={open} onClose={onClose} title="Profile Templates" width="lg">
+    <Modal open={open} onClose={onClose} title={t('template.title')} width="lg">
       <div className="flex flex-col" style={{ height: 480 }}>
         <div className="flex items-center gap-2 px-4 py-3 border-b border-surface-border shrink-0">
           <input
             type="text"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            placeholder="Search templates..."
+            placeholder={t('template.searchPlaceholder')}
             className="flex-1 bg-base-950 border border-surface-border rounded-md px-3 py-1.5 text-xs font-mono text-text-primary placeholder:text-text-muted focus:outline-none focus:border-accent/40 transition-colors"
           />
           <button
@@ -102,7 +104,9 @@ export function TemplateModal({ open, onClose }: Props) {
         <div className="flex flex-1 overflow-hidden min-h-0">
           <div className="w-52 shrink-0 border-r border-surface-border overflow-y-auto py-2">
             {loading && !templates && (
-              <p className="text-xs text-text-muted font-mono px-4 py-6 text-center">Loading...</p>
+              <p className="text-xs text-text-muted font-mono px-4 py-6 text-center">
+                {t('general.loading')}
+              </p>
             )}
             {error && (
               <p className="text-xs text-red-400 font-mono px-4 py-6 text-center leading-relaxed">
@@ -111,7 +115,7 @@ export function TemplateModal({ open, onClose }: Props) {
             )}
             {templates && filtered.length === 0 && (
               <p className="text-xs text-text-muted font-mono px-4 py-6 text-center">
-                No templates found.
+                {t('template.noTemplates')}
               </p>
             )}
             {Object.entries(grouped).map(([cat, entries]) => (
@@ -152,9 +156,7 @@ export function TemplateModal({ open, onClose }: Props) {
             {!selected ? (
               <div className="flex flex-col items-center justify-center h-full gap-3 text-text-muted">
                 <VscPackage size={28} />
-                <p className="text-xs font-mono text-center">
-                  Select a template to preview its configuration
-                </p>
+                <p className="text-xs font-mono text-center">{t('template.selectHint')}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -178,7 +180,7 @@ export function TemplateModal({ open, onClose }: Props) {
                   </div>
                 </div>
                 <div className="border-t border-surface-border" />
-                <TplSection title="JVM Args">
+                <TplSection title={t('template.jvmArgs')}>
                   {selected.template.defaults.jvmArgs.length === 0 ? (
                     <TplEmpty />
                   ) : (
@@ -187,7 +189,7 @@ export function TemplateModal({ open, onClose }: Props) {
                     ))
                   )}
                 </TplSection>
-                <TplSection title="System Properties">
+                <TplSection title={t('template.systemProperties')}>
                   {selected.template.defaults.systemProperties.length === 0 ? (
                     <TplEmpty />
                   ) : (
@@ -200,7 +202,7 @@ export function TemplateModal({ open, onClose }: Props) {
                     ))
                   )}
                 </TplSection>
-                <TplSection title="Program Args">
+                <TplSection title={t('template.programArgs')}>
                   {selected.template.defaults.programArgs.length === 0 ? (
                     <TplEmpty />
                   ) : (
@@ -211,8 +213,10 @@ export function TemplateModal({ open, onClose }: Props) {
                 </TplSection>
                 <div className="flex items-center gap-1.5 text-xs text-text-muted font-mono">
                   <LuShield size={11} />
-                  Template version {selected.template.templateVersion} · Requires app{' '}
-                  {selected.template.minAppVersion}+
+                  {t('template.versionInfo', {
+                    version: String(selected.template.templateVersion),
+                    appVersion: selected.template.minAppVersion,
+                  })}
                 </div>
               </div>
             )}
@@ -221,10 +225,10 @@ export function TemplateModal({ open, onClose }: Props) {
 
         <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-surface-border shrink-0">
           <Button variant="ghost" size="sm" onClick={onClose}>
-            Cancel
+            {t('general.cancel')}
           </Button>
           <Button variant="primary" size="sm" disabled={!selected} onClick={handleCreate}>
-            <VscAdd size={11} /> Create Profile
+            <VscAdd size={11} /> {t('template.createProfile')}
           </Button>
         </div>
       </div>
@@ -257,5 +261,6 @@ function TplPill({ value, enabled }: { value: string; enabled: boolean }) {
 }
 
 function TplEmpty() {
-  return <span className="text-xs text-text-muted font-mono italic">none</span>;
+  const { t } = useTranslation();
+  return <span className="text-xs text-text-muted font-mono italic">{t('general.none')}</span>;
 }

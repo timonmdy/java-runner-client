@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useApp } from '../../AppProvider';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
-import { VscTrash, VscRefresh, VscFolderOpened } from 'react-icons/vsc';
+import { ContextMenu } from '../common/ContextMenu';
+import { VscTrash, VscRefresh, VscFolderOpened, VscCopy } from 'react-icons/vsc';
 
 interface LogFileInfo {
   filename: string;
@@ -20,6 +22,7 @@ function formatBytes(n: number): string {
 
 export function LogsTab() {
   const { activeProfile } = useApp();
+  const { t } = useTranslation();
   const profileId = activeProfile?.id ?? '';
   const color = activeProfile?.color ?? '#4ade80';
 
@@ -28,6 +31,7 @@ export function LogsTab() {
   const [logContent, setLogContent] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<LogFileInfo | null>(null);
+  const [logCtxMenu, setLogCtxMenu] = useState<{ x: number; y: number; sel: string } | null>(null);
 
   const refresh = useCallback(async () => {
     if (!profileId) return;
@@ -68,7 +72,7 @@ export function LogsTab() {
   if (!activeProfile) {
     return (
       <div className="flex items-center justify-center h-full text-sm text-text-muted">
-        No profile selected
+        {t('general.noProfileSelected')}
       </div>
     );
   }
@@ -76,10 +80,8 @@ export function LogsTab() {
   if (!activeProfile.fileLogging) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3 text-text-muted">
-        <p className="text-xs font-mono">File logging is disabled for this profile.</p>
-        <p className="text-xs text-text-muted">
-          Enable it in Configure &gt; General &gt; Save session logs to file.
-        </p>
+        <p className="text-xs font-mono">{t('logs.disabled')}</p>
+        <p className="text-xs text-text-muted">{t('logs.disabledHint')}</p>
       </div>
     );
   }
@@ -88,22 +90,22 @@ export function LogsTab() {
     <div className="flex flex-col h-full min-h-0">
       <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0">
         <h2 className="text-sm font-medium text-text-primary flex-1">
-          Session Logs
+          {t('logs.title')}
           <span className="text-xs text-text-muted font-mono ml-2">
-            {logFiles.length} file{logFiles.length !== 1 ? 's' : ''}
+            {logFiles.length} {t('logs.files')}
           </span>
         </h2>
         <button
           onClick={refresh}
           className="text-text-muted hover:text-text-primary transition-colors p-1"
-          title="Refresh"
+          title={t('general.refresh')}
         >
           <VscRefresh size={13} />
         </button>
         <button
           onClick={handleOpenDir}
           className="text-text-muted hover:text-text-primary transition-colors p-1"
-          title="Open logs directory"
+          title={t('logs.openDir')}
         >
           <VscFolderOpened size={13} />
         </button>
@@ -113,7 +115,7 @@ export function LogsTab() {
         <div className="w-56 shrink-0 border-r border-surface-border bg-base-900/60 overflow-y-auto">
           {logFiles.length === 0 && (
             <p className="text-xs text-text-muted font-mono py-8 text-center px-3">
-              No log files yet. Start and stop a process to create one.
+              {t('logs.noFiles')}
             </p>
           )}
           {logFiles.map((file) => (
@@ -148,12 +150,12 @@ export function LogsTab() {
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {!selectedFile && (
             <div className="flex items-center justify-center h-full text-xs text-text-muted font-mono">
-              Select a log file to view its contents
+              {t('logs.selectFile')}
             </div>
           )}
           {selectedFile && loading && (
             <div className="flex items-center justify-center h-full text-xs text-text-muted font-mono animate-pulse">
-              Loading...
+              {t('general.loading')}
             </div>
           )}
           {selectedFile && !loading && logContent !== null && (
@@ -167,7 +169,7 @@ export function LogsTab() {
                   size="sm"
                   onClick={() => navigator.clipboard.writeText(logContent)}
                 >
-                  Copy
+                  {t('general.copy')}
                 </Button>
                 <button
                   onClick={(e) => {
@@ -181,12 +183,22 @@ export function LogsTab() {
                     }
                   }}
                   className="text-text-muted hover:text-red-400 transition-colors p-1"
-                  title="Delete log file (hold Shift to skip confirmation)"
+                  title={t('logs.deleteHint')}
                 >
                   <VscTrash size={12} />
                 </button>
               </div>
-              <div className="flex-1 overflow-auto bg-base-950 p-3 select-text">
+              <div
+                className="flex-1 overflow-auto bg-base-950 p-3 select-text"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  setLogCtxMenu({
+                    x: e.clientX,
+                    y: e.clientY,
+                    sel: window.getSelection()?.toString() ?? '',
+                  });
+                }}
+              >
                 <pre className="text-xs font-mono text-text-secondary whitespace-pre-wrap leading-relaxed">
                   {logContent}
                 </pre>
@@ -196,11 +208,32 @@ export function LogsTab() {
         </div>
       </div>
 
+      {logCtxMenu && logContent !== null && (
+        <ContextMenu
+          x={logCtxMenu.x}
+          y={logCtxMenu.y}
+          onClose={() => setLogCtxMenu(null)}
+          items={[
+            {
+              label: 'Copy',
+              icon: <VscCopy size={12} />,
+              disabled: !logCtxMenu.sel,
+              onClick: () => navigator.clipboard.writeText(logCtxMenu.sel),
+            },
+            { type: 'separator' },
+            {
+              label: 'Copy all',
+              icon: <VscCopy size={12} />,
+              onClick: () => navigator.clipboard.writeText(logContent),
+            },
+          ]}
+        />
+      )}
       <Dialog
         open={!!deleteTarget}
-        title="Delete log file?"
-        message={`"${deleteTarget?.filename}" will be permanently deleted.`}
-        confirmLabel="Delete"
+        title={t('logs.deleteTitle')}
+        message={t('logs.deleteMessage', { name: deleteTarget?.filename ?? '' })}
+        confirmLabel={t('general.delete')}
         danger
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

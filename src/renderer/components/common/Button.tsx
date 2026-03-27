@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'ghost' | 'danger';
+  variant?: 'primary' | 'custom' | 'ghost' | 'danger';
   size?: 'sm' | 'md';
   loading?: boolean;
 }
@@ -20,6 +20,7 @@ export function Button({
   const sizes = { sm: 'px-2.5 py-1 text-xs', md: 'px-3.5 py-1.5 text-sm' };
   const variants = {
     primary: 'bg-accent border-accent text-base-950 hover:brightness-110',
+    custom: 'hover:brightness-110',
     ghost:
       'bg-transparent border-surface-border text-text-secondary hover:text-text-primary hover:border-text-muted',
     danger: 'bg-transparent border-red-500/30 text-red-400 hover:border-red-400 hover:text-red-300',

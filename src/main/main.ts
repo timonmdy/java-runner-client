@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { allRoutes, initDevIPC, initSystemIPC, initWindowIPC } from './ipc/_index';
 import { EnvironmentIPC } from './ipc/Environment.ipc';
+import { getActiveTheme } from './AssetManager';
 import { getEnvironment, loadEnvironment, shouldStartMinimized } from './JRCEnvironment';
 import { processManager } from './ProcessManager';
 import { restApiServer } from './RestAPI';
@@ -11,6 +12,10 @@ import { getAllProfiles, getSettings, syncLoginItem } from './Store';
 import { hasJarConfigured } from './shared/types/Profile.types';
 
 loadEnvironment();
+
+if (process.platform === 'win32') {
+  app.setAppUserModelId('com.timonmdy.java-runner-client');
+}
 
 const RESOURCES =
   getEnvironment().type === 'dev'
@@ -43,7 +48,7 @@ function createWindow(): void {
     minWidth: 900,
     minHeight: 600,
     frame: false,
-    backgroundColor: '#08090d',
+    backgroundColor: getActiveTheme().colors['base-950'] ?? '#08090d',
     icon: getIconImage(),
     show: getEnvironment().startUpSource !== 'withSystem',
     webPreferences: {
