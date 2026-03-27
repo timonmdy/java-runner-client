@@ -12,35 +12,35 @@ import { DeveloperTab } from './developer/DeveloperTab';
 import { PanelHeader } from './layout/PanelHeader';
 import { useApp } from '../AppProvider';
 import { useDevMode } from '../hooks/useDevMode';
+import { useTranslation } from '../i18n/I18nProvider';
 import { VscTerminal, VscAccount } from 'react-icons/vsc';
 import { LuList, LuScrollText } from 'react-icons/lu';
 
-// Panels rendered in the side-panel view (replace main tabs area)
 const SIDE_PANELS = ['settings', 'faq', 'utilities', 'developer'] as const;
 type SidePanel = (typeof SIDE_PANELS)[number];
 
-const PANEL_LABELS: Record<SidePanel, string> = {
-  settings: 'Application Settings',
-  faq: 'FAQ',
-  utilities: 'Utilities',
-  developer: 'Developer',
+const PANEL_LABEL_KEYS: Record<SidePanel, string> = {
+  settings: 'panels.settings',
+  faq: 'panels.faq',
+  utilities: 'panels.utilities',
+  developer: 'panels.developer',
 };
 
 function isSidePanel(seg: string): seg is SidePanel {
   return (SIDE_PANELS as readonly string[]).includes(seg);
 }
 
-// Profile-specific tabs shown in the tab bar
 const PROFILE_TABS = [
-  { path: 'console', label: 'Console', Icon: VscTerminal },
-  { path: 'config', label: 'Configure', Icon: LuList },
-  { path: 'logs', label: 'Logs', Icon: LuScrollText },
-  { path: 'profile', label: 'Profile', Icon: VscAccount },
+  { path: 'console', labelKey: 'tabs.console', Icon: VscTerminal },
+  { path: 'config', labelKey: 'tabs.configure', Icon: LuList },
+  { path: 'logs', labelKey: 'tabs.logs', Icon: LuScrollText },
+  { path: 'profile', labelKey: 'tabs.profile', Icon: VscAccount },
 ] as const;
 
 export function MainLayout() {
   const { state, activeProfile, isRunning } = useApp();
   const devMode = useDevMode();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -52,14 +52,12 @@ export function MainLayout() {
   const color = activeProfile?.color ?? '#4ade80';
   const running = activeProfile ? isRunning(activeProfile.id) : false;
 
-  // Redirect away from developer panel when dev mode is disabled
   useEffect(() => {
     if (!devMode && activePanel === 'developer') {
       navigate('/console', { replace: true });
     }
   }, [devMode, activePanel, navigate]);
 
-  // Navigate to console when active profile changes
   const prevIdRef = React.useRef(state.activeProfileId);
   useEffect(() => {
     if (state.activeProfileId !== prevIdRef.current) {
@@ -74,9 +72,8 @@ export function MainLayout() {
 
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         {activePanel ? (
-          // Side panel view
           <>
-            <PanelHeader title={PANEL_LABELS[activePanel]} />
+            <PanelHeader title={t(PANEL_LABEL_KEYS[activePanel])} />
             <div className="flex-1 min-h-0 overflow-hidden animate-fade-in">
               <Routes>
                 <Route path="settings" element={<SettingsTab />} />
@@ -88,7 +85,6 @@ export function MainLayout() {
             </div>
           </>
         ) : (
-          // Profile tab view
           <>
             <div className="flex items-center px-4 border-b border-surface-border bg-base-900 shrink-0">
               {PROFILE_TABS.map((tab) => {
@@ -106,7 +102,7 @@ export function MainLayout() {
                     style={isActive ? { borderBottomColor: color, color } : {}}
                   >
                     <tab.Icon size={13} />
-                    {tab.label}
+                    {t(tab.labelKey)}
                     {tab.path === 'console' && running && (
                       <span
                         className="w-1.5 h-1.5 rounded-full animate-pulse-dot"

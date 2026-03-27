@@ -4,7 +4,6 @@ import path from 'path';
 import https from 'https';
 import { GITHUB_CONFIG } from './shared/config/GitHub.config';
 import { BUILTIN_THEME, THEME_GITHUB_PATH } from './shared/config/Theme.config';
-import { LANGUAGE_GITHUB_PATH } from './shared/config/Language.config';
 import { ENGLISH } from './shared/config/DefaultLanguage.config';
 import type { ThemeDefinition, LocalThemeState } from './shared/types/Theme.types';
 import type { LanguageDefinition, LocalLanguageState } from './shared/types/Language.types';
@@ -180,12 +179,12 @@ export function setActiveLanguage(langId: string): LanguageDefinition {
 
 export async function fetchRemoteLanguages(): Promise<{ ok: boolean; languages?: LanguageDefinition[]; error?: string }> {
   try {
-    const listing = await httpsGetJson(contentsUrl(LANGUAGE_GITHUB_PATH));
+    const listing = await httpsGetJson(contentsUrl(GITHUB_CONFIG.languagesPath));
     if (!Array.isArray(listing)) return { ok: false, error: 'Languages folder not found' };
     const languages: LanguageDefinition[] = [];
     for (const f of (listing as Array<{ name: string }>).filter((f) => f.name.endsWith('.json'))) {
       try {
-        const lang = (await httpsGetJson(rawUrl(LANGUAGE_GITHUB_PATH, f.name))) as LanguageDefinition;
+        const lang = (await httpsGetJson(rawUrl(GITHUB_CONFIG.languagesPath, f.name))) as LanguageDefinition;
         if (lang.id && lang.name && lang.strings) languages.push(lang);
       } catch { /* skip */ }
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useApp } from '../../AppProvider';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { SidebarLayout } from '../layout/SidebarLayout';
 import { SETTINGS_TOPICS } from '../../../main/shared/config/Settings.config';
@@ -15,6 +16,7 @@ type SetFn = (patch: Partial<AppSettings>) => void;
 
 export function SettingsTab() {
   const { state, saveSettings } = useApp();
+  const { t } = useTranslation();
   const [draft, setDraft] = useState<AppSettings | null>(null);
   const [saved, setSaved] = useState(false);
   const [activeTopic, setActiveTopic] = useState(SETTINGS_TOPICS[0].id);
@@ -63,18 +65,18 @@ export function SettingsTab() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  // Sections that don't need draft/set props
-  const isStandaloneSection = activeTopic === 'appearance' || activeTopic === 'updates' || activeTopic === 'about';
+  const isStandaloneSection =
+    activeTopic === 'appearance' || activeTopic === 'updates' || activeTopic === 'about';
 
   return (
     <div className="flex flex-col h-full min-h-0">
       {(isDirty || saved) && (
         <div className="flex items-center gap-3 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0 animate-fade-in">
           <span className="text-xs text-text-secondary flex-1">
-            {saved ? 'Settings saved' : 'Unsaved changes'}
+            {saved ? t('settings.saved') : t('settings.unsaved')}
           </span>
           <Button variant="primary" size="sm" onClick={handleSave} disabled={!isDirty}>
-            {saved ? 'Saved' : 'Save Changes'}
+            {saved ? t('general.saved') : t('settings.saveChanges')}
           </Button>
         </div>
       )}
