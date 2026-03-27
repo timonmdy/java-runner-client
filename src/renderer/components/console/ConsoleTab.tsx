@@ -54,7 +54,7 @@ export function ConsoleTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchIdx, setSearchIdx] = useState(0);
   const [lineCtxMenu, setLineCtxMenu] = useState<{ x: number; y: number; text: string } | null>(
-    null,
+    null
   );
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -154,7 +154,7 @@ export function ConsoleTab() {
     if (!cmd || !running) return;
     await sendInput(profileId, cmd);
     setCmdHistory((prev) =>
-      [cmd, ...prev.filter((c) => c !== cmd)].slice(0, settings?.consoleHistorySize ?? 200),
+      [cmd, ...prev.filter((c) => c !== cmd)].slice(0, settings?.consoleHistorySize ?? 200)
     );
     setInputValue('');
     setHistoryIdx(-1);
@@ -190,7 +190,7 @@ export function ConsoleTab() {
         openSearch();
       }
     },
-    [handleSend, historyIdx, cmdHistory, clearConsole, profileId, openSearch],
+    [handleSend, historyIdx, cmdHistory, clearConsole, profileId, openSearch]
   );
 
   useEffect(() => {
@@ -475,7 +475,7 @@ const ConsoleLineRow = React.forwardRef<
       isAnyMatch,
       onContextMenu,
     },
-    ref,
+    ref
   ) => {
     const text = line.text || ' ';
     const content =
@@ -515,7 +515,7 @@ const ConsoleLineRow = React.forwardRef<
         </span>
       </div>
     );
-  },
+  }
 );
 ConsoleLineRow.displayName = 'ConsoleLineRow';
 
@@ -538,7 +538,7 @@ function renderHighlighted(text: string, term: string, isCurrent: boolean): Reac
         }
       >
         {text.slice(idx, idx + term.length)}
-      </mark>,
+      </mark>
     );
     last = idx + term.length;
     idx = lower.indexOf(term, last);

@@ -23,12 +23,18 @@ function httpsGetJson(url: string): Promise<unknown> {
       let data = '';
       res.on('data', (c) => (data += c));
       res.on('end', () => {
-        try { resolve(JSON.parse(data)); }
-        catch { reject(new Error('JSON parse error')); }
+        try {
+          resolve(JSON.parse(data));
+        } catch {
+          reject(new Error('JSON parse error'));
+        }
       });
     });
     req.on('error', reject);
-    req.setTimeout(10000, () => { req.destroy(); reject(new Error('Timeout')); });
+    req.setTimeout(10000, () => {
+      req.destroy();
+      reject(new Error('Timeout'));
+    });
   });
 }
 
@@ -80,7 +86,11 @@ export function setActiveTheme(themeId: string): ThemeDefinition {
   return getActiveTheme();
 }
 
-export async function fetchRemoteThemes(): Promise<{ ok: boolean; themes?: ThemeDefinition[]; error?: string }> {
+export async function fetchRemoteThemes(): Promise<{
+  ok: boolean;
+  themes?: ThemeDefinition[];
+  error?: string;
+}> {
   try {
     const listing = await httpsGetJson(contentsUrl(THEME_GITHUB_PATH));
     if (!Array.isArray(listing)) return { ok: false, error: 'Themes folder not found' };
@@ -89,7 +99,9 @@ export async function fetchRemoteThemes(): Promise<{ ok: boolean; themes?: Theme
       try {
         const theme = (await httpsGetJson(rawUrl(THEME_GITHUB_PATH, f.name))) as ThemeDefinition;
         if (theme.id && theme.name && theme.colors) themes.push(theme);
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
     }
     return { ok: true, themes };
   } catch (e) {
@@ -97,16 +109,20 @@ export async function fetchRemoteThemes(): Promise<{ ok: boolean; themes?: Theme
   }
 }
 
-export async function checkThemeUpdate(themeId: string): Promise<{ hasUpdate: boolean; remoteVersion: number; localVersion: number }> {
+export async function checkThemeUpdate(
+  themeId: string
+): Promise<{ hasUpdate: boolean; remoteVersion: number; localVersion: number }> {
   const state = loadThemeState();
   const local = state.themes.find((t) => t.id === themeId);
   if (!local) return { hasUpdate: false, remoteVersion: 0, localVersion: 0 };
 
   const result = await fetchRemoteThemes();
-  if (!result.ok || !result.themes) return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
+  if (!result.ok || !result.themes)
+    return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
 
   const remote = result.themes.find((t) => t.id === themeId);
-  if (!remote) return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
+  if (!remote)
+    return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
 
   return {
     hasUpdate: remote.version > local.version,
@@ -177,16 +193,24 @@ export function setActiveLanguage(langId: string): LanguageDefinition {
   return getActiveLanguage();
 }
 
-export async function fetchRemoteLanguages(): Promise<{ ok: boolean; languages?: LanguageDefinition[]; error?: string }> {
+export async function fetchRemoteLanguages(): Promise<{
+  ok: boolean;
+  languages?: LanguageDefinition[];
+  error?: string;
+}> {
   try {
     const listing = await httpsGetJson(contentsUrl(GITHUB_CONFIG.languagesPath));
     if (!Array.isArray(listing)) return { ok: false, error: 'Languages folder not found' };
     const languages: LanguageDefinition[] = [];
     for (const f of (listing as Array<{ name: string }>).filter((f) => f.name.endsWith('.json'))) {
       try {
-        const lang = (await httpsGetJson(rawUrl(GITHUB_CONFIG.languagesPath, f.name))) as LanguageDefinition;
+        const lang = (await httpsGetJson(
+          rawUrl(GITHUB_CONFIG.languagesPath, f.name)
+        )) as LanguageDefinition;
         if (lang.id && lang.name && lang.strings) languages.push(lang);
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
     }
     return { ok: true, languages };
   } catch (e) {
@@ -194,16 +218,20 @@ export async function fetchRemoteLanguages(): Promise<{ ok: boolean; languages?:
   }
 }
 
-export async function checkLanguageUpdate(langId: string): Promise<{ hasUpdate: boolean; remoteVersion: number; localVersion: number }> {
+export async function checkLanguageUpdate(
+  langId: string
+): Promise<{ hasUpdate: boolean; remoteVersion: number; localVersion: number }> {
   const state = loadLanguageState();
   const local = state.languages.find((l) => l.id === langId);
   if (!local) return { hasUpdate: false, remoteVersion: 0, localVersion: 0 };
 
   const result = await fetchRemoteLanguages();
-  if (!result.ok || !result.languages) return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
+  if (!result.ok || !result.languages)
+    return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
 
   const remote = result.languages.find((l) => l.id === langId);
-  if (!remote) return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
+  if (!remote)
+    return { hasUpdate: false, remoteVersion: local.version, localVersion: local.version };
 
   return {
     hasUpdate: remote.version > local.version,
@@ -212,7 +240,9 @@ export async function checkLanguageUpdate(langId: string): Promise<{ hasUpdate: 
   };
 }
 
-export async function applyLanguageUpdate(langId: string): Promise<{ ok: boolean; error?: string }> {
+export async function applyLanguageUpdate(
+  langId: string
+): Promise<{ ok: boolean; error?: string }> {
   const result = await fetchRemoteLanguages();
   if (!result.ok || !result.languages) return { ok: false, error: result.error ?? 'Fetch failed' };
 
@@ -244,14 +274,17 @@ function projectRoot(): string {
 export function loadLocalDevThemes(): ThemeDefinition[] {
   const dir = path.join(projectRoot(), 'themes');
   if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir)
+  return fs
+    .readdirSync(dir)
     .filter((f) => f.endsWith('.json'))
     .map((f) => {
       try {
         const raw = fs.readFileSync(path.join(dir, f), 'utf8');
         const theme = JSON.parse(raw) as ThemeDefinition;
         if (theme.id && theme.name && theme.colors) return theme;
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
       return null;
     })
     .filter((t): t is ThemeDefinition => t !== null);
@@ -260,14 +293,17 @@ export function loadLocalDevThemes(): ThemeDefinition[] {
 export function loadLocalDevLanguages(): LanguageDefinition[] {
   const dir = path.join(projectRoot(), 'languages');
   if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir)
+  return fs
+    .readdirSync(dir)
     .filter((f) => f.endsWith('.json'))
     .map((f) => {
       try {
         const raw = fs.readFileSync(path.join(dir, f), 'utf8');
         const lang = JSON.parse(raw) as LanguageDefinition;
         if (lang.id && lang.name && lang.strings) return lang;
-      } catch { /* skip */ }
+      } catch {
+        /* skip */
+      }
       return null;
     })
     .filter((l): l is LanguageDefinition => l !== null);
@@ -286,4 +322,3 @@ export function syncLocalDevAssets(): { themes: number; languages: number } {
   }
   return { themes: tc, languages: lc };
 }
-

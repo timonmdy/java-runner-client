@@ -140,10 +140,7 @@ class ProcessManager {
     this.window = win;
   }
 
-  private buildArgs(
-    profile: Profile,
-    resolvedJarPath: string
-  ): { cmd: string; args: string[] } {
+  private buildArgs(profile: Profile, resolvedJarPath: string): { cmd: string; args: string[] } {
     const cmd = profile.javaPath || 'java';
     const args: string[] = [];
     for (const a of profile.jvmArgs) if (a.enabled && a.value.trim()) args.push(a.value.trim());
@@ -303,7 +300,12 @@ class ProcessManager {
     m.intentionallyStopped = true;
     this.cancelRestartTimer(profileId);
 
-    this.pushSystem('stopping', profileId, String(m.process.pid ?? 0), 'Stopping process gracefully...');
+    this.pushSystem(
+      'stopping',
+      profileId,
+      String(m.process.pid ?? 0),
+      'Stopping process gracefully...'
+    );
 
     gracefulStop(
       m.process,
@@ -587,11 +589,7 @@ class ProcessManager {
     }
   }
 
-  private flushPartial(
-    profileId: string,
-    type: 'stdout' | 'stderr',
-    m: ManagedProcess
-  ) {
+  private flushPartial(profileId: string, type: 'stdout' | 'stderr', m: ManagedProcess) {
     const partialKey = type === 'stdout' ? 'stdoutPartial' : 'stderrPartial';
     const text = m[partialKey].trim();
     if (!text) return;

@@ -50,7 +50,9 @@ function buildThemeCSS(colors: ThemeColors): string {
     lines.push(`.bg-${CSS.escape(twName)} { background-color: ${v} !important; }`);
     lines.push(`.text-${CSS.escape(twName)} { color: ${v} !important; }`);
     lines.push(`.border-${CSS.escape(twName)} { border-color: ${v} !important; }`);
-    lines.push(`.divide-${CSS.escape(twName)} > :not([hidden]) ~ :not([hidden]) { border-color: ${v} !important; }`);
+    lines.push(
+      `.divide-${CSS.escape(twName)} > :not([hidden]) ~ :not([hidden]) { border-color: ${v} !important; }`
+    );
   }
 
   // Handle body background + color

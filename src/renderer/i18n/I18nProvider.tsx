@@ -42,7 +42,7 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       }
       return str;
     },
-    [language],
+    [language]
   );
 
   const setLanguage = useCallback(async (id: string) => {

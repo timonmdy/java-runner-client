@@ -54,13 +54,8 @@ export function EnvVarList({ items, onChange, onPendingChange }: Props) {
               : 'border-surface-border/50 bg-base-900/30 opacity-60',
           ].join(' ')}
         >
-          <Toggle
-            checked={item.enabled}
-            onChange={(v) => handleToggle(i, v)}
-          />
-          <code className="text-xs font-mono text-accent min-w-0 truncate">
-            {item.key}
-          </code>
+          <Toggle checked={item.enabled} onChange={(v) => handleToggle(i, v)} />
+          <code className="text-xs font-mono text-accent min-w-0 truncate">{item.key}</code>
           <span className="text-xs text-text-muted">=</span>
           <code className="text-xs font-mono text-text-secondary flex-1 min-w-0 truncate">
             {item.value}

@@ -36,10 +36,7 @@ export function ConsoleSection({ draft, set }: Props) {
         />
       </Row>
       <Row label={t('settings.timestamps')} hint={t('settings.timestampsHint')}>
-        <Toggle
-          checked={draft.consoleTimestamps}
-          onChange={(v) => set({ consoleTimestamps: v })}
-        />
+        <Toggle checked={draft.consoleTimestamps} onChange={(v) => set({ consoleTimestamps: v })} />
       </Row>
       <Row label={t('settings.wordWrap')} hint={t('settings.wordWrapHint')}>
         <Toggle checked={draft.consoleWordWrap} onChange={(v) => set({ consoleWordWrap: v })} />

@@ -80,9 +80,7 @@ export function AppearanceSection() {
           </button>
         </div>
         {themeFetch === 'error' && (
-          <p className="text-xs text-red-400 font-mono py-1">
-            {t('appearance.fetchThemesFailed')}
-          </p>
+          <p className="text-xs text-red-400 font-mono py-1">{t('appearance.fetchThemesFailed')}</p>
         )}
         <div className="space-y-1 py-1">
           {allThemes.map((th) => (
@@ -125,9 +123,7 @@ export function AppearanceSection() {
           </button>
         </div>
         {langFetch === 'error' && (
-          <p className="text-xs text-red-400 font-mono py-1">
-            {t('appearance.fetchLangsFailed')}
-          </p>
+          <p className="text-xs text-red-400 font-mono py-1">{t('appearance.fetchLangsFailed')}</p>
         )}
         <div className="space-y-1 py-1">
           {allLangs.map((l) => (
@@ -159,11 +155,7 @@ export function AppearanceSection() {
               onClick={handleDevSync}
               className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-mono text-text-muted hover:text-text-primary transition-colors"
             >
-              {devSynced ? (
-                <VscCheck size={11} className="text-accent" />
-              ) : (
-                <VscSync size={11} />
-              )}
+              {devSynced ? <VscCheck size={11} className="text-accent" /> : <VscSync size={11} />}
               {devSynced ? t('appearance.synced') : t('appearance.sync')}
             </button>
           </div>

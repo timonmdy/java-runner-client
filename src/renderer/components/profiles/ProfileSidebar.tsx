@@ -74,7 +74,7 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
       const res = await startProcess(profile);
       if (!res.ok) setActionError(res.error ?? 'Failed to start');
     },
-    [startProcess, t],
+    [startProcess, t]
   );
 
   const handleStop = useCallback(
@@ -82,7 +82,7 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
       const res = await stopProcess(profile.id);
       if (!res.ok) setActionError(res.error ?? 'Failed to stop');
     },
-    [stopProcess],
+    [stopProcess]
   );
 
   const ctxItems: ContextMenuItem[] = ctxProfile
@@ -313,9 +313,7 @@ function ProfileItem({
           </span>
         )}
       </span>
-      {running && (
-        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-      )}
+      {running && <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />}
     </button>
   );
 }

@@ -106,10 +106,19 @@ export function DevDiagnostics() {
 
       <DiagSection title="Feature Usage">
         <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
-          <DiagRow label="Console timestamps" value={state.settings?.consoleTimestamps ? 'On' : 'Off'} />
-          <DiagRow label="File logging (profiles)" value={`${profilesWithLogging} / ${state.profiles.length}`} />
+          <DiagRow
+            label="Console timestamps"
+            value={state.settings?.consoleTimestamps ? 'On' : 'Off'}
+          />
+          <DiagRow
+            label="File logging (profiles)"
+            value={`${profilesWithLogging} / ${state.profiles.length}`}
+          />
           <DiagRow label="Total env vars" value={String(totalEnvVars)} />
-          <DiagRow label="REST API" value={state.settings?.restApiEnabled ? `Port ${state.settings.restApiPort}` : 'Off'} />
+          <DiagRow
+            label="REST API"
+            value={state.settings?.restApiEnabled ? `Port ${state.settings.restApiPort}` : 'Off'}
+          />
           <DiagRow label="Word wrap" value={state.settings?.consoleWordWrap ? 'On' : 'Off'} />
           <DiagRow label="Line numbers" value={state.settings?.consoleLineNumbers ? 'On' : 'Off'} />
         </div>

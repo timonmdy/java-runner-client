@@ -28,9 +28,18 @@ const LOGIC: Record<string, { check: CheckFn; apply: ApplyFn }> = {
     check: async () => {
       const res = await window.api.fetchLatestRelease();
       if (!res.ok || !res.data)
-        return { hasUpdate: false, currentVersion: version, remoteVersion: version, error: res.error };
+        return {
+          hasUpdate: false,
+          currentVersion: version,
+          remoteVersion: version,
+          error: res.error,
+        };
       const remote = (res.data.tag_name ?? '').replace(/^v/, '');
-      return { hasUpdate: semverGt(remote, version), currentVersion: version, remoteVersion: remote };
+      return {
+        hasUpdate: semverGt(remote, version),
+        currentVersion: version,
+        remoteVersion: remote,
+      };
     },
     apply: async () => ({ ok: false, error: 'Use the release modal to download the installer' }),
   },
@@ -38,7 +47,11 @@ const LOGIC: Record<string, { check: CheckFn; apply: ApplyFn }> = {
     check: async () => {
       const state = await window.api.getThemeState();
       const res = await window.api.checkThemeUpdate(state.activeThemeId);
-      return { hasUpdate: res.hasUpdate, currentVersion: res.localVersion, remoteVersion: res.remoteVersion };
+      return {
+        hasUpdate: res.hasUpdate,
+        currentVersion: res.localVersion,
+        remoteVersion: res.remoteVersion,
+      };
     },
     apply: async () => {
       const state = await window.api.getThemeState();
@@ -49,7 +62,11 @@ const LOGIC: Record<string, { check: CheckFn; apply: ApplyFn }> = {
     check: async () => {
       const state = await window.api.getLanguageState();
       const res = await window.api.checkLanguageUpdate(state.activeLanguageId);
-      return { hasUpdate: res.hasUpdate, currentVersion: res.localVersion, remoteVersion: res.remoteVersion };
+      return {
+        hasUpdate: res.hasUpdate,
+        currentVersion: res.localVersion,
+        remoteVersion: res.remoteVersion,
+      };
     },
     apply: async () => {
       const state = await window.api.getLanguageState();
@@ -61,7 +78,9 @@ const LOGIC: Record<string, { check: CheckFn; apply: ApplyFn }> = {
 export function useUpdateRegistry(): ResolvedUpdatable[] {
   return UPDATE_ITEMS.map((item) => ({
     ...item,
-    check: LOGIC[item.id]?.check ?? (async () => ({ hasUpdate: false, currentVersion: '?', remoteVersion: '?' })),
+    check:
+      LOGIC[item.id]?.check ??
+      (async () => ({ hasUpdate: false, currentVersion: '?', remoteVersion: '?' })),
     apply: LOGIC[item.id]?.apply ?? (async () => ({ ok: false, error: 'Not implemented' })),
   }));
 }
