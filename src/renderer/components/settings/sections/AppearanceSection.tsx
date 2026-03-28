@@ -9,7 +9,10 @@ import type {
   ThemePreview,
   ThemePreviewColors,
 } from '../../../../main/shared/types/Theme.types';
-import type { LanguageDefinition, LanguagePreview } from '../../../../main/shared/types/Language.types';
+import type {
+  LanguageDefinition,
+  LanguagePreview,
+} from '../../../../main/shared/types/Language.types';
 import { ENGLISH } from '../../../../main/shared/config/DefaultLanguage.config';
 import { BUILTIN_THEME } from '../../../../main/shared/config/Theme.config';
 import type { JRCEnvironment } from '../../../../main/shared/types/App.types';
