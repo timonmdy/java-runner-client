@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Modal } from '../common/Modal';
-import { Button } from '../common/Button';
+import { ProfileTemplate } from '@shared/types/GitHub.types';
+import React, { useEffect, useState } from 'react';
+import { LuShield } from 'react-icons/lu';
+import { VscAdd, VscPackage, VscRefresh, VscTag } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { VscPackage, VscTag, VscRefresh, VscAdd } from 'react-icons/vsc';
-import { LuShield } from 'react-icons/lu';
-import { ProfileTemplate } from '../../../main/shared/types/GitHub.types';
+import { Button } from '../common/Button';
+import { Modal } from '../common/Modal';
 
 const APP_TEMPLATE_VERSION = 1;
 

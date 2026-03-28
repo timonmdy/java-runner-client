@@ -1,4 +1,3 @@
-import React from 'react';
 import { VscSearch } from 'react-icons/vsc';
 import { Button } from '../common/Button';
 

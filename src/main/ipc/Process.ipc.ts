@@ -1,9 +1,9 @@
 import { shell } from 'electron';
-import type { RouteMap } from '../IPCController';
-import { processManager } from '../ProcessManager';
-import { Profile } from '../shared/types/Profile.types';
+import type { RouteMap } from '../core/IPCController';
+import { getAllProfiles } from '../core/Store';
+import { processManager } from '../core/process/ProcessManager';
 import { ConsoleLine, ProcessState } from '../shared/types/Process.types';
-import { getAllProfiles } from '../Store';
+import { Profile } from '../shared/types/Profile.types';
 
 export const ProcessIPC = {
   startProcess: {

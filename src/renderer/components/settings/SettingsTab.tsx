@@ -1,17 +1,16 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { SETTINGS_TOPICS } from '@shared/config/Settings.config';
+import { AppSettings } from '@shared/types/App.types';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
+import type { TranslationKey } from '../../i18n/TranslationKeys';
 import { Button } from '../common/Button';
 import { SidebarLayout } from '../layout/SidebarLayout';
-import { SETTINGS_TOPICS } from '../../../main/shared/config/Settings.config';
-import type { TranslationKey } from '../../i18n/TranslationKeys';
-import { GeneralSection } from './sections/GeneralSection';
-import { ConsoleSection } from './sections/ConsoleSection';
-import { AppearanceSection } from './sections/AppearanceSection';
 import { AdvancedSection } from './sections/AdvancedSection';
-import { UpdatesSection } from './sections/UpdatesSection';
-import { AboutSection } from './sections/AboutSection';
-import { AppSettings } from '../../../main/shared/types/App.types';
+import { AppearanceSection } from './sections/AppearanceSection';
+import { ConsoleSection } from './sections/ConsoleSection';
+import { GeneralSection } from './sections/GeneralSection';
+import { AboutSection } from './sections/about/AboutSection';
 
 type SetFn = (patch: Partial<AppSettings>) => void;
 
@@ -75,9 +74,6 @@ export function SettingsTab() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  const isStandaloneSection =
-    activeTopic === 'appearance' || activeTopic === 'updates' || activeTopic === 'about';
-
   return (
     <div className="flex flex-col h-full min-h-0">
       {(isDirty || saved) && (
@@ -101,7 +97,6 @@ export function SettingsTab() {
           {activeTopic === 'console' && <ConsoleSection draft={draft} set={set} />}
           {activeTopic === 'appearance' && <AppearanceSection />}
           {activeTopic === 'advanced' && <AdvancedSection draft={draft} set={set} />}
-          {activeTopic === 'updates' && <UpdatesSection />}
           {activeTopic === 'about' && <AboutSection />}
         </div>
       </SidebarLayout>

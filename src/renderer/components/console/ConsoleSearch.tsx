@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { VscChevronUp, VscChevronDown, VscClose } from 'react-icons/vsc';
+import { useEffect, useRef } from 'react';
+import { VscChevronDown, VscChevronUp, VscClose } from 'react-icons/vsc';
 
 interface Props {
   query: string;

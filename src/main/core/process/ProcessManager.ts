@@ -1,26 +1,23 @@
-import { spawn, execSync, ChildProcess } from 'child_process';
+import { ChildProcess, execSync, spawn } from 'child_process';
 import { BrowserWindow } from 'electron';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
-import { PROTECTED_PROCESS_NAMES } from './shared/config/Scanner.config';
+import { ProcessIPC } from '../../ipc/Process.ipc';
+import { DEFAULT_JAR_RESOLUTION } from '../../shared/config/JarResolution.config';
+import { PROTECTED_PROCESS_NAMES } from '../../shared/config/Scanner.config';
 import {
   ConsoleLine,
   JavaProcessInfo,
   ProcessLogEntry,
   ProcessState,
-} from './shared/types/Process.types';
-import { Profile } from './shared/types/Profile.types';
-import { ProcessIPC } from './ipc/Process.ipc';
-import { DEFAULT_JAR_RESOLUTION } from './shared/config/JarResolution.config';
-import { processChunk, stripAnsi } from './shared/utils/AnsiParser';
+} from '../../shared/types/Process.types';
+import { Profile } from '../../shared/types/Profile.types';
+import { processChunk, stripAnsi } from '../../shared/utils/AnsiParser';
+import { startLogSession, stopLogSession, writeLogLine } from './FileLogger';
 import { gracefulStop } from './GracefulStop';
-import { startLogSession, writeLogLine, stopLogSession } from './FileLogger';
 
 import fs from 'fs';
-import { patternToRegex } from './shared/config/JarResolution.config';
-import type { JarResolutionConfig } from './shared/types/JarResolution.types';
-import { ProfileIPC } from './ipc/Profile.ipc';
-import { saveProfile } from './Store';
+import { patternToRegex } from '../../shared/config/JarResolution.config';
 
 const SELF_PROCESS_NAME = 'Java Client Runner';
 

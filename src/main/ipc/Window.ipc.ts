@@ -1,6 +1,6 @@
 import { app } from 'electron';
-import type { RouteMap } from '../IPCController';
-import { getSettings } from '../Store';
+import type { RouteMap } from '../core/IPCController';
+import { getSettings } from '../core/Store';
 
 // Injected from main.ts — avoids a circular import on mainWindow/forceQuit
 let getWindow: () => Electron.BrowserWindow | null = () => null;

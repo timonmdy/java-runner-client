@@ -1,12 +1,12 @@
-import React, { useState, useCallback } from 'react';
-import { VscCheck, VscCopy, VscPlay, VscEdit, VscCode } from 'react-icons/vsc';
-import { routeConfig, REST_API_CONFIG } from '../../../main/shared/config/API.config';
+import { REST_API_CONFIG, routeConfig } from '@shared/config/API.config';
+import { RouteDefinition } from '@shared/types/RestAPI.types';
+import React, { useCallback, useState } from 'react';
+import { VscCheck, VscCode, VscCopy, VscEdit, VscPlay } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
+import { useInputContextMenu } from '../../hooks/useInputContextMenu';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
-import { RouteDefinition } from '../../..//main/shared/types/RestAPI.types';
-import { useInputContextMenu } from '../../hooks/useInputContextMenu';
 
 const METHOD_COLORS: Record<string, string> = {
   GET: 'text-accent border-accent/30 bg-accent/10',

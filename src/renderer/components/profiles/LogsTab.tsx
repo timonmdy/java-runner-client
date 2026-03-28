@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { VscCopy, VscFolderOpened, VscRefresh, VscTrash } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
-import { Dialog } from '../common/Dialog';
 import { ContextMenu } from '../common/ContextMenu';
-import { VscTrash, VscRefresh, VscFolderOpened, VscCopy } from 'react-icons/vsc';
+import { Dialog } from '../common/Dialog';
 
 interface LogFileInfo {
   filename: string;

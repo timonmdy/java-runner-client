@@ -1,13 +1,12 @@
-import React from 'react';
+import { JAR_RESOLUTION_STRATEGIES } from '@shared/config/JarResolution.config';
+import type { JarResolutionConfig } from '@shared/types/JarResolution.types';
+import { useInputContextMenu } from '../../../hooks/useInputContextMenu';
+import { useJarResolutionPreview } from '../../../hooks/useJarResolutionPreview';
+import { useTranslation } from '../../../i18n/I18nProvider';
+import type { TranslationKey } from '../../../i18n/TranslationKeys';
 import { Input } from '../../common/Input';
 import { FolderBtn } from './FolderBtn';
 import { ResolutionPreview } from './ResolutionPreview';
-import { useJarResolutionPreview } from '../../../hooks/useJarResolutionPreview';
-import { JAR_RESOLUTION_STRATEGIES } from '../../../../main/shared/config/JarResolution.config';
-import type { JarResolutionConfig } from '../../../../main/shared/types/JarResolution.types';
-import { useTranslation } from '../../../i18n/I18nProvider';
-import type { TranslationKey } from '../../../i18n/TranslationKeys';
-import { useInputContextMenu } from '../../../hooks/useInputContextMenu';
 
 const STRATEGY_KEYS: Record<string, { label: TranslationKey; hint: TranslationKey }> = {
   'highest-version': {

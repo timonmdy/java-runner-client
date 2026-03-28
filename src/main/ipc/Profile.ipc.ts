@@ -1,6 +1,6 @@
-import type { RouteMap } from '../IPCController';
-import { getAllProfiles, saveProfile, deleteProfile, reorderProfiles } from '../Store';
-import { processManager } from '../ProcessManager';
+import type { RouteMap } from '../core/IPCController';
+import { deleteProfile, getAllProfiles, reorderProfiles, saveProfile } from '../core/Store';
+import { processManager } from '../core/process/ProcessManager';
 import type { Profile } from '../shared/types/Profile.types';
 
 export const ProfileIPC = {

@@ -1,20 +1,20 @@
-import React, { useRef, useEffect, useState, useCallback, useMemo, KeyboardEvent } from 'react';
+import { ConsoleLine } from '@shared/types/Process.types';
+import { hasJarConfigured } from '@shared/types/Profile.types';
+import React, { KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  VscChevronDown,
+  VscChevronUp,
+  VscClearAll,
+  VscClose,
+  VscCopy,
+  VscFolderOpened,
+  VscSearch,
+} from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
+import { useInputContextMenu } from '../../hooks/useInputContextMenu';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
-import { useInputContextMenu } from '../../hooks/useInputContextMenu';
-import {
-  VscSearch,
-  VscChevronUp,
-  VscChevronDown,
-  VscClose,
-  VscFolderOpened,
-  VscClearAll,
-  VscCopy,
-} from 'react-icons/vsc';
-import { ConsoleLine } from '../../../main/shared/types/Process.types';
-import { hasJarConfigured } from '../../../main/shared/types/Profile.types';
 
 function formatTimestamp(ts: number): string {
   const d = new Date(ts);

@@ -1,6 +1,6 @@
 import React from 'react';
+import { VscChromeClose, VscChromeMinimize } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
-import { VscChromeMinimize, VscChromeClose } from 'react-icons/vsc';
 
 export function TitleBar() {
   const { state } = useApp();

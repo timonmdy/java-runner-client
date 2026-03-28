@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export function useAutoScroll(deps: unknown[]) {
   const scrollRef = useRef<HTMLDivElement>(null);

@@ -1,9 +1,8 @@
-import React from 'react';
-import { Input } from '../common/Input';
-import { Profile } from '../../../main/shared/types/Profile.types';
-import { useTranslation } from '../../i18n/I18nProvider';
-import { JarSelector } from './jar/JarSelector';
+import { Profile } from '@shared/types/Profile.types';
 import { useInputContextMenu } from '../../hooks/useInputContextMenu';
+import { useTranslation } from '../../i18n/I18nProvider';
+import { Input } from '../common/Input';
+import { JarSelector } from './jar/JarSelector';
 
 interface Props {
   draft: Profile;

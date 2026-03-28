@@ -1,8 +1,8 @@
 import { app } from 'electron';
 import Store from 'electron-store';
-import { DEFAULT_SETTINGS } from './shared/config/App.config';
-import { Profile } from './shared/types/Profile.types';
-import { AppSettings } from './shared/types/App.types';
+import { DEFAULT_SETTINGS } from '../shared/config/App.config';
+import { AppSettings } from '../shared/types/App.types';
+import { Profile } from '../shared/types/Profile.types';
 
 interface StoreSchema {
   profiles: Profile[];

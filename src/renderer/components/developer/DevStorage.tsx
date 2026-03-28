@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { VscRefresh, VscTrash } from 'react-icons/vsc';
+import { useApp } from '../../AppProvider';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
-import { useApp } from '../../AppProvider';
-import { VscRefresh, VscTrash } from 'react-icons/vsc';
 
 interface SessionEntry {
   key: string;

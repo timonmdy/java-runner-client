@@ -1,8 +1,8 @@
 import { BrowserWindow } from 'electron';
-import { getEnvironment, loadEnvironment } from '../JRCEnvironment';
-import { RouteMap } from '../IPCController';
+import { RouteMap } from '../core/IPCController';
+import { getEnvironment, loadEnvironment } from '../core/JRCEnvironment';
+import { toggleDevMode } from '../core/Store';
 import { JRCEnvironment } from '../shared/types/App.types';
-import { toggleDevMode } from '../Store';
 
 export const EnvironmentIPC = {
   get: {

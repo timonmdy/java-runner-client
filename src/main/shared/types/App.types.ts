@@ -8,7 +8,8 @@ export interface AppSettings {
   consoleLineNumbers: boolean;
   consoleTimestamps: boolean;
   consoleHistorySize: number;
-  theme: 'dark';
+  themeId: string;
+  languageId: string;
   restApiEnabled: boolean;
   restApiPort: number;
   devModeEnabled: boolean;

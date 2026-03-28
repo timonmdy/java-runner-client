@@ -1,0 +1,22 @@
+import type { ThemeDefinition } from '../../types/Theme.types';
+
+export const LIGHT_THEME: ThemeDefinition = {
+  id: 'light',
+  name: 'Light',
+  author: 'timonmdy',
+  colors: {
+    accent: '#7c3aed',
+    'base-950': '#e8ecf5',
+    'base-900': '#f0f3fb',
+    'base-800': '#dce1ef',
+    'surface-raised': '#ffffff',
+    'surface-border': '#c8cedf',
+    'text-primary': '#181b2d',
+    'text-secondary': '#454d6e',
+    'text-muted': '#7980a0',
+    'console-error': '#dc2626',
+    'console-warn': '#b45309',
+    'console-input': '#1d4ed8',
+    'console-system': '#7980a0',
+  },
+};

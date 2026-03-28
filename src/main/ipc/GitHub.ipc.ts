@@ -1,8 +1,8 @@
+import { dialog, shell } from 'electron';
 import fs from 'fs';
 import https from 'https';
-import { dialog, shell, BrowserWindow } from 'electron';
-import type { RouteMap } from '../IPCController';
-import { latestReleaseUrl, templateListUrl, rawTemplateUrl } from '../shared/config/GitHub.config';
+import type { RouteMap } from '../core/IPCController';
+import { latestReleaseUrl, rawTemplateUrl, templateListUrl } from '../shared/config/GitHub.config';
 import type { GitHubRelease, ProfileTemplate } from '../shared/types/GitHub.types';
 
 function httpsGet(url: string): Promise<unknown> {

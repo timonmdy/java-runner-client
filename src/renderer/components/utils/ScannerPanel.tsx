@@ -1,11 +1,11 @@
-import React, { useState, useCallback } from 'react';
+import { JavaProcessInfo } from '@shared/types/Process.types';
+import { useCallback, useState } from 'react';
+import { LuScanLine } from 'react-icons/lu';
+import { VscCheck } from 'react-icons/vsc';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
 import { EmptyState } from '../common/EmptyState';
-import { VscCheck } from 'react-icons/vsc';
-import { LuScanLine } from 'react-icons/lu';
-import { JavaProcessInfo } from '../../../main/shared/types/Process.types';
 
 type Filter = 'java' | 'all';
 interface KillIntent {

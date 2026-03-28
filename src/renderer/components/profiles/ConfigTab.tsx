@@ -1,12 +1,12 @@
+import { Profile } from '@shared/types/Profile.types';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Profile } from '../../../main/shared/types/Profile.types';
 import { useApp } from '../../AppProvider';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { ArgList } from '../common/ArgList';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
 import { EnvVarList } from '../common/EnvVarList';
 import { PropList } from '../common/PropList';
-import { useTranslation } from '../../i18n/I18nProvider';
 import { FilesSection } from './FilesSection';
 import { GeneralSection } from './GeneralSection';
 
@@ -132,15 +132,7 @@ export function ConfigTab() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-          {section === 'general' && (
-            <GeneralSection
-              draft={draft}
-              update={update}
-              running={running}
-              color={color}
-              onRestart={handleRestart}
-            />
-          )}
+          {section === 'general' && <GeneralSection draft={draft} update={update} />}
           {section === 'files' && <FilesSection draft={draft} update={update} />}
           {section === 'jvm' && (
             <ArgSection title={t('config.jvmTitle')} hint={t('config.jvmHint')}>
