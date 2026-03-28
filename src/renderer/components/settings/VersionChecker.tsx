@@ -4,7 +4,7 @@ import { Button } from '../common/Button';
 import { Tooltip } from '../common/Tooltip';
 import { ReleaseModal } from './ReleaseModal';
 import { VscCheck, VscWarning, VscSync, VscCircleSlash } from 'react-icons/vsc';
-import { GitHubRelease } from '../../../../main/shared/types/GitHub.types';
+import { GitHubRelease } from '../../../main/shared/types/GitHub.types';
 
 interface Props {
   currentVersion: string;

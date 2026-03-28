@@ -197,6 +197,8 @@
     "appearance.syncHint": "Designs und Sprachen aus /themes und /languages im Projektverzeichnis laden",
     "appearance.sync": "Synchronisieren",
     "appearance.synced": "Synchronisiert",
+    "appearance.localOnly": "Nur lokal",
+    "appearance.localOverride": "Überschreibt Remote",
 
     "settings.advanced": "Erweitert",
     "settings.devMode": "Entwickleroptionen",
@@ -234,6 +236,7 @@
     "settings.version": "Version",
     "settings.stack": "Technologie",
     "settings.configPath": "Konfiguration",
+    "settings.openConfigFolder": "Konfigurationsordner öffnen",
 
     "release.title": "Release-Details",
     "release.preRelease": "Vorabversion",

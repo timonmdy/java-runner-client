@@ -26,3 +26,15 @@ export interface LocalThemeState {
   activeThemeId: string;
   activeTheme: ThemeDefinition;
 }
+
+export type ThemePreviewColors = Pick<
+  ThemeColors,
+  'accent' | 'base-900' | 'surface-raised' | 'text-primary'
+>;
+
+export interface ThemePreview {
+  id: string;
+  name: string;
+  filename: string;
+  previewColors: ThemePreviewColors;
+}
