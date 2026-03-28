@@ -1,13 +1,13 @@
 import { app, BrowserWindow, Input, Menu, nativeImage, Tray } from 'electron';
 import fs from 'fs';
 import path from 'path';
-import { restApiServer } from './core/RestAPI';
 import { registerIPC } from './core/IPCController';
 import { getEnvironment, loadEnvironment, shouldStartMinimized } from './core/JRCEnvironment';
+import { processManager } from './core/process/ProcessManager';
+import { restApiServer } from './core/RestAPI';
 import { getAllProfiles, getSettings, syncLoginItem } from './core/Store';
 import { allRoutes, initDevIPC, initSystemIPC, initWindowIPC } from './ipc/_index';
 import { EnvironmentIPC } from './ipc/Environment.ipc';
-import { processManager } from './core/process/ProcessManager';
 import { ALL_THEMES, BUILTIN_THEME } from './shared/config/Theme.config';
 import { hasJarConfigured } from './shared/types/Profile.types';
 

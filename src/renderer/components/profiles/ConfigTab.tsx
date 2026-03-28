@@ -132,12 +132,7 @@ export function ConfigTab() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
-          {section === 'general' && (
-            <GeneralSection
-              draft={draft}
-              update={update}
-            />
-          )}
+          {section === 'general' && <GeneralSection draft={draft} update={update} />}
           {section === 'files' && <FilesSection draft={draft} update={update} />}
           {section === 'jvm' && (
             <ArgSection title={t('config.jvmTitle')} hint={t('config.jvmHint')}>
