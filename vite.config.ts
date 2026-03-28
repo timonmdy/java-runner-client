@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 import { readFileSync } from 'fs';
+import path from 'path';
+import { defineConfig } from 'vite';
 const { version } = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8'));
 export default defineConfig({
   plugins: [react()],
@@ -25,6 +25,11 @@ export default defineConfig({
     },
     reportCompressedSize: true,
   },
-  resolve: { alias: { '@': path.resolve(__dirname, 'src/renderer') } },
+  resolve: {
+    alias: {
+      '@': path.resolve(__dirname, 'src/renderer'),
+      '@shared': path.resolve(__dirname, 'src/main/shared'),
+    },
+  },
   server: { port: 5173 },
 });

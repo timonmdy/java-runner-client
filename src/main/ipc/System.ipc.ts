@@ -1,9 +1,8 @@
 import { app, dialog, shell } from 'electron';
-import { restApiServer } from '../RestAPI';
-import type { RouteMap } from '../IPCController';
-import type { AppSettings, JRCEnvironment } from '../shared/types/App.types';
-import { getSettings, saveSettings } from '../Store';
-import { getEnvironment } from './../JRCEnvironment';
+import type { RouteMap } from '../core/IPCController';
+import { restApiServer } from '../core/RestAPI';
+import { getSettings, saveSettings } from '../core/Store';
+import type { AppSettings } from '../shared/types/App.types';
 
 // mainWindow is needed for dialogs — set via initSystemIPC() called from main.ts
 let getWindow: () => Electron.BrowserWindow | null = () => null;

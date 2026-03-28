@@ -1,9 +1,9 @@
-import { processManager } from '../ProcessManager';
-import { err, ok } from '../RestAPI';
-import { Profile } from '../shared/types/Profile.types';
-import { deleteProfile, getAllProfiles, saveProfile } from '../Store';
-import { defineRoute, RouteMap } from '../shared/types/RestAPI.types';
 import { v4 as uuidv4 } from 'uuid';
+import { processManager } from '../core/process/ProcessManager';
+import { err, ok } from '../core/RestAPI';
+import { deleteProfile, getAllProfiles, saveProfile } from '../core/Store';
+import { Profile } from '../shared/types/Profile.types';
+import { defineRoute, RouteMap } from '../shared/types/RestAPI.types';
 
 export const ProfileRoutes: RouteMap = {
   profiles_list: defineRoute('profiles_list', ({ res }) => ok(res, getAllProfiles())),

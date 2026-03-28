@@ -1,9 +1,9 @@
-import { ok } from '../RestAPI';
-import { processManager } from '../ProcessManager';
-import { defineRoute, RouteMap } from '../shared/types/RestAPI.types';
-import { getAllProfiles, getSettings, saveSettings } from '../Store';
-import { AppSettings } from '../shared/types/App.types';
 import { version } from '../../../package.json';
+import { ok } from '../core/RestAPI';
+import { getAllProfiles, getSettings, saveSettings } from '../core/Store';
+import { processManager } from '../core/process/ProcessManager';
+import { AppSettings } from '../shared/types/App.types';
+import { defineRoute, RouteMap } from '../shared/types/RestAPI.types';
 
 export const BaseRoutes: RouteMap = {
   status: defineRoute('status', ({ res }) =>

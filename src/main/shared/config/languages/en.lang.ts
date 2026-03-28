@@ -1,4 +1,4 @@
-import type { LanguageDefinition } from '../types/Language.types';
+import type { LanguageDefinition } from '../../types/Language.types';
 
 const ENGLISH_STRINGS = {
   // General
@@ -173,8 +173,6 @@ const ENGLISH_STRINGS = {
   'settings.saved': 'Settings saved',
   'settings.unsaved': 'Unsaved changes',
   'settings.saveChanges': 'Save Changes',
-
-  // Settings: General
   'settings.general': 'General',
   'settings.startup': 'Startup',
   'settings.launchOnStartup': 'Launch on Windows startup',
@@ -184,8 +182,6 @@ const ENGLISH_STRINGS = {
   'settings.minimizeToTray': 'Minimize to tray on close',
   'settings.minimizeToTrayHint':
     'Closing the window keeps the app and running JARs alive in the background',
-
-  // Settings: Console
   'settings.console': 'Console',
   'settings.fontSize': 'Font size',
   'settings.fontSizeHint': 'Console output font size in pixels',
@@ -199,30 +195,15 @@ const ENGLISH_STRINGS = {
   'settings.maxLinesHint': 'Older lines are discarded when the limit is reached',
   'settings.historySize': 'Command history size',
   'settings.historySizeHint': 'Commands stored per session (Up/Down to navigate)',
-
-  // Settings: Appearance
   'settings.appearance': 'Appearance',
   'settings.theme': 'Theme',
   'settings.themeHint': 'Select a visual theme',
-  'settings.themeBuiltin': 'Built-in',
-  'settings.themeCheckUpdate': 'Check for theme update',
   'settings.language': 'Language',
   'settings.languageHint': 'Select a display language',
-  'settings.languageCheckUpdate': 'Check for language update',
-
-  // Appearance section
-  'appearance.fetchThemesFailed': 'Failed to fetch themes.',
-  'appearance.fetchLangsFailed': 'Failed to fetch languages.',
-  'appearance.development': 'Development',
-  'appearance.syncTitle': 'Sync local project files',
-  'appearance.syncHint':
-    'Load themes and languages from /themes and /languages in the project root',
-  'appearance.sync': 'Sync',
-  'appearance.synced': 'Synced',
-  'appearance.localOnly': 'Local only',
-  'appearance.localOverride': 'Overrides remote',
-
-  // Settings: Advanced
+  'appearance.searchThemes': 'Search themes...',
+  'appearance.searchLanguages': 'Search languages...',
+  'appearance.noThemesFound': 'No themes match your search',
+  'appearance.noLanguagesFound': 'No languages match your search',
   'settings.advanced': 'Advanced',
   'settings.devMode': 'Developer Options',
   'settings.devModeLabel': 'Toggle Developer Mode (Right-Shift + 7)',
@@ -234,29 +215,15 @@ const ENGLISH_STRINGS = {
   'settings.restApiPortHint': 'Restart required to change the port',
   'settings.listeningOn': 'Listening on',
   'settings.endpoints': 'Endpoints',
-
-  // Settings: Updates
-  'settings.updates': 'Updates',
-  'settings.updateCenter': 'Update Center',
-  'settings.checkAll': 'Check All',
-  'settings.updateAll': 'Update All',
   'settings.upToDate': 'Up to date',
   'settings.updateAvailable': 'Update available',
   'settings.checking': 'Checking...',
   'settings.checkFailed': 'Check failed',
-  'settings.updatesHint': 'Check for updates to the app, themes, and language packs',
-  'settings.allUpToDate': 'Everything is up to date.',
-  'settings.updatedSuccess': 'Updated successfully',
-  'settings.applyingUpdate': 'Applying update...',
-  'settings.check': 'Check',
-  'settings.update': 'Update',
   'settings.versionCurrent': 'Current:',
   'settings.checkForUpdates': 'Check for updates',
   'settings.viewUpdate': 'View update',
   'settings.upToDateTooltip': 'You are on the latest version ({version})',
   'settings.updateAvailableTooltip': '{tag} is available — click for details',
-
-  // Settings: About
   'settings.about': 'About',
   'settings.version': 'Version',
   'settings.stack': 'Stack',
@@ -289,8 +256,6 @@ const ENGLISH_STRINGS = {
   'utilities.title': 'Utilities',
   'utilities.activityLog': 'Activity Log',
   'utilities.processScanner': 'Process Scanner',
-
-  // Activity Log
   'activity.description': 'All processes started by JRC this session',
   'activity.empty': 'No processes started yet this session',
   'activity.clearTitle': 'Clear activity log?',
@@ -341,7 +306,7 @@ const ENGLISH_STRINGS = {
   'scanner.javaBadge': 'Java',
   'scanner.nonJavaBadge': 'Non-Java',
 
-  // Panel headers
+  // Panels
   'panels.settings': 'Application Settings',
   'panels.faq': 'FAQ',
   'panels.utilities': 'Utilities',
@@ -353,6 +318,14 @@ const ENGLISH_STRINGS = {
   'dev.apiExplorer': 'API Explorer',
   'dev.storage': 'Storage',
   'dev.diagnostics': 'Diagnostics',
+  'dev.assets': 'Assets',
+  'dev.translationCoverage': 'Translation Coverage',
+  'dev.keysTranslated': '{count} of {total} keys translated',
+  'dev.missingKeys': 'Missing Keys',
+  'dev.apply': 'Apply',
+  'dev.activeTheme': 'Active theme',
+  'dev.activeLang': 'Active language',
+  'dev.bundled': 'Bundled',
 
   // Template modal
   'template.title': 'Profile Templates',
@@ -374,8 +347,6 @@ const ENGLISH_STRINGS = {
 export const ENGLISH: LanguageDefinition = {
   id: 'en',
   name: 'English',
-  version: 2,
-  author: 'JRC',
   strings: ENGLISH_STRINGS,
 };
 

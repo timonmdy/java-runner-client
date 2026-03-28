@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
+import { VscBeaker, VscDashboard, VscDatabase, VscPlug, VscSymbolColor } from 'react-icons/vsc';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { VscDashboard, VscPlug, VscDatabase, VscBeaker } from 'react-icons/vsc';
-import { DevDashboard } from './DevDashboard';
 import { DevApiExplorer } from './DevApiExplorer';
-import { DevStorage } from './DevStorage';
+import { DevAssets } from './DevAssets';
+import { DevDashboard } from './DevDashboard';
 import { DevDiagnostics } from './DevDiagnostics';
+import { DevStorage } from './DevStorage';
 
-type Panel = 'dashboard' | 'api' | 'storage' | 'diagnostics';
+type Panel = 'dashboard' | 'api' | 'storage' | 'diagnostics' | 'assets';
 
 export function DeveloperTab() {
   const { t } = useTranslation();
@@ -17,6 +18,7 @@ export function DeveloperTab() {
     { id: 'api', label: t('dev.apiExplorer'), Icon: VscPlug },
     { id: 'storage', label: t('dev.storage'), Icon: VscDatabase },
     { id: 'diagnostics', label: t('dev.diagnostics'), Icon: VscBeaker },
+    { id: 'assets', label: t('dev.assets'), Icon: VscSymbolColor },
   ];
 
   return (
@@ -51,6 +53,7 @@ export function DeveloperTab() {
         {panel === 'api' && <DevApiExplorer />}
         {panel === 'storage' && <DevStorage />}
         {panel === 'diagnostics' && <DevDiagnostics />}
+        {panel === 'assets' && <DevAssets />}
       </div>
     </div>
   );

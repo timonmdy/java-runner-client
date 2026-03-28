@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useTranslation } from '../../i18n/I18nProvider';
-import { VscListUnordered } from 'react-icons/vsc';
+import { useState } from 'react';
 import { LuScanLine } from 'react-icons/lu';
+import { VscListUnordered } from 'react-icons/vsc';
+import { useTranslation } from '../../i18n/I18nProvider';
 import { ActivityLogPanel } from './ActivityLogPanel';
 import { ScannerPanel } from './ScannerPanel';
 

@@ -1,5 +1,5 @@
+import type { SidebarTopic } from '@shared/types/Sidebar.types';
 import React from 'react';
-import type { SidebarTopic } from '../../../main/shared/types/Sidebar.types';
 
 export type { SidebarTopic };
 

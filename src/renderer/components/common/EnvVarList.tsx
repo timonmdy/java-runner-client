@@ -1,8 +1,8 @@
-import React, { useState, useRef } from 'react';
-import { VscTrash, VscAdd } from 'react-icons/vsc';
-import { Toggle } from './Toggle';
-import type { EnvVariable } from '../../../main/shared/types/Profile.types';
+import type { EnvVariable } from '@shared/types/Profile.types';
+import React, { useRef, useState } from 'react';
+import { VscAdd, VscTrash } from 'react-icons/vsc';
 import { useInputContextMenu } from '../../hooks/useInputContextMenu';
+import { Toggle } from './Toggle';
 
 interface Props {
   items: EnvVariable[];

@@ -1,7 +1,7 @@
-import { err, ok } from '../RestAPI';
+import { processManager } from '../core/process/ProcessManager';
+import { err, ok } from '../core/RestAPI';
+import { getAllProfiles } from '../core/Store';
 import { defineRoute, RouteMap } from '../shared/types/RestAPI.types';
-import { processManager } from '../ProcessManager';
-import { getAllProfiles } from '../Store';
 
 export const ProcessRoutes: RouteMap = {
   processes_list: defineRoute('processes_list', ({ res }) => ok(res, processManager.getStates())),

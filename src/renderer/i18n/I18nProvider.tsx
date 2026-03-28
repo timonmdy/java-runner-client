@@ -1,15 +1,19 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import type { LanguageDefinition } from '../../main/shared/types/Language.types';
-import { ENGLISH } from '../../main/shared/config/DefaultLanguage.config';
+import { ALL_LANGUAGES, ENGLISH } from '@shared/config/Language.config';
+import type { LanguageDefinition } from '@shared/types/Language.types';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { TranslationKey } from './TranslationKeys';
 
 interface I18nContextValue {
   language: LanguageDefinition;
   t: (key: TranslationKey, params?: Record<string, string>) => string;
-  setLanguage: (lang: LanguageDefinition) => Promise<void>;
+  setLanguage: (lang: LanguageDefinition) => void;
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
+
+function resolveLanguage(id: string): LanguageDefinition {
+  return ALL_LANGUAGES.find((l) => l.id === id) ?? ENGLISH;
+}
 
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [language, setLang] = useState<LanguageDefinition>(ENGLISH);
@@ -21,7 +25,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!window.api) return;
-    window.api.getActiveLanguage().then((l) => {
+    window.api.getSettings().then((s) => {
+      const l = resolveLanguage(s.languageId);
       setLang(l);
       langRef.current = l;
     });
@@ -41,11 +46,13 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
     [language]
   );
 
-  const setLanguage = useCallback(async (lang: LanguageDefinition) => {
+  const setLanguage = useCallback((lang: LanguageDefinition) => {
     if (!window.api) return;
-    const result = await window.api.setActiveLanguage(lang);
-    langRef.current = result;
-    setLang(result);
+    langRef.current = lang;
+    setLang(lang);
+    window.api.getSettings().then((s) => {
+      window.api.saveSettings({ ...s, languageId: lang.id });
+    });
   }, []);
 
   return (

@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useApp, PROFILE_COLORS } from '../../AppProvider';
+import { Profile } from '@shared/types/Profile.types';
+import React, { useEffect, useState } from 'react';
+import { PROFILE_COLORS, useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
-import { Input } from '../common/Input';
 import { Dialog } from '../common/Dialog';
-import { Profile } from '../../../main/shared/types/Profile.types';
+import { Input } from '../common/Input';
 
 export function ProfileTab() {
   const { activeProfile, saveProfile, deleteProfile } = useApp();

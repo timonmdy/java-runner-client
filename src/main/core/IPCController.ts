@@ -13,7 +13,7 @@
  *             main pushes via webContents.send(channel, ...args)
  */
 
-import { ipcMain, ipcRenderer, IpcMainInvokeEvent, IpcMainEvent, IpcRendererEvent } from 'electron';
+import { ipcMain, IpcMainEvent, IpcMainInvokeEvent, ipcRenderer, IpcRendererEvent } from 'electron';
 
 // ─── Route descriptors ────────────────────────────────────────────────────────
 

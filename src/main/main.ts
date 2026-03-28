@@ -1,20 +1,20 @@
 import { app, BrowserWindow, Input, Menu, nativeImage, Tray } from 'electron';
 import fs from 'fs';
 import path from 'path';
+import { restApiServer } from './core/RestAPI';
+import { registerIPC } from './core/IPCController';
+import { getEnvironment, loadEnvironment, shouldStartMinimized } from './core/JRCEnvironment';
+import { getAllProfiles, getSettings, syncLoginItem } from './core/Store';
 import { allRoutes, initDevIPC, initSystemIPC, initWindowIPC } from './ipc/_index';
 import { EnvironmentIPC } from './ipc/Environment.ipc';
-import { getActiveTheme } from './AssetManager';
-import { getEnvironment, loadEnvironment, shouldStartMinimized } from './JRCEnvironment';
-import { processManager } from './ProcessManager';
-import { restApiServer } from './RestAPI';
-import { registerIPC } from './IPCController';
-import { getAllProfiles, getSettings, syncLoginItem } from './Store';
+import { processManager } from './core/process/ProcessManager';
+import { ALL_THEMES, BUILTIN_THEME } from './shared/config/Theme.config';
 import { hasJarConfigured } from './shared/types/Profile.types';
 
 loadEnvironment();
 
 if (process.platform === 'win32') {
-  app.setAppUserModelId('com.timonmdy.java-runner-client');
+  app.setAppUserModelId('Java Runner Client');
 }
 
 const RESOURCES =
@@ -48,7 +48,8 @@ function createWindow(): void {
     minWidth: 900,
     minHeight: 600,
     frame: false,
-    backgroundColor: getActiveTheme().colors['base-950'] ?? '#08090d',
+    backgroundColor: (ALL_THEMES.find((t) => t.id === getSettings().themeId) ?? BUILTIN_THEME)
+      .colors['base-950'],
     icon: getIconImage(),
     show: getEnvironment().startUpSource !== 'withSystem',
     webPreferences: {

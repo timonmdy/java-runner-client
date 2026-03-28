@@ -1,27 +1,19 @@
 export type TrustLevel = 'trusted' | 'automation' | 'unknown';
 
-export interface TrustedPublisher {
-  login: string;
-  label: string;
-}
-
 export const GITHUB_CONFIG = {
   owner: 'timonmdy',
   repo: 'java-runner-client',
   templatesPath: 'profile-templates',
-  themesPath: 'themes',
-  languagesPath: 'languages',
   templateMinVersion: 1,
   apiBase: 'https://api.github.com',
 
-  trustedPublishers: [{ login: 'timonmdy', label: 'Lead Developer' }] as TrustedPublisher[],
+  trustedPublishers: [{ login: 'timonmdy', label: 'Lead Developer' }] as {
+    login: string;
+    label: string;
+  }[],
 
   automationAccounts: ['github-actions[bot]', 'github-actions'],
 } as const;
-
-export function releasesUrl(): string {
-  return `${GITHUB_CONFIG.apiBase}/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/releases`;
-}
 
 export function latestReleaseUrl(): string {
   return `${GITHUB_CONFIG.apiBase}/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/releases/latest`;

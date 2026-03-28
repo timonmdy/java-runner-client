@@ -1,6 +1,5 @@
-import React from 'react';
-import { VscCheck, VscWarning, VscSync } from 'react-icons/vsc';
-import type { JarResolutionResult } from '../../../../main/shared/types/JarResolution.types';
+import type { JarResolutionResult } from '@shared/types/JarResolution.types';
+import { VscCheck, VscSync, VscWarning } from 'react-icons/vsc';
 import { useTranslation } from '../../../i18n/I18nProvider';
 
 interface Props {

@@ -1,8 +1,7 @@
-import React from 'react';
+import { useInputContextMenu } from '../../../hooks/useInputContextMenu';
+import { useTranslation } from '../../../i18n/I18nProvider';
 import { Input } from '../../common/Input';
 import { FolderBtn } from './FolderBtn';
-import { useTranslation } from '../../../i18n/I18nProvider';
-import { useInputContextMenu } from '../../../hooks/useInputContextMenu';
 
 interface Props {
   jarPath: string;

@@ -15,7 +15,10 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "baseUrl": ".",
-    "paths": { "@/*": ["src/renderer/*"] }
+    "paths": {
+      "@/*": ["src/renderer/*"],
+      "@shared/*": ["src/main/shared/*"]
+    }
   },
   "include": ["src/renderer", "src/main/shared"]
 }

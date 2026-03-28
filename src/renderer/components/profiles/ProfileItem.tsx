@@ -1,6 +1,6 @@
+import { Profile } from '@shared/types/Profile.types';
 import React from 'react';
 import { PROFILE_COLORS } from '../../AppProvider';
-import { Profile } from '../../../main/shared/types/Profile.types';
 
 interface Props {
   profile: Profile;

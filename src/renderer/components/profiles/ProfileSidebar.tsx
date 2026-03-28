@@ -1,26 +1,26 @@
-import React, { useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { hasJarConfigured, Profile } from '@shared/types/Profile.types';
 import { Reorder } from 'framer-motion';
+import React, { useCallback, useState } from 'react';
 import {
-  VscPlay,
-  VscDebugStop,
+  VscAdd,
   VscCheck,
   VscClearAll,
-  VscTrash,
-  VscSettings,
-  VscQuestion,
-  VscTools,
-  VscAdd,
-  VscLayout,
   VscCode,
+  VscDebugStop,
+  VscLayout,
+  VscPlay,
+  VscQuestion,
+  VscSettings,
+  VscTools,
+  VscTrash,
 } from 'react-icons/vsc';
-import { useApp, PROFILE_COLORS } from '../../AppProvider';
+import { useNavigate } from 'react-router-dom';
+import { PROFILE_COLORS, useApp } from '../../AppProvider';
 import { useDevMode } from '../../hooks/useDevMode';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { Dialog } from '../common/Dialog';
 import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
+import { Dialog } from '../common/Dialog';
 import { TemplateModal } from './TemplateModal';
-import { hasJarConfigured, Profile } from '../../../main/shared/types/Profile.types';
 
 interface Props {
   activeSidePanel: string | null;

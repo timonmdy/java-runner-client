@@ -1,20 +1,13 @@
-import React from 'react';
-import { Toggle } from '../common/Toggle';
-import { Profile } from '../../../main/shared/types/Profile.types';
+import { Profile } from '@shared/types/Profile.types';
 import { useTranslation } from '../../i18n/I18nProvider';
+import { Toggle } from '../common/Toggle';
 
 export function GeneralSection({
   draft,
   update,
-  running,
-  color,
-  onRestart,
 }: {
   draft: Profile;
   update: (p: Partial<Profile>) => void;
-  running: boolean;
-  color: string;
-  onRestart: () => void;
 }) {
   const { t } = useTranslation();
 
@@ -90,20 +83,6 @@ export function GeneralSection({
           />
         </div>
       </div>
-
-      {running && (
-        <div className="space-y-3">
-          <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">
-            {t('config.process')}
-          </h3>
-          <button
-            onClick={onRestart}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-surface-border bg-base-900 text-xs text-text-secondary hover:text-text-primary hover:border-accent/30 transition-colors"
-          >
-            {t('config.restartProcess')}
-          </button>
-        </div>
-      )}
     </div>
   );
 }

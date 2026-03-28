@@ -1,37 +1,32 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import type { FaqItem } from '@shared/config/faq/_index';
+import { getFAQ } from '@shared/config/faq/_index';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from '../../i18n/I18nProvider';
-import type { FaqItem } from '../../../main/shared/config/faq/_index';
 import { SidebarLayout } from '../layout/SidebarLayout';
-import { FaqTopic, getFAQ } from '../../../main/shared/config/faq/_index';
 
 export function FaqPanel() {
-  const { t } = useTranslation();
-  const [faqTopics, setFaqTopics] = useState<FaqTopic[] | null>(null);
+  const { language, t } = useTranslation();
   const [search, setSearch] = useState('');
   const [activeTopic, setActiveTopic] = useState<string>('');
   const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
   const searchTrimmed = search.trim().toLowerCase();
 
+  const faqTopics = useMemo(() => getFAQ(language.id), [language.id]);
+
   useEffect(() => {
-    window.api.getActiveLanguage().then((l) => {
-      const topics = getFAQ(l.id);
-      setFaqTopics(topics);
-      if (topics.length > 0) setActiveTopic(topics[0].id);
-    });
-  }, []);
+    if (faqTopics.length > 0 && !activeTopic) setActiveTopic(faqTopics[0].id);
+  }, [faqTopics, activeTopic]);
 
   const searchResults = useMemo<FaqItem[]>(() => {
     if (!searchTrimmed) return [];
-    return (
-      faqTopics
-        ?.flatMap((t) => t.items)
-        .filter(
-          (item) =>
-            item.q.toLowerCase().includes(searchTrimmed) ||
-            item.a.toLowerCase().includes(searchTrimmed)
-        ) ?? []
-    );
+    return faqTopics
+      .flatMap((t) => t.items)
+      .filter(
+        (item) =>
+          item.q.toLowerCase().includes(searchTrimmed) ||
+          item.a.toLowerCase().includes(searchTrimmed)
+      );
   }, [searchTrimmed, faqTopics]);
 
   const activeTopic_ = faqTopics?.find((t) => t.id === activeTopic) ?? faqTopics?.[0];
@@ -42,8 +37,6 @@ export function FaqPanel() {
     setExpandedIdx(null);
     setSearch('');
   };
-
-  if (!faqTopics) return null;
 
   return (
     <div className="flex flex-col h-full min-h-0">

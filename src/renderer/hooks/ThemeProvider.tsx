@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import type { ThemeDefinition, ThemeColors } from '../../main/shared/types/Theme.types';
-import { BUILTIN_THEME } from '../../main/shared/config/Theme.config';
+import { ALL_THEMES, BUILTIN_THEME } from '@shared/config/Theme.config';
+import type { ThemeColors, ThemeDefinition } from '@shared/types/Theme.types';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 interface ThemeContextValue {
   theme: ThemeDefinition;
-  setTheme: (theme: ThemeDefinition) => Promise<void>;
+  setTheme: (theme: ThemeDefinition) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
@@ -90,12 +90,10 @@ function applyThemeToDOM(theme: ThemeDefinition) {
 
   if (theme.id === BUILTIN_THEME.id) {
     existing?.remove();
-    localStorage.removeItem('jrc:theme-bg');
     document.documentElement.style.background = '';
     return;
   }
 
-  localStorage.setItem('jrc:theme-bg', theme.colors['base-950']);
   const css = buildThemeCSS(theme.colors);
   if (existing) {
     existing.textContent = css;
@@ -107,22 +105,29 @@ function applyThemeToDOM(theme: ThemeDefinition) {
   }
 }
 
+function resolveTheme(id: string): ThemeDefinition {
+  return ALL_THEMES.find((t) => t.id === id) ?? BUILTIN_THEME;
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeDefinition>(BUILTIN_THEME);
 
   useEffect(() => {
     if (!window.api) return;
-    window.api.getActiveTheme().then((t) => {
+    window.api.getSettings().then((s) => {
+      const t = resolveTheme(s.themeId);
       setThemeState(t);
       applyThemeToDOM(t);
     });
   }, []);
 
-  const setTheme = useCallback(async (theme: ThemeDefinition) => {
+  const setTheme = useCallback((theme: ThemeDefinition) => {
     if (!window.api) return;
-    const t = await window.api.setActiveTheme(theme);
-    setThemeState(t);
-    applyThemeToDOM(t);
+    setThemeState(theme);
+    applyThemeToDOM(theme);
+    window.api.getSettings().then((s) => {
+      window.api.saveSettings({ ...s, themeId: theme.id });
+    });
   }, []);
 
   return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;

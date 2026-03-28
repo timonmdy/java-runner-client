@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
-import type { RouteMap } from '../IPCController';
-import type { JarResolutionConfig, JarResolutionResult } from '../shared/types/JarResolution.types';
+import type { RouteMap } from '../core/IPCController';
 import { patternToRegex } from '../shared/config/JarResolution.config';
+import type { JarResolutionConfig, JarResolutionResult } from '../shared/types/JarResolution.types';
 
 function parseVersion(str: string): number[] {
   return str

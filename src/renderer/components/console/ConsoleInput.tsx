@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, KeyboardEvent } from 'react';
+import React, { KeyboardEvent, useCallback, useRef } from 'react';
 
 interface Props {
   running: boolean;

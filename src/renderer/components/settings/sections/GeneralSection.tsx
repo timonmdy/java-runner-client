@@ -1,8 +1,7 @@
-import React from 'react';
-import { Toggle } from '../../common/Toggle';
-import { Section, Row } from '../SettingsRow';
+import { AppSettings } from '@shared/types/App.types';
 import { useTranslation } from '../../../i18n/I18nProvider';
-import { AppSettings } from '../../../../main/shared/types/App.types';
+import { Toggle } from '../../common/Toggle';
+import { Row, Section } from '../SettingsRow';
 
 interface Props {
   draft: AppSettings;

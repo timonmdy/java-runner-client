@@ -1,7 +1,7 @@
+import { JRCEnvironment } from '@shared/types/App.types';
 import React, { useEffect, useState } from 'react';
+import { VscCircle, VscCircleFilled } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
-import { VscCircleFilled, VscCircle } from 'react-icons/vsc';
-import { JRCEnvironment } from '../../../main/shared/types/App.types';
 
 declare const __APP_VERSION__: string;
 

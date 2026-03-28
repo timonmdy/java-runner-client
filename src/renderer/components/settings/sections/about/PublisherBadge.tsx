@@ -1,7 +1,7 @@
+import { getPublisherTrust, TrustLevel } from '@shared/config/GitHub.config';
 import React from 'react';
-import { VscVerified, VscWarning } from 'react-icons/vsc';
 import { LuBot } from 'react-icons/lu';
-import { getPublisherTrust, TrustLevel } from '../../../main/shared/config/GitHub.config';
+import { VscVerified, VscWarning } from 'react-icons/vsc';
 
 interface Props {
   login: string;

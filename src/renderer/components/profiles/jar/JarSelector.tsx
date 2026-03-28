@@ -1,9 +1,8 @@
-import React from 'react';
-import { StaticJarPicker } from './StaticJarPicker';
-import { DynamicJarConfig } from './DynamicJarConfig';
-import { DEFAULT_JAR_RESOLUTION } from '../../../../main/shared/config/JarResolution.config';
-import type { JarResolutionConfig } from '../../../../main/shared/types/JarResolution.types';
+import { DEFAULT_JAR_RESOLUTION } from '@shared/config/JarResolution.config';
+import type { JarResolutionConfig } from '@shared/types/JarResolution.types';
 import { useTranslation } from '../../../i18n/I18nProvider';
+import { DynamicJarConfig } from './DynamicJarConfig';
+import { StaticJarPicker } from './StaticJarPicker';
 
 interface Props {
   jarPath: string;

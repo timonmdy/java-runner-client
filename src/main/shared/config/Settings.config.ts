@@ -5,6 +5,5 @@ export const SETTINGS_TOPICS: SidebarTopic[] = [
   { id: 'console', label: 'Console' },
   { id: 'appearance', label: 'Appearance' },
   { id: 'advanced', label: 'Advanced' },
-  { id: 'updates', label: 'Updates' },
   { id: 'about', label: 'About' },
 ];

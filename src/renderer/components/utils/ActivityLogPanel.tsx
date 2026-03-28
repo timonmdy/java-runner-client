@@ -1,10 +1,10 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import { ProcessLogEntry } from '@shared/types/Process.types';
+import { useCallback, useEffect, useState } from 'react';
+import { VscListUnordered } from 'react-icons/vsc';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/Button';
 import { Dialog } from '../common/Dialog';
 import { EmptyState } from '../common/EmptyState';
-import { VscListUnordered } from 'react-icons/vsc';
-import { ProcessLogEntry } from '../../../main/shared/types/Process.types';
 
 export function ActivityLogPanel() {
   const { t } = useTranslation();

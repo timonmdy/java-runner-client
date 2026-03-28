@@ -1,6 +1,6 @@
-import { err, ok } from '../RestAPI';
+import { deleteLogFile, getLogFiles, readLogFile } from '../core/process/FileLogger';
+import { err, ok } from '../core/RestAPI';
 import { defineRoute, RouteMap } from '../shared/types/RestAPI.types';
-import { getLogFiles, readLogFile, deleteLogFile } from '../FileLogger';
 
 export const LogRoutes: RouteMap = {
   logs_list: defineRoute('logs_list', ({ res, params }) => {

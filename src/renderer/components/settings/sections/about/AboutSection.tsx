@@ -1,10 +1,9 @@
-import React from 'react';
-import { useTranslation } from '../../../i18n/I18nProvider';
-import { Section, Row } from '../SettingsRow';
-import { Tooltip } from '../../common/Tooltip';
-import { VersionChecker } from '../VersionChecker';
 import { VscFolderOpened } from 'react-icons/vsc';
-import { version } from '../../../../../package.json';
+import { version } from '../../../../../../package.json';
+import { useTranslation } from '../../../../i18n/I18nProvider';
+import { Tooltip } from '../../../common/Tooltip';
+import { Row, Section } from '../../SettingsRow';
+import { VersionChecker } from './VersionChecker';
 
 export function AboutSection() {
   const { t } = useTranslation();

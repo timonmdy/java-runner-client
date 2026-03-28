@@ -1,6 +1,6 @@
 import { app, BrowserWindow } from 'electron';
-import { EnvironmentIPC } from './ipc/Environment.ipc';
-import { JRCEnvironment } from './shared/types/App.types';
+import { EnvironmentIPC } from '../ipc/Environment.ipc';
+import { JRCEnvironment } from '../shared/types/App.types';
 import { getSettings } from './Store';
 
 let env: JRCEnvironment = {

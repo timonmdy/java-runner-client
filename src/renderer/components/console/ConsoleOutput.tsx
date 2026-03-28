@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useCallback, useMemo } from 'react';
-import type { ConsoleLine } from '../../../main/shared/types/Process.types';
-import { parseAnsi, hasAnsi, AnsiSpan } from '../../utils/ansi';
+import type { ConsoleLine } from '@shared/types/Process.types';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { AnsiSpan, hasAnsi, parseAnsi } from '../../utils/ansi';
 
 interface Props {
   lines: ConsoleLine[];

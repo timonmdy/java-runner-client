@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Button } from './Button';
+import { useState } from 'react';
 import { useInputContextMenu } from '../../hooks/useInputContextMenu';
+import { Button } from './Button';
 
 export interface PropItem {
   key: string;

@@ -1,20 +1,20 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useTranslation } from '../../i18n/I18nProvider';
-import { Modal } from '../common/Modal';
-import { Button } from '../common/Button';
+import { GitHubAsset, GitHubRelease } from '@shared/types/GitHub.types';
+import { useCallback, useEffect, useState } from 'react';
+import { LuCheck, LuDownload, LuExternalLink, LuRotateCcw } from 'react-icons/lu';
 import {
-  VscPackage,
-  VscGithub,
+  VscBeaker,
   VscCalendar,
+  VscClose,
+  VscDebugContinue,
+  VscDebugPause,
+  VscGithub,
+  VscPackage,
   VscTag,
   VscVerified,
-  VscBeaker,
-  VscDebugPause,
-  VscDebugContinue,
-  VscClose,
 } from 'react-icons/vsc';
-import { LuDownload, LuExternalLink, LuCheck, LuRotateCcw } from 'react-icons/lu';
-import { GitHubAsset, GitHubRelease } from '../../../main/shared/types/GitHub.types';
+import { useTranslation } from '../../../../i18n/I18nProvider';
+import { Button } from '../../../common/Button';
+import { Modal } from '../../../common/Modal';
 
 interface Props {
   release: GitHubRelease;

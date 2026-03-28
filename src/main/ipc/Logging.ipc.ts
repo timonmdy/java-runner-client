@@ -1,12 +1,12 @@
 import { shell } from 'electron';
-import type { RouteMap } from '../IPCController';
+import type { RouteMap } from '../core/IPCController';
 import {
-  getLogFiles,
-  readLogFile,
   deleteLogFile,
+  getLogFiles,
   getLogsDirectory,
   LogFileInfo,
-} from '../FileLogger';
+  readLogFile,
+} from '../core/process/FileLogger';
 
 export const LoggingIPC = {
   getLogFiles: {

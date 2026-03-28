@@ -1,9 +1,8 @@
-import React from 'react';
+import { REST_API_CONFIG } from '@shared/config/API.config';
+import { AppSettings } from '@shared/types/App.types';
 import { useTranslation } from '../../../i18n/I18nProvider';
 import { Toggle } from '../../common/Toggle';
-import { Section, Row, NumInput } from '../SettingsRow';
-import { REST_API_CONFIG } from '../../../../main/shared/config/API.config';
-import { AppSettings } from '../../../../main/shared/types/App.types';
+import { NumInput, Row, Section } from '../SettingsRow';
 
 interface Props {
   draft: AppSettings;
