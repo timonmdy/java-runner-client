@@ -3,9 +3,13 @@ import {
   getActiveTheme,
   setActiveTheme,
   fetchRemoteThemes,
+  fetchRemoteThemePreviews,
+  fetchRemoteThemeByFile,
   getActiveLanguage,
   setActiveLanguage,
   fetchRemoteLanguages,
+  fetchRemoteLanguagePreviews,
+  fetchRemoteLanguageByFile,
   loadDevAssets,
 } from '../AssetManager';
 import type { ThemeDefinition } from '../shared/types/Theme.types';
@@ -28,6 +32,16 @@ export const AssetIPC = {
     channel: 'asset:fetchThemes',
     handler: () => fetchRemoteThemes(),
   },
+  fetchThemePreviews: {
+    type: 'invoke',
+    channel: 'asset:themePreviews',
+    handler: () => fetchRemoteThemePreviews(),
+  },
+  fetchThemeByFile: {
+    type: 'invoke',
+    channel: 'asset:themeByFile',
+    handler: (_e: any, filename: string) => fetchRemoteThemeByFile(filename),
+  },
 
   // Languages
   getActiveLanguage: {
@@ -44,6 +58,16 @@ export const AssetIPC = {
     type: 'invoke',
     channel: 'asset:fetchLangs',
     handler: () => fetchRemoteLanguages(),
+  },
+  fetchLanguagePreviews: {
+    type: 'invoke',
+    channel: 'asset:langPreviews',
+    handler: () => fetchRemoteLanguagePreviews(),
+  },
+  fetchLanguageByFile: {
+    type: 'invoke',
+    channel: 'asset:langByFile',
+    handler: (_e: any, filename: string) => fetchRemoteLanguageByFile(filename),
   },
 
   // Dev

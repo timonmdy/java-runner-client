@@ -10,3 +10,9 @@ export interface LocalLanguageState {
   activeLanguageId: string;
   activeLanguage: LanguageDefinition;
 }
+
+export interface LanguagePreview {
+  id: string;
+  name: string;
+  filename: string;
+}

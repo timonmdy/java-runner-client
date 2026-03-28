@@ -219,6 +219,8 @@ const ENGLISH_STRINGS = {
     'Load themes and languages from /themes and /languages in the project root',
   'appearance.sync': 'Sync',
   'appearance.synced': 'Synced',
+  'appearance.localOnly': 'Local only',
+  'appearance.localOverride': 'Overrides remote',
 
   // Settings: Advanced
   'settings.advanced': 'Advanced',
@@ -259,6 +261,7 @@ const ENGLISH_STRINGS = {
   'settings.version': 'Version',
   'settings.stack': 'Stack',
   'settings.configPath': 'Config',
+  'settings.openConfigFolder': 'Open config folder',
 
   // Release modal
   'release.title': 'Release Details',

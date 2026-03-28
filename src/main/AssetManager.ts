@@ -5,8 +5,12 @@ import https from 'https';
 import { GITHUB_CONFIG } from './shared/config/GitHub.config';
 import { BUILTIN_THEME, THEME_GITHUB_PATH } from './shared/config/Theme.config';
 import { ENGLISH } from './shared/config/DefaultLanguage.config';
-import type { ThemeDefinition, LocalThemeState } from './shared/types/Theme.types';
-import type { LanguageDefinition, LocalLanguageState } from './shared/types/Language.types';
+import type { ThemeDefinition, LocalThemeState, ThemePreview } from './shared/types/Theme.types';
+import type {
+  LanguageDefinition,
+  LocalLanguageState,
+  LanguagePreview,
+} from './shared/types/Language.types';
 
 function dataDir(): string {
   return app.getPath('userData');
@@ -93,6 +97,53 @@ export async function fetchRemoteThemes(): Promise<{
   }
 }
 
+export async function fetchRemoteThemePreviews(): Promise<{
+  ok: boolean;
+  themes?: ThemePreview[];
+  error?: string;
+}> {
+  try {
+    const listing = await httpsGetJson(contentsUrl(THEME_GITHUB_PATH));
+    if (!Array.isArray(listing)) return { ok: false, error: 'Themes folder not found' };
+    const themes: ThemePreview[] = [];
+    for (const f of (listing as Array<{ name: string }>).filter((f) => f.name.endsWith('.json'))) {
+      try {
+        const theme = (await httpsGetJson(rawUrl(THEME_GITHUB_PATH, f.name))) as ThemeDefinition;
+        if (theme.id && theme.name && theme.colors) {
+          themes.push({
+            id: theme.id,
+            name: theme.name,
+            filename: f.name,
+            previewColors: {
+              accent: theme.colors.accent,
+              'base-900': theme.colors['base-900'],
+              'surface-raised': theme.colors['surface-raised'],
+              'text-primary': theme.colors['text-primary'],
+            },
+          });
+        }
+      } catch {
+        /* skip */
+      }
+    }
+    return { ok: true, themes };
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
+}
+
+export async function fetchRemoteThemeByFile(
+  filename: string
+): Promise<{ ok: boolean; theme?: ThemeDefinition; error?: string }> {
+  try {
+    const theme = (await httpsGetJson(rawUrl(THEME_GITHUB_PATH, filename))) as ThemeDefinition;
+    if (theme.id && theme.name && theme.colors) return { ok: true, theme };
+    return { ok: false, error: 'Invalid theme' };
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
+}
+
 // ─── Languages ────────────────────────────────────────────────────────────────
 
 const LANG_FILE = 'language-state.json';
@@ -137,6 +188,47 @@ export async function fetchRemoteLanguages(): Promise<{
       }
     }
     return { ok: true, languages };
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
+}
+
+export async function fetchRemoteLanguagePreviews(): Promise<{
+  ok: boolean;
+  languages?: LanguagePreview[];
+  error?: string;
+}> {
+  try {
+    const listing = await httpsGetJson(contentsUrl(GITHUB_CONFIG.languagesPath));
+    if (!Array.isArray(listing)) return { ok: false, error: 'Languages folder not found' };
+    const languages: LanguagePreview[] = [];
+    for (const f of (listing as Array<{ name: string }>).filter((f) => f.name.endsWith('.json'))) {
+      try {
+        const lang = (await httpsGetJson(
+          rawUrl(GITHUB_CONFIG.languagesPath, f.name)
+        )) as LanguageDefinition;
+        if (lang.id && lang.name) {
+          languages.push({ id: lang.id, name: lang.name, filename: f.name });
+        }
+      } catch {
+        /* skip */
+      }
+    }
+    return { ok: true, languages };
+  } catch (e) {
+    return { ok: false, error: String(e) };
+  }
+}
+
+export async function fetchRemoteLanguageByFile(
+  filename: string
+): Promise<{ ok: boolean; language?: LanguageDefinition; error?: string }> {
+  try {
+    const lang = (await httpsGetJson(
+      rawUrl(GITHUB_CONFIG.languagesPath, filename)
+    )) as LanguageDefinition;
+    if (lang.id && lang.name && lang.strings) return { ok: true, language: lang };
+    return { ok: false, error: 'Invalid language' };
   } catch (e) {
     return { ok: false, error: String(e) };
   }

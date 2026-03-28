@@ -28,9 +28,11 @@ export function ContextMenu({ x, y, items, onClose }: Props) {
     };
     document.addEventListener('mousedown', handleOutside);
     document.addEventListener('keydown', handleKey);
+    document.addEventListener('scroll', onClose, true);
     return () => {
       document.removeEventListener('mousedown', handleOutside);
       document.removeEventListener('keydown', handleKey);
+      document.removeEventListener('scroll', onClose, true);
     };
   }, [onClose]);
 

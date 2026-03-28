@@ -1,4 +1,4 @@
-import { dialog, shell } from 'electron';
+import { app, dialog, shell } from 'electron';
 import { restApiServer } from '../RestAPI';
 import type { RouteMap } from '../IPCController';
 import type { AppSettings, JRCEnvironment } from '../shared/types/App.types';
@@ -64,5 +64,11 @@ export const SystemIPC = {
     type: 'invoke',
     channel: 'shell:openExternal',
     handler: (_e: any, url: string) => shell.openExternal(url),
+  },
+
+  openConfigFolder: {
+    type: 'invoke',
+    channel: 'shell:openConfigFolder',
+    handler: () => shell.openPath(app.getPath('userData')),
   },
 } satisfies RouteMap;
