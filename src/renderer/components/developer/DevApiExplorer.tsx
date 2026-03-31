@@ -1,12 +1,14 @@
 import { REST_API_CONFIG, routeConfig } from '@shared/config/API.config';
+import { JSON_TOKEN_COLORS } from '@shared/config/Dev.config';
+import { JsonToken } from '@shared/types/Dev.types';
 import { RouteDefinition } from '@shared/types/RestAPI.types';
 import React, { useCallback, useState } from 'react';
 import { VscCheck, VscCode, VscCopy, VscEdit, VscPlay } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
 import { useInputContextMenu } from '../../hooks/useInputContextMenu';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { Button } from '../common/Button';
-import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
+import { Button } from '../common/inputs';
+import { ContextMenu, ContextMenuItem } from '../common/overlays';
 
 const METHOD_COLORS: Record<string, string> = {
   GET: 'text-accent border-accent/30 bg-accent/10',
@@ -17,13 +19,8 @@ const METHOD_COLORS: Record<string, string> = {
 
 // ─── JSON syntax highlighter ─────────────────────────────────────────────────
 
-type Token = {
-  type: 'key' | 'string' | 'number' | 'boolean' | 'null' | 'punct' | 'plain';
-  value: string;
-};
-
-function tokenizeJson(text: string): Token[] {
-  const tokens: Token[] = [];
+function tokenizeJson(text: string): JsonToken[] {
+  const tokens: JsonToken[] = [];
   let i = 0;
   while (i < text.length) {
     const ws = text.slice(i).match(/^[\s,:\[\]{}]+/);
@@ -71,16 +68,6 @@ function tokenizeJson(text: string): Token[] {
   return tokens;
 }
 
-const TOKEN_CLASS: Record<Token['type'], string> = {
-  key: 'text-blue-300',
-  string: 'text-emerald-400',
-  number: 'text-amber-400',
-  boolean: 'text-purple-400',
-  null: 'text-red-400/80',
-  punct: 'text-text-muted',
-  plain: 'text-text-secondary',
-};
-
 function JsonHighlight({ text }: { text: string }) {
   let isJson = false;
   try {
@@ -93,7 +80,7 @@ function JsonHighlight({ text }: { text: string }) {
   return (
     <>
       {tokenizeJson(text).map((tok, i) => (
-        <span key={i} className={TOKEN_CLASS[tok.type]}>
+        <span key={i} className={JSON_TOKEN_COLORS[tok.type]}>
           {tok.value}
         </span>
       ))}

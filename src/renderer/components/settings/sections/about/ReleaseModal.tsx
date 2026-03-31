@@ -13,8 +13,8 @@ import {
   VscVerified,
 } from 'react-icons/vsc';
 import { useTranslation } from '../../../../i18n/I18nProvider';
-import { Button } from '../../../common/Button';
-import { Modal } from '../../../common/Modal';
+import { Button } from '../../../common/inputs';
+import { Modal } from '../../../common/overlays';
 
 interface Props {
   release: GitHubRelease;

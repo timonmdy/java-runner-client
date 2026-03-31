@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { VscRefresh, VscTrash } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
-import { Button } from '../common/Button';
-import { Dialog } from '../common/Dialog';
+import { Button } from '../common/inputs';
+import { Dialog } from '../common/overlays';
+import { Card, DataRow, ScrollContent, Section } from '../layout/containers';
 
 interface SessionEntry {
   key: string;
@@ -43,12 +44,12 @@ export function DevStorage() {
   const profilesWithLogging = state.profiles.filter((p) => p.fileLogging).length;
 
   return (
-    <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-5">
-      <StorageSection title="Electron Store (Persistent)">
-        <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
-          <StoreRow label="Profiles" value={String(state.profiles.length)} />
-          <StoreRow label="Active profile ID" value={state.activeProfileId || '---'} mono />
-          <StoreRow
+    <ScrollContent>
+      <Section title="Electron Store (Persistent)">
+        <Card divided>
+          <DataRow label="Profiles" value={String(state.profiles.length)} />
+          <DataRow label="Active profile ID" value={state.activeProfileId || '---'} mono />
+          <DataRow
             label="REST API"
             value={
               state.settings?.restApiEnabled
@@ -56,26 +57,26 @@ export function DevStorage() {
                 : 'Disabled'
             }
           />
-          <StoreRow
+          <DataRow
             label="Console max lines"
             value={String(state.settings?.consoleMaxLines ?? '---')}
           />
-          <StoreRow
+          <DataRow
             label="Console timestamps"
             value={state.settings?.consoleTimestamps ? 'Enabled' : 'Disabled'}
           />
-          <StoreRow
+          <DataRow
             label="File logging profiles"
             value={`${profilesWithLogging} / ${state.profiles.length}`}
           />
-        </div>
+        </Card>
         <Button variant="danger" size="sm" onClick={() => setConfirmReset('electron-store')}>
           <VscTrash size={11} />
           Reset Electron Store
         </Button>
-      </StorageSection>
+      </Section>
 
-      <StorageSection title={`Session Storage (${formatBytes(totalSessionBytes)})`}>
+      <Section title={`Session Storage (${formatBytes(totalSessionBytes)})`}>
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs text-text-muted font-mono">{sessionEntries.length} keys</p>
           <button
@@ -88,7 +89,7 @@ export function DevStorage() {
         {sessionEntries.length === 0 ? (
           <p className="text-xs font-mono text-text-muted py-2">Empty</p>
         ) : (
-          <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
+          <Card divided>
             {sessionEntries.map((e) => (
               <div key={e.key} className="px-3 py-2 flex items-start gap-3">
                 <div className="flex-1 min-w-0">
@@ -111,7 +112,7 @@ export function DevStorage() {
                 </div>
               </div>
             ))}
-          </div>
+          </Card>
         )}
         <Button
           variant="danger"
@@ -122,7 +123,7 @@ export function DevStorage() {
           <VscTrash size={11} />
           Clear Session Storage
         </Button>
-      </StorageSection>
+      </Section>
 
       <Dialog
         open={confirmReset === 'electron-store'}
@@ -149,30 +150,6 @@ export function DevStorage() {
         }}
         onCancel={() => setConfirmReset(null)}
       />
-    </div>
-  );
-}
-
-function StorageSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</p>
-      {children}
-    </div>
-  );
-}
-
-function StoreRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-4 px-3 py-2">
-      <span className="text-xs text-text-muted">{label}</span>
-      <span
-        className={['text-xs', mono ? 'font-mono text-text-secondary' : 'text-text-secondary'].join(
-          ' '
-        )}
-      >
-        {value}
-      </span>
-    </div>
+    </ScrollContent>
   );
 }

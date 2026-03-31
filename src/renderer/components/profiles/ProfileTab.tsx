@@ -2,9 +2,10 @@ import { Profile } from '@shared/types/Profile.types';
 import React, { useEffect, useState } from 'react';
 import { PROFILE_COLORS, useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { Button } from '../common/Button';
-import { Dialog } from '../common/Dialog';
-import { Input } from '../common/Input';
+import { Button, Input } from '../common/inputs';
+import { Dialog } from '../common/overlays';
+import { Section } from '../layout/containers';
+import { Toolbar } from '../layout/shell';
 
 export function ProfileTab() {
   const { activeProfile, saveProfile, deleteProfile } = useApp();
@@ -39,7 +40,7 @@ export function ProfileTab() {
   return (
     <>
       <div className="flex flex-col h-full min-h-0">
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0">
+        <Toolbar>
           <h2 className="text-sm font-medium text-text-primary flex-1">{t('profile.identity')}</h2>
           <Button
             variant="custom"
@@ -49,7 +50,7 @@ export function ProfileTab() {
           >
             {saved ? t('general.saved') : t('general.save')}
           </Button>
-        </div>
+        </Toolbar>
 
         <div className="flex-1 overflow-y-auto min-h-0 px-4 py-5 space-y-6">
           <Section title={t('profile.name')}>
@@ -138,25 +139,5 @@ export function ProfileTab() {
         onCancel={() => setShowDelete(false)}
       />
     </>
-  );
-}
-
-function Section({
-  title,
-  hint,
-  children,
-}: {
-  title: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-2">
-      <div>
-        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</h3>
-        {hint && <p className="text-xs text-text-muted mt-0.5">{hint}</p>}
-      </div>
-      {children}
-    </div>
   );
 }

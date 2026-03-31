@@ -1,6 +1,6 @@
 {
   "name": "java-runner-client",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Run and manage Java processes with profiles, console I/O, and system tray support",
   "main": "dist/main/main.js",
   "scripts": {
@@ -11,6 +11,8 @@
     "build:renderer": "vite build",
     "build:main": "tsc -p tsconfig.main.json",
     "dist": "rimraf dist && npm run build && electron-builder",
+    "lint": "eslint src/renderer",
+    "check": "npm run format:check && npm run lint",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
@@ -28,11 +30,13 @@
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "@types/uuid": "^9.0.0",
+    "@typescript-eslint/parser": "^8.58.0",
     "@vitejs/plugin-react": "^4.2.0",
     "autoprefixer": "^10.4.0",
     "concurrently": "^8.2.0",
     "electron": "^28.0.0",
     "electron-builder": "^24.9.0",
+    "eslint": "^10.1.0",
     "postcss": "^8.4.0",
     "prettier": "^3.8.1",
     "prettier-plugin-organize-imports": "^4.3.0",

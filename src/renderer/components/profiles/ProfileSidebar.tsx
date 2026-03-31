@@ -18,8 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { PROFILE_COLORS, useApp } from '../../AppProvider';
 import { useDevMode } from '../../hooks/useDevMode';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { ContextMenu, ContextMenuItem } from '../common/ContextMenu';
-import { Dialog } from '../common/Dialog';
+import { ContextMenu, ContextMenuItem, Dialog } from '../common/overlays';
 import { TemplateModal } from './TemplateModal';
 
 interface Props {

@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { VscCheck, VscCopy } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
-import { Button } from '../common/Button';
+import { Button } from '../common/inputs';
+import { Card, DataRow, ScrollContent, Section } from '../layout/containers';
 
 declare const __APP_VERSION__: string;
 
@@ -62,8 +63,8 @@ export function DevDiagnostics() {
   const totalEnvVars = state.profiles.reduce((sum, p) => sum + (p.envVars ?? []).length, 0);
 
   return (
-    <div className="flex-1 overflow-y-auto min-h-0 px-4 py-4 space-y-5">
-      <DiagSection title="JS Heap Memory (renderer)">
+    <ScrollContent>
+      <Section title="JS Heap Memory (renderer)">
         <div className="rounded-lg border border-surface-border bg-base-950 px-3 py-2">
           <div className="flex items-end gap-px h-16 mb-1">
             {perfSamples.map((s, i) => (
@@ -85,50 +86,80 @@ export function DevDiagnostics() {
             <span>max {maxMem} MB</span>
           </div>
         </div>
-      </DiagSection>
+      </Section>
 
-      <DiagSection title="Renderer State">
-        <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
-          <DiagRow label="Active profile ID" value={state.activeProfileId || '---'} mono />
-          <DiagRow label="Profiles loaded" value={String(state.profiles.length)} />
-          <DiagRow label="Process states" value={String(state.processStates.length)} />
-          <DiagRow
+      <Section title="Renderer State">
+        <Card divided>
+          <DataRow
+            label="Active profile ID"
+            value={state.activeProfileId || '---'}
+            mono
+            labelWidth="w-44"
+          />
+          <DataRow
+            label="Profiles loaded"
+            value={String(state.profiles.length)}
+            labelWidth="w-44"
+          />
+          <DataRow
+            label="Process states"
+            value={String(state.processStates.length)}
+            labelWidth="w-44"
+          />
+          <DataRow
             label="Console buffers"
             value={`${Object.keys(state.consoleLogs).length} profiles`}
+            labelWidth="w-44"
           />
-          <DiagRow
+          <DataRow
             label="Total buffered lines"
             value={String(Object.values(state.consoleLogs).reduce((a, b) => a + b.length, 0))}
+            labelWidth="w-44"
           />
-          <DiagRow label="Settings loaded" value={state.settings ? 'Yes' : 'No'} />
-        </div>
-      </DiagSection>
+          <DataRow
+            label="Settings loaded"
+            value={state.settings ? 'Yes' : 'No'}
+            labelWidth="w-44"
+          />
+        </Card>
+      </Section>
 
-      <DiagSection title="Feature Usage">
-        <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
-          <DiagRow
+      <Section title="Feature Usage">
+        <Card divided>
+          <DataRow
             label="Console timestamps"
             value={state.settings?.consoleTimestamps ? 'On' : 'Off'}
+            labelWidth="w-44"
           />
-          <DiagRow
+          <DataRow
             label="File logging (profiles)"
             value={`${profilesWithLogging} / ${state.profiles.length}`}
+            labelWidth="w-44"
           />
-          <DiagRow label="Total env vars" value={String(totalEnvVars)} />
-          <DiagRow
+          <DataRow label="Total env vars" value={String(totalEnvVars)} labelWidth="w-44" />
+          <DataRow
             label="REST API"
             value={state.settings?.restApiEnabled ? `Port ${state.settings.restApiPort}` : 'Off'}
+            labelWidth="w-44"
           />
-          <DiagRow label="Word wrap" value={state.settings?.consoleWordWrap ? 'On' : 'Off'} />
-          <DiagRow label="Line numbers" value={state.settings?.consoleLineNumbers ? 'On' : 'Off'} />
-        </div>
-      </DiagSection>
+          <DataRow
+            label="Word wrap"
+            value={state.settings?.consoleWordWrap ? 'On' : 'Off'}
+            labelWidth="w-44"
+          />
+          <DataRow
+            label="Line numbers"
+            value={state.settings?.consoleLineNumbers ? 'On' : 'Off'}
+            labelWidth="w-44"
+          />
+        </Card>
+      </Section>
 
-      <DiagSection title="Profile Console Buffers">
+      <Section title="Profile Console Buffers">
         {state.profiles.length === 0 ? (
           <p className="text-xs font-mono text-text-muted">No profiles</p>
         ) : (
-          <div className="rounded-lg border border-surface-border bg-base-900 divide-y divide-surface-border/50">
+          <Card divided>
             {state.profiles.map((p) => {
               const lines = state.consoleLogs[p.id]?.length ?? 0;
               const running = state.processStates.some((s) => s.profileId === p.id && s.running);
@@ -151,11 +182,11 @@ export function DevDiagnostics() {
                 </div>
               );
             })}
-          </div>
+          </Card>
         )}
-      </DiagSection>
+      </Section>
 
-      <DiagSection title="Diagnostic Report">
+      <Section title="Diagnostic Report">
         <p className="text-xs text-text-muted font-mono">
           Copy a JSON snapshot of the current app state to clipboard for bug reports.
         </p>
@@ -163,32 +194,7 @@ export function DevDiagnostics() {
           {copied ? <VscCheck size={11} className="text-accent" /> : <VscCopy size={11} />}
           {copied ? 'Copied!' : 'Copy Report to Clipboard'}
         </Button>
-      </DiagSection>
-    </div>
-  );
-}
-
-function DiagSection({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-2">
-      <p className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</p>
-      {children}
-    </div>
-  );
-}
-
-function DiagRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex items-center justify-between gap-4 px-3 py-2">
-      <span className="text-xs text-text-muted font-mono w-44 shrink-0">{label}</span>
-      <span
-        className={[
-          'text-xs flex-1 truncate text-right',
-          mono ? 'font-mono text-text-secondary' : 'text-text-secondary',
-        ].join(' ')}
-      >
-        {value}
-      </span>
-    </div>
+      </Section>
+    </ScrollContent>
   );
 }

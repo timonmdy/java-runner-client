@@ -1,22 +1,23 @@
 import { Profile } from '@shared/types/Profile.types';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { ArgList } from '../common/ArgList';
-import { Button } from '../common/Button';
-import { Dialog } from '../common/Dialog';
-import { EnvVarList } from '../common/EnvVarList';
-import { PropList } from '../common/PropList';
+import { Button } from '../common/inputs';
+import { ArgList, EnvVarList, PropList } from '../common/lists';
+import { Dialog } from '../common/overlays';
+import { Card, Section } from '../layout/containers';
+import { TabBar } from '../layout/navigation';
+import { Toolbar } from '../layout/shell';
 import { FilesSection } from './FilesSection';
 import { GeneralSection } from './GeneralSection';
 
-type Section = 'general' | 'files' | 'jvm' | 'props' | 'args' | 'env';
+type SectionId = 'general' | 'files' | 'jvm' | 'props' | 'args' | 'env';
 
 export function ConfigTab() {
   const { activeProfile, saveProfile, isRunning, startProcess, stopProcess } = useApp();
   const { t } = useTranslation();
 
-  const SECTIONS: { id: Section; label: string }[] = [
+  const TABS = [
     { id: 'general', label: t('config.general') },
     { id: 'files', label: t('config.files') },
     { id: 'jvm', label: t('config.jvm') },
@@ -28,9 +29,9 @@ export function ConfigTab() {
   const [draft, setDraft] = useState<Profile | null>(null);
   const [savedSnapshot, setSavedSnapshot] = useState<Profile | null>(null);
   const [saved, setSaved] = useState(false);
-  const [section, setSection] = useState<Section>('general');
+  const [section, setSection] = useState<SectionId>('general');
   const [pendingArg, setPendingArg] = useState(false);
-  const [pendingChange, setPendingChange] = useState<Section | null>(null);
+  const [pendingChange, setPendingChange] = useState<SectionId | null>(null);
 
   useEffect(() => {
     if (activeProfile) {
@@ -55,7 +56,7 @@ export function ConfigTab() {
   }, [draft, saveProfile]);
 
   const requestSectionChange = useCallback(
-    (next: Section) => {
+    (next: SectionId) => {
       if (pendingArg && next !== section) {
         setPendingChange(next);
         return;
@@ -90,7 +91,7 @@ export function ConfigTab() {
   return (
     <>
       <div className="flex flex-col h-full">
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0">
+        <Toolbar>
           <h2 className="text-sm font-medium text-text-primary flex-1 truncate">{draft.name}</h2>
           {isDirty && !saved && (
             <span className="text-xs text-console-warn font-mono">
@@ -108,79 +109,66 @@ export function ConfigTab() {
           >
             {saved ? t('general.saved') : t('general.save')}
           </Button>
-        </div>
+        </Toolbar>
 
-        <div className="flex gap-0 px-4 border-b border-surface-border shrink-0">
-          {SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => requestSectionChange(s.id)}
-              className={[
-                'px-3 py-2 text-xs font-mono border-b-2 -mb-px transition-colors',
-                section === s.id
-                  ? 'font-medium'
-                  : 'text-text-muted border-transparent hover:text-text-primary',
-              ].join(' ')}
-              style={section === s.id ? { borderBottomColor: color, color } : {}}
-            >
-              {s.label}
-              {pendingArg && s.id === section && (
-                <span className="ml-1 inline-block w-1.5 h-1.5 rounded-full bg-console-warn align-middle" />
-              )}
-            </button>
-          ))}
-        </div>
+        <TabBar
+          tabs={TABS}
+          active={section}
+          onChange={(id) => requestSectionChange(id as SectionId)}
+          accentColor={color}
+          dotTab={pendingArg ? section : undefined}
+        />
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5">
           {section === 'general' && <GeneralSection draft={draft} update={update} />}
           {section === 'files' && <FilesSection draft={draft} update={update} />}
           {section === 'jvm' && (
-            <ArgSection title={t('config.jvmTitle')} hint={t('config.jvmHint')}>
+            <Section title={t('config.jvmTitle')} hint={t('config.jvmHint')}>
               <ArgList
                 items={draft.jvmArgs}
                 onChange={(jvmArgs) => update({ jvmArgs })}
                 onPendingChange={setPendingArg}
                 placeholder="-Xmx2g"
               />
-            </ArgSection>
+            </Section>
           )}
           {section === 'props' && (
-            <ArgSection title={t('config.propsTitle')} hint={t('config.propsHint')}>
+            <Section title={t('config.propsTitle')} hint={t('config.propsHint')}>
               <PropList
                 items={draft.systemProperties}
                 onChange={(systemProperties) => update({ systemProperties })}
                 onPendingChange={setPendingArg}
               />
-            </ArgSection>
+            </Section>
           )}
           {section === 'args' && (
-            <ArgSection title={t('config.argsTitle')} hint={t('config.argsHint')}>
+            <Section title={t('config.argsTitle')} hint={t('config.argsHint')}>
               <ArgList
                 items={draft.programArgs}
                 onChange={(programArgs) => update({ programArgs })}
                 onPendingChange={setPendingArg}
                 placeholder="--nogui"
               />
-            </ArgSection>
+            </Section>
           )}
           {section === 'env' && (
-            <ArgSection title={t('config.envTitle')} hint={t('config.envHint')}>
+            <Section title={t('config.envTitle')} hint={t('config.envHint')}>
               <EnvVarList
                 items={draft.envVars ?? []}
                 onChange={(envVars) => update({ envVars })}
                 onPendingChange={setPendingArg}
               />
-            </ArgSection>
+            </Section>
           )}
 
-          <div className="rounded-lg bg-base-950 border border-surface-border p-3">
+          <Card className="bg-base-950 p-3">
             <p className="text-xs text-text-muted font-mono uppercase tracking-widest mb-2">
               {t('config.commandPreview')}
             </p>
             <p className="text-xs font-mono text-text-secondary break-all leading-5 select-text">
               {buildCmdPreview(draft)}
             </p>
-          </div>
+          </Card>
         </div>
       </div>
 
@@ -200,26 +188,6 @@ export function ConfigTab() {
         onCancel={() => setPendingChange(null)}
       />
     </>
-  );
-}
-
-function ArgSection({
-  title,
-  hint,
-  children,
-}: {
-  title: string;
-  hint: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-3">
-      <div>
-        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">{title}</h3>
-        <p className="text-xs text-text-muted mt-0.5">{hint}</p>
-      </div>
-      {children}
-    </div>
   );
 }
 

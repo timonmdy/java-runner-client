@@ -6,10 +6,11 @@ import { useApp } from '../AppProvider';
 import { useDevMode } from '../hooks/useDevMode';
 import { useTranslation } from '../i18n/I18nProvider';
 import type { TranslationKey } from '../i18n/TranslationKeys';
+import { StatusDot } from './common/display';
 import { ConsoleTab } from './console/ConsoleTab';
 import { DeveloperTab } from './developer/DeveloperTab';
 import { FaqPanel } from './faq/FaqPanel';
-import { PanelHeader } from './layout/PanelHeader';
+import { PanelHeader } from './layout/navigation';
 import { ConfigTab } from './profiles/ConfigTab';
 import { LogsTab } from './profiles/LogsTab';
 import { ProfileSidebar } from './profiles/ProfileSidebar';
@@ -104,12 +105,7 @@ export function MainLayout() {
                   >
                     <tab.Icon size={13} />
                     {t(tab.labelKey)}
-                    {tab.path === 'console' && running && (
-                      <span
-                        className="w-1.5 h-1.5 rounded-full animate-pulse-dot"
-                        style={{ backgroundColor: color }}
-                      />
-                    )}
+                    {tab.path === 'console' && running && <StatusDot color={color} pulse />}
                   </button>
                 );
               })}

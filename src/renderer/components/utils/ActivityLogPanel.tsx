@@ -2,9 +2,11 @@ import { ProcessLogEntry } from '@shared/types/Process.types';
 import { useCallback, useEffect, useState } from 'react';
 import { VscListUnordered } from 'react-icons/vsc';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { Button } from '../common/Button';
-import { Dialog } from '../common/Dialog';
-import { EmptyState } from '../common/EmptyState';
+import { EmptyState, StatusDot } from '../common/display';
+import { Button } from '../common/inputs';
+import { Dialog } from '../common/overlays';
+import { Card } from '../layout/containers';
+import { Toolbar } from '../layout/shell';
 
 export function ActivityLogPanel() {
   const { t } = useTranslation();
@@ -25,7 +27,7 @@ export function ActivityLogPanel() {
   return (
     <>
       <div className="flex flex-col h-full min-h-0">
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900/50 shrink-0">
+        <Toolbar>
           <p className="text-xs text-text-muted flex-1">{t('activity.description')}</p>
           <Button variant="ghost" size="sm" onClick={load} loading={loading}>
             {t('general.refresh')}
@@ -38,7 +40,7 @@ export function ActivityLogPanel() {
           >
             {t('general.clear')}
           </Button>
-        </div>
+        </Toolbar>
 
         <div className="flex-1 overflow-y-auto min-h-0 px-4 py-3">
           {loading && !entries && (
@@ -81,7 +83,7 @@ function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
   const duration = entry.stoppedAt ? formatDuration(entry.stoppedAt - entry.startedAt) : null;
   const jarName = entry.jarPath.split(/[/\\]/).pop() ?? entry.jarPath;
   return (
-    <div className="rounded-lg border border-surface-border bg-base-900 px-3 py-2.5">
+    <Card className="px-3 py-2.5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap mb-0.5">
@@ -93,7 +95,7 @@ function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
               <span className="text-xs text-text-muted">{t('activity.stopped')}</span>
             ) : (
               <span className="flex items-center gap-1 text-xs text-accent">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
+                <StatusDot pulse />
                 {t('activity.running')}
               </span>
             )}
@@ -117,7 +119,7 @@ function LogEntryRow({ entry }: { entry: ProcessLogEntry }) {
           )}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 

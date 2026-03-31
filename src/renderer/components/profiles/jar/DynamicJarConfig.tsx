@@ -4,7 +4,7 @@ import { useInputContextMenu } from '../../../hooks/useInputContextMenu';
 import { useJarResolutionPreview } from '../../../hooks/useJarResolutionPreview';
 import { useTranslation } from '../../../i18n/I18nProvider';
 import type { TranslationKey } from '../../../i18n/TranslationKeys';
-import { Input } from '../../common/Input';
+import { Input } from '../../common/inputs';
 import { FolderBtn } from './FolderBtn';
 import { ResolutionPreview } from './ResolutionPreview';
 

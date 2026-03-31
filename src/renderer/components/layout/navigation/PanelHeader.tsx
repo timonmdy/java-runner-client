@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from '../../i18n/I18nProvider';
+import { useTranslation } from '../../../i18n/I18nProvider';
 
 interface Props {
   title: string;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { VscChromeClose, VscChromeMinimize } from 'react-icons/vsc';
-import { useApp } from '../../AppProvider';
+import { useApp } from '../../../AppProvider';
+import { StatusDot } from '../../common/display/StatusDot';
 
 export function TitleBar() {
   const { state } = useApp();
@@ -45,7 +46,7 @@ export function TitleBar() {
         </span>
         {runningCount > 0 && (
           <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-accent/15 border border-accent/30 animate-fade-in">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse-dot" />
+            <StatusDot pulse />
             <span className="text-accent text-xs font-mono font-medium leading-none">
               {runningCount}
             </span>

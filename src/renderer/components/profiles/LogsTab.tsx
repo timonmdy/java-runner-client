@@ -2,9 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { VscCopy, VscFolderOpened, VscRefresh, VscTrash } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { Button } from '../common/Button';
-import { ContextMenu } from '../common/ContextMenu';
-import { Dialog } from '../common/Dialog';
+import { Button } from '../common/inputs';
+import { ContextMenu, Dialog } from '../common/overlays';
+import { Toolbar } from '../layout/shell';
 
 interface LogFileInfo {
   filename: string;
@@ -88,7 +88,7 @@ export function LogsTab() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900 shrink-0">
+      <Toolbar>
         <h2 className="text-sm font-medium text-text-primary flex-1">
           {t('logs.title')}
           <span className="text-xs text-text-muted font-mono ml-2">
@@ -109,7 +109,7 @@ export function LogsTab() {
         >
           <VscFolderOpened size={13} />
         </button>
-      </div>
+      </Toolbar>
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div className="w-56 shrink-0 border-r border-surface-border bg-base-900/60 overflow-y-auto">
@@ -160,7 +160,7 @@ export function LogsTab() {
           )}
           {selectedFile && !loading && logContent !== null && (
             <>
-              <div className="flex items-center gap-2 px-3 py-1.5 border-b border-surface-border bg-base-900 shrink-0">
+              <Toolbar className="px-3 py-1.5">
                 <span className="text-xs font-mono text-text-secondary flex-1 truncate">
                   {selectedFile.filename}
                 </span>
@@ -187,7 +187,7 @@ export function LogsTab() {
                 >
                   <VscTrash size={12} />
                 </button>
-              </div>
+              </Toolbar>
               <div
                 className="flex-1 overflow-auto bg-base-950 p-3 select-text"
                 onContextMenu={(e) => {

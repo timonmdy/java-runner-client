@@ -1,6 +1,6 @@
 import { useInputContextMenu } from '../../../hooks/useInputContextMenu';
 import { useTranslation } from '../../../i18n/I18nProvider';
-import { Input } from '../../common/Input';
+import { Input } from '../../common/inputs';
 import { FolderBtn } from './FolderBtn';
 
 interface Props {
