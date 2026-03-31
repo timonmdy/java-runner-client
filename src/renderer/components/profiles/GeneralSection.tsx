@@ -1,6 +1,7 @@
 import { Profile } from '@shared/types/Profile.types';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { Toggle } from '../common/Toggle';
+import { Toggle } from '../common/inputs';
+import { Card, Section } from '../layout/containers';
 
 export function GeneralSection({
   draft,
@@ -13,24 +14,18 @@ export function GeneralSection({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">
-          {t('config.autoStartTitle')}
-        </h3>
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
+      <Section title={t('config.autoStartTitle')}>
+        <Card className="flex items-center justify-between gap-4 px-3 py-2.5">
           <div>
             <p className="text-xs text-text-primary font-medium">{t('config.autoStart')}</p>
             <p className="text-xs text-text-muted mt-0.5">{t('config.autoStartHint')}</p>
           </div>
           <Toggle checked={draft.autoStart} onChange={(v) => update({ autoStart: v })} />
-        </div>
-      </div>
+        </Card>
+      </Section>
 
-      <div className="space-y-3">
-        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">
-          {t('config.autoRestartTitle')}
-        </h3>
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
+      <Section title={t('config.autoRestartTitle')}>
+        <Card className="flex items-center justify-between gap-4 px-3 py-2.5">
           <div>
             <p className="text-xs text-text-primary font-medium">{t('config.autoRestart')}</p>
             <p className="text-xs text-text-muted mt-0.5">{t('config.autoRestartHint')}</p>
@@ -39,10 +34,10 @@ export function GeneralSection({
             checked={draft.autoRestart ?? false}
             onChange={(v) => update({ autoRestart: v })}
           />
-        </div>
+        </Card>
 
         {draft.autoRestart && (
-          <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
+          <Card className="flex items-center justify-between gap-4 px-3 py-2.5 mt-3">
             <div>
               <p className="text-xs text-text-primary font-medium">
                 {t('config.autoRestartInterval')}
@@ -64,15 +59,12 @@ export function GeneralSection({
               />
               <span className="text-xs text-text-muted font-mono">{t('config.sec')}</span>
             </div>
-          </div>
+          </Card>
         )}
-      </div>
+      </Section>
 
-      <div className="space-y-3">
-        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest">
-          {t('config.logging')}
-        </h3>
-        <div className="flex items-center justify-between gap-4 rounded-lg bg-base-900 border border-surface-border px-3 py-2.5">
+      <Section title={t('config.logging')}>
+        <Card className="flex items-center justify-between gap-4 px-3 py-2.5">
           <div>
             <p className="text-xs text-text-primary font-medium">{t('config.fileLogging')}</p>
             <p className="text-xs text-text-muted mt-0.5">{t('config.fileLoggingHint')}</p>
@@ -81,8 +73,8 @@ export function GeneralSection({
             checked={draft.fileLogging ?? false}
             onChange={(v) => update({ fileLogging: v })}
           />
-        </div>
-      </div>
+        </Card>
+      </Section>
     </div>
   );
 }

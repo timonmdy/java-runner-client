@@ -1,5 +1,5 @@
-import { ALL_LANGUAGES } from '@shared/config/Language.config';
-import { ALL_THEMES } from '@shared/config/Theme.config';
+import { ALL_LANGUAGES } from '@shared/config/languages/Language.config';
+import { ALL_THEMES } from '@shared/config/themes/Theme.config';
 import type { ThemeColors } from '@shared/types/Theme.types';
 import { useMemo, useState } from 'react';
 import { VscCheck, VscSearch } from 'react-icons/vsc';

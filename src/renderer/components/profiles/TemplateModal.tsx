@@ -4,8 +4,8 @@ import { LuShield } from 'react-icons/lu';
 import { VscAdd, VscPackage, VscRefresh, VscTag } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { Button } from '../common/Button';
-import { Modal } from '../common/Modal';
+import { Button } from '../common/inputs';
+import { Modal } from '../common/overlays';
 
 const APP_TEMPLATE_VERSION = 1;
 

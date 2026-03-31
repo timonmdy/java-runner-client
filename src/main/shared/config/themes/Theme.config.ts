@@ -1,7 +1,7 @@
-import type { ThemeDefinition } from '../types/Theme.types';
-import { DARK_DEFAULT_THEME } from './themes/dark-default.theme';
-import { LIGHT_THEME } from './themes/light.theme';
-import { MIDNIGHT_BLUE_THEME } from './themes/midnight-blue.theme';
+import type { ThemeDefinition } from '../../types/Theme.types';
+import { DARK_DEFAULT_THEME } from './dark-default.theme';
+import { LIGHT_THEME } from './light.theme';
+import { MIDNIGHT_BLUE_THEME } from './midnight-blue.theme';
 
 export const BUILTIN_THEME: ThemeDefinition = DARK_DEFAULT_THEME;
 

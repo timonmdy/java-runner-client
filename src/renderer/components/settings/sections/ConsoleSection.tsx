@@ -1,6 +1,6 @@
 import { AppSettings } from '@shared/types/App.types';
 import { useTranslation } from '../../../i18n/I18nProvider';
-import { Toggle } from '../../common/Toggle';
+import { Toggle } from '../../common/inputs';
 import { NumInput, Row, Section } from '../SettingsRow';
 
 interface Props {
@@ -12,7 +12,7 @@ export function ConsoleSection({ draft, set }: Props) {
   const { t } = useTranslation();
 
   return (
-    <Section title={t('settings.console')}>
+    <Section title={t('settings.console')} divided>
       <Row label={t('settings.fontSize')} hint={t('settings.fontSizeHint')}>
         <div className="flex items-center gap-2.5">
           <input

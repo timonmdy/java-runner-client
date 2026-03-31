@@ -1,13 +1,7 @@
 import React from 'react';
+import { Section } from '../layout/containers';
 
-export function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest mb-4">{title}</h3>
-      <div className="space-y-0 divide-y divide-surface-border/50">{children}</div>
-    </div>
-  );
-}
+export { Section };
 
 export function Row({
   label,

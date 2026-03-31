@@ -1,4 +1,4 @@
-import { ALL_THEMES, BUILTIN_THEME } from '@shared/config/Theme.config';
+import { ALL_THEMES, BUILTIN_THEME } from '@shared/config/themes/Theme.config';
 import type { ThemeColors, ThemeDefinition } from '@shared/types/Theme.types';
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
@@ -49,6 +49,7 @@ function buildThemeCSS(colors: ThemeColors): string {
     lines.push(`.bg-${CSS.escape(twName)} { background-color: ${v} !important; }`);
     lines.push(`.text-${CSS.escape(twName)} { color: ${v} !important; }`);
     lines.push(`.border-${CSS.escape(twName)} { border-color: ${v} !important; }`);
+    lines.push(`.accent-${CSS.escape(twName)} { accent-color: ${v} !important; }`);
     lines.push(
       `.divide-${CSS.escape(twName)} > :not([hidden]) ~ :not([hidden]) { border-color: ${v} !important; }`
     );

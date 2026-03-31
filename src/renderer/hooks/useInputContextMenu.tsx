@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { MdContentCopy, MdContentCut, MdContentPaste, MdSelectAll } from 'react-icons/md';
-import { ContextMenu } from '../components/common/ContextMenu';
+import { ContextMenu } from '../components/common/overlays';
 import { useTranslation } from '../i18n/I18nProvider';
 
 type InputEl = HTMLInputElement | HTMLTextAreaElement;

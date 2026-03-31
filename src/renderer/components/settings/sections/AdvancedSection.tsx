@@ -1,7 +1,7 @@
 import { REST_API_CONFIG } from '@shared/config/API.config';
 import { AppSettings } from '@shared/types/App.types';
 import { useTranslation } from '../../../i18n/I18nProvider';
-import { Toggle } from '../../common/Toggle';
+import { Toggle } from '../../common/inputs';
 import { NumInput, Row, Section } from '../SettingsRow';
 
 interface Props {
@@ -13,13 +13,13 @@ export function AdvancedSection({ draft, set }: Props) {
   const { t } = useTranslation();
   return (
     <>
-      <Section title={t('settings.devMode')}>
+      <Section title={t('settings.devMode')} divided>
         <Row label={t('settings.devModeLabel')} hint={t('settings.devModeHint')}>
           <Toggle checked={draft.devModeEnabled} onChange={(v) => set({ devModeEnabled: v })} />
         </Row>
       </Section>
 
-      <Section title={t('settings.restApi')}>
+      <Section title={t('settings.restApi')} divided>
         <Row
           label={t('settings.restApiLabel')}
           hint={t('settings.restApiHint', { port: String(REST_API_CONFIG.defaultPort) })}

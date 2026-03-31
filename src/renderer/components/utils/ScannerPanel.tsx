@@ -3,9 +3,11 @@ import { useCallback, useState } from 'react';
 import { LuScanLine } from 'react-icons/lu';
 import { VscCheck } from 'react-icons/vsc';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { Button } from '../common/Button';
-import { Dialog } from '../common/Dialog';
-import { EmptyState } from '../common/EmptyState';
+import { Badge, EmptyState } from '../common/display';
+import { Button } from '../common/inputs';
+import { Dialog } from '../common/overlays';
+import { DataRow } from '../layout/containers';
+import { Toolbar } from '../layout/shell';
 
 type Filter = 'java' | 'all';
 interface KillIntent {
@@ -91,7 +93,7 @@ export function ScannerPanel() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center gap-2 px-4 py-2.5 border-b border-surface-border bg-base-900/50 shrink-0 flex-wrap gap-y-2">
+      <Toolbar className="flex-wrap gap-y-2">
         <div className="flex items-center gap-1 bg-base-950 rounded-lg p-0.5 border border-surface-border">
           {(['java', 'all'] as const).map((f) => (
             <button
@@ -126,7 +128,7 @@ export function ScannerPanel() {
         <Button variant="primary" size="sm" onClick={scan} loading={scanning}>
           {results === null ? t('scanner.scan') : t('scanner.rescan')}
         </Button>
-      </div>
+      </Toolbar>
 
       {statusMsg && (
         <div
@@ -260,9 +262,9 @@ function ProcessRow({
         </button>
         <div className="flex items-center gap-1 shrink-0">
           {proc.protected && <Badge label={t('scanner.protectedLabel')} />}
-          {proc.managed && <Badge label={t('scanner.managedBadge')} accent />}
+          {proc.managed && <Badge label={t('scanner.managedBadge')} variant="accent" />}
           {proc.isJava ? (
-            <Badge label={t('scanner.javaBadge')} blue />
+            <Badge label={t('scanner.javaBadge')} variant="blue" />
           ) : (
             <Badge label={t('scanner.nonJavaBadge')} />
           )}
@@ -290,69 +292,35 @@ function ProcessRow({
       </div>
       {expanded && (
         <div className="px-10 pb-3 pt-1 border-t border-surface-border/50 space-y-1.5 animate-fade-in">
-          <DetailRow label={t('scanner.fullCommand')} value={proc.command} mono wrap />
-          {proc.jarName && <DetailRow label="JAR" value={proc.jarName} />}
+          <DataRow
+            label={t('scanner.fullCommand')}
+            value={proc.command}
+            mono
+            wrap
+            labelWidth="w-28"
+          />
+          {proc.jarName && <DataRow label="JAR" value={proc.jarName} labelWidth="w-28" />}
           {proc.memoryMB !== undefined && (
-            <DetailRow label={t('scanner.memory')} value={`${proc.memoryMB} MB`} />
+            <DataRow label={t('scanner.memory')} value={`${proc.memoryMB} MB`} labelWidth="w-28" />
           )}
           {proc.threads !== undefined && (
-            <DetailRow label={t('scanner.threads')} value={String(proc.threads)} />
+            <DataRow label={t('scanner.threads')} value={String(proc.threads)} labelWidth="w-28" />
           )}
-          {proc.startTime && <DetailRow label={t('scanner.started')} value={proc.startTime} />}
-          <DetailRow
+          {proc.startTime && (
+            <DataRow label={t('scanner.started')} value={proc.startTime} labelWidth="w-28" />
+          )}
+          <DataRow
             label={t('scanner.managedByJrc')}
             value={proc.managed ? t('general.yes') : t('general.no')}
+            labelWidth="w-28"
           />
-          <DetailRow
+          <DataRow
             label={t('scanner.protectedLabel')}
             value={proc.protected ? t('scanner.protectedYes') : t('general.no')}
+            labelWidth="w-28"
           />
         </div>
       )}
-    </div>
-  );
-}
-
-function Badge({ label, accent, blue }: { label: string; accent?: boolean; blue?: boolean }) {
-  return (
-    <span
-      className={[
-        'px-1.5 py-0.5 rounded text-xs font-mono border',
-        accent
-          ? 'bg-accent/15 text-accent border-accent/30'
-          : blue
-            ? 'bg-blue-500/10 text-blue-400 border-blue-500/20'
-            : 'bg-surface-raised text-text-muted border-surface-border',
-      ].join(' ')}
-    >
-      {label}
-    </span>
-  );
-}
-
-function DetailRow({
-  label,
-  value,
-  mono,
-  wrap,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-  wrap?: boolean;
-}) {
-  return (
-    <div className="flex gap-3 text-xs">
-      <span className="text-text-muted font-mono w-28 shrink-0">{label}</span>
-      <span
-        className={[
-          mono ? 'font-mono' : '',
-          wrap ? 'break-all' : 'truncate',
-          'text-text-secondary flex-1',
-        ].join(' ')}
-      >
-        {value}
-      </span>
     </div>
   );
 }

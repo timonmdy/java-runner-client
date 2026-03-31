@@ -1,6 +1,6 @@
 import { AppSettings } from '@shared/types/App.types';
 import { useTranslation } from '../../../i18n/I18nProvider';
-import { Toggle } from '../../common/Toggle';
+import { Toggle } from '../../common/inputs';
 import { Row, Section } from '../SettingsRow';
 
 interface Props {
@@ -13,7 +13,7 @@ export function GeneralSection({ draft, set }: Props) {
 
   return (
     <>
-      <Section title={t('settings.startup')}>
+      <Section title={t('settings.startup')} divided>
         <Row label={t('settings.launchOnStartup')} hint={t('settings.launchOnStartupHint')}>
           <Toggle checked={draft.launchOnStartup} onChange={(v) => set({ launchOnStartup: v })} />
         </Row>

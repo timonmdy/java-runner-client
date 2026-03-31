@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { useInputContextMenu } from '../../hooks/useInputContextMenu';
-import { Button } from './Button';
+import { VscClose } from 'react-icons/vsc';
+import { useInputContextMenu } from '../../../hooks/useInputContextMenu';
+import { Button } from '../inputs/Button';
+import { Checkbox } from '../inputs/Checkbox';
 
 export interface PropItem {
   key: string;
@@ -69,28 +71,7 @@ export function PropList({ items, onChange, onPendingChange }: Props) {
         )}
         {items.map((item, i) => (
           <div key={i} className="flex items-center gap-2 group">
-            <button
-              onClick={() => toggle(i)}
-              className={[
-                'w-4 h-4 rounded border transition-colors shrink-0',
-                item.enabled
-                  ? 'bg-accent border-accent'
-                  : 'bg-transparent border-surface-border hover:border-text-muted',
-              ].join(' ')}
-            >
-              {item.enabled && (
-                <svg
-                  viewBox="0 0 10 10"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  className="w-full h-full text-base-950 p-0.5"
-                >
-                  <polyline points="2,5 4,7.5 8,2.5" />
-                </svg>
-              )}
-            </button>
+            <Checkbox checked={item.enabled} onChange={() => toggle(i)} />
             <input
               type="text"
               value={item.key}
@@ -112,18 +93,7 @@ export function PropList({ items, onChange, onPendingChange }: Props) {
               onClick={() => remove(i)}
               className="opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hover:text-red-400 shrink-0"
             >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 12 12"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-              >
-                <line x1="2" y1="2" x2="10" y2="10" />
-                <line x1="10" y1="2" x2="2" y2="10" />
-              </svg>
+              <VscClose size={12} />
             </button>
           </div>
         ))}

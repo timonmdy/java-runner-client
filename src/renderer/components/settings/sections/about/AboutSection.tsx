@@ -1,7 +1,7 @@
 import { VscFolderOpened } from 'react-icons/vsc';
 import { version } from '../../../../../../package.json';
 import { useTranslation } from '../../../../i18n/I18nProvider';
-import { Tooltip } from '../../../common/Tooltip';
+import { Tooltip } from '../../../common/overlays';
 import { Row, Section } from '../../SettingsRow';
 import { VersionChecker } from './VersionChecker';
 

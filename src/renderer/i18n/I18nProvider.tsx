@@ -1,4 +1,4 @@
-import { ALL_LANGUAGES, ENGLISH } from '@shared/config/Language.config';
+import { ALL_LANGUAGES, ENGLISH } from '@shared/config/languages/Language.config';
 import type { LanguageDefinition } from '@shared/types/Language.types';
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import type { TranslationKey } from './TranslationKeys';

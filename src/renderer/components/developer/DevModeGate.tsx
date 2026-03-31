@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { VscCode } from 'react-icons/vsc';
 import { useDevMode } from '../../hooks/useDevMode';
-import { Button } from '../common/Button';
+import { Button } from '../common/inputs';
 
 export function DevModeGate() {
   const devEnabled = useDevMode();

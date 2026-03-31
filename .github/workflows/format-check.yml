@@ -1,4 +1,4 @@
-name: Code Formatting
+name: Code Quality
 
 on: [pull_request]
 
@@ -16,3 +16,6 @@ jobs:
 
       - name: Prettier check
         run: npm run format:check
+
+      - name: ESLint check
+        run: npm run lint

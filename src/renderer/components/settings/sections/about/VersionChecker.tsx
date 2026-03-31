@@ -2,7 +2,7 @@ import { GitHubRelease } from '@shared/types/GitHub.types';
 import { useCallback, useState } from 'react';
 import { VscCheck, VscCircleSlash, VscSync, VscWarning } from 'react-icons/vsc';
 import { useTranslation } from '../../../../i18n/I18nProvider';
-import { Tooltip } from '../../../common/Tooltip';
+import { Tooltip } from '../../../common/overlays';
 import { ReleaseModal } from './ReleaseModal';
 
 interface Props {
