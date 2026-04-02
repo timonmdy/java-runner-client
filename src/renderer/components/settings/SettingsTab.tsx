@@ -1,5 +1,5 @@
 import { SETTINGS_TOPICS } from '@shared/config/Settings.config';
-import { AppSettings } from '@shared/types/App.types';
+import { AppSettings } from '@shared/config/Settings.config';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';

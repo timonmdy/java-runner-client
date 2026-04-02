@@ -1,4 +1,4 @@
-import { AppSettings } from '@shared/types/App.types';
+import { AppSettings } from '@shared/config/Settings.config';
 import { ConsoleLine, ProcessState } from '@shared/types/Process.types';
 import { Profile } from '@shared/types/Profile.types';
 import {

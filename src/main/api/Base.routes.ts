@@ -2,7 +2,7 @@ import { version } from '../../../package.json';
 import { ok } from '../core/RestAPI';
 import { getAllProfiles, getSettings, saveSettings } from '../core/Store';
 import { processManager } from '../core/process/ProcessManager';
-import { AppSettings } from '../shared/types/App.types';
+import { AppSettings } from '../shared/config/Settings.config';
 import { defineRoute, RouteMap } from '../shared/types/RestAPI.types';
 
 export const BaseRoutes: RouteMap = {
