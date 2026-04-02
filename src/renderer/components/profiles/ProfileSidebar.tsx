@@ -54,8 +54,6 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
   const [templateOpen, setTemplateOpen] = useState(false);
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
-  const canDelete = state.profiles.length > 1;
-
   const handleContextMenu = useCallback((e: React.MouseEvent, profile: Profile) => {
     e.preventDefault();
     setCtxMenu({ profileId: profile.id, x: e.clientX, y: e.clientY });
@@ -118,9 +116,7 @@ export function ProfileSidebar({ activeSidePanel }: Props) {
           label: t('general.delete'),
           icon: <VscTrash size={12} />,
           danger: true,
-          disabled: !canDelete,
           onClick: (e?: React.MouseEvent) => {
-            if (!canDelete) return;
             if (e?.shiftKey) deleteProfile(ctxProfile.id);
             else setDeleteTarget(ctxProfile);
           },

@@ -21,7 +21,7 @@ export function TabBar({
   tabs,
   active,
   onChange,
-  accentColor = '#4ade80',
+  accentColor = 'var(--tw-theme-accent, #4ade80)',
   className = '',
   dotTab,
 }: TabBarProps) {
