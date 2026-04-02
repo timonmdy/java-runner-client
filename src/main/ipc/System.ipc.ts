@@ -2,7 +2,7 @@ import { app, dialog, shell } from 'electron';
 import type { RouteMap } from '../core/IPCController';
 import { restApiServer } from '../core/RestAPI';
 import { getSettings, saveSettings } from '../core/Store';
-import type { AppSettings } from '../shared/types/App.types';
+import type { AppSettings } from '../shared/config/Settings.config';
 
 // mainWindow is needed for dialogs — set via initSystemIPC() called from main.ts
 let getWindow: () => Electron.BrowserWindow | null = () => null;

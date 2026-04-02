@@ -1,7 +1,7 @@
 import { BrowserWindow } from 'electron';
 import type { RouteMap } from '../core/IPCController';
 import { getAllProfiles } from '../core/Store';
-import { DEFAULT_SETTINGS } from '../shared/config/App.config';
+import { DEFAULT_SETTINGS } from '../shared/config/Settings.config';
 
 let getWindow: () => BrowserWindow | null = () => null;
 

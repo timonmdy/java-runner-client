@@ -1,10 +1,10 @@
-import type { SidebarTopic } from '@shared/types/Sidebar.types';
+import type { SettingSidebarTopic } from '@shared/types/Settings.types';
 import React from 'react';
 
-export type { SidebarTopic };
+export type { SettingSidebarTopic };
 
 interface Props {
-  topics: SidebarTopic[];
+  topics: SettingSidebarTopic[];
   activeTopicId: string;
   onTopicChange: (id: string) => void;
   children: React.ReactNode;
