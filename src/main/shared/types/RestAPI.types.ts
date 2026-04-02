@@ -5,11 +5,23 @@ export type Params = Record<string, string>;
 
 type RouteMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
+export type BodyParamType = 'string' | 'number' | 'boolean';
+
+export type BodyParamDef = {
+  type: BodyParamType;
+  required?: boolean;
+  placeholder?: string;
+  hint?: string;
+};
+
+export type BodyParams = Record<string, BodyParamDef>;
+
 export type RouteDefinition = {
   method: RouteMethod;
   path: string;
   description: string;
   bodyTemplate?: string;
+  bodyParams?: BodyParams;
 };
 
 export type CompiledRoute = {
