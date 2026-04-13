@@ -3,7 +3,8 @@ import type { API, Environment } from '../main/ipc/_index';
 
 declare global {
   interface Window {
-    api: API;
-    env: Environment;
+    jrc: { api: API; env: Environment };
   }
+
+  const jrc: { api: API; env: Environment };
 }

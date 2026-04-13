@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from '../../../i18n/I18nProvider';
+import { useTranslation } from '../../../../i18n/I18nProvider';
 
 interface Props {
   title: string;
@@ -30,7 +30,7 @@ export function PanelHeader({ title, backTo = '/console' }: Props) {
           {t('general.back')}
         </button>
         <div className="w-px h-4 bg-surface-border" />
-        <span className="text-xs font-medium text-text-secondary">{title}</span>
+        <span className="text-xs font-medium text-text-secondary truncate min-w-0">{title}</span>
       </div>
     </div>
   );

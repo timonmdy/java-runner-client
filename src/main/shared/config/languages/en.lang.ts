@@ -383,6 +383,7 @@ const ENGLISH_STRINGS = {
 export const ENGLISH: LanguageDefinition = {
   id: 'en',
   name: 'English',
+  countryCode: 'gb',
   strings: ENGLISH_STRINGS,
 };
 

@@ -30,7 +30,7 @@ export function VersionChecker({ currentVersion }: Props) {
   const check = useCallback(async () => {
     setCheckState('checking');
     setErrorMsg(null);
-    const res = await window.api.fetchLatestRelease();
+    const res = await jrc.api.fetchLatestRelease();
     if (!res.ok || !res.data) {
       setCheckState('error');
       setErrorMsg(res.error ?? 'Could not reach GitHub');

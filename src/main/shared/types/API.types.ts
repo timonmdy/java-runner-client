@@ -5,7 +5,7 @@ export type Params = Record<string, string>;
 
 type RouteMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
-export type BodyParamType = 'string' | 'number' | 'boolean';
+export type BodyParamType = 'string' | 'number' | 'boolean' | 'json';
 
 export type BodyParamDef = {
   type: BodyParamType;
@@ -15,6 +15,14 @@ export type BodyParamDef = {
 };
 
 export type BodyParams = Record<string, BodyParamDef>;
+
+/**
+ * Enforces that a body schema covers every key in `T` except those in `Excluded`.
+ * If a field is added to the source type and not to the schema, TypeScript will error.
+ */
+export type BodySchemaFor<T, Excluded extends keyof T = never> = {
+  [K in Exclude<keyof T, Excluded>]: BodyParamDef;
+};
 
 export type RouteDefinition = {
   method: RouteMethod;

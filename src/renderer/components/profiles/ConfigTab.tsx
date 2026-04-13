@@ -3,11 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/inputs';
+import { Card, Section } from '../common/layout/containers';
+import { TabBar } from '../common/layout/navigation';
+import { Toolbar } from '../common/layout/shell';
 import { ArgList, EnvVarList, PropList } from '../common/lists';
 import { Dialog } from '../common/overlays';
-import { Card, Section } from '../layout/containers';
-import { TabBar } from '../layout/navigation';
-import { Toolbar } from '../layout/shell';
 import { FilesSection } from './FilesSection';
 import { GeneralSection } from './GeneralSection';
 

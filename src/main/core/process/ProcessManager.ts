@@ -3,7 +3,6 @@ import { BrowserWindow } from 'electron';
 import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { ProcessIPC } from '../../ipc/Process.ipc';
-import { DEFAULT_JAR_RESOLUTION } from '../../shared/config/JarResolution.config';
 import { PROTECTED_PROCESS_NAMES } from '../../shared/config/Scanner.config';
 import {
   ConsoleLine,
@@ -17,9 +16,14 @@ import { startLogSession, stopLogSession, writeLogLine } from './FileLogger';
 import { gracefulStop } from './GracefulStop';
 
 import fs from 'fs';
-import { patternToRegex } from '../../shared/config/JarResolution.config';
-
 const SELF_PROCESS_NAME = 'Java Client Runner';
+
+function patternToRegex(pattern: string): RegExp {
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, (c) =>
+    c === '{' || c === '}' ? c : `\\${c}`
+  );
+  return new RegExp(`^${escaped.replace(/\{version\}/g, '(.+)')}$`, 'i');
+}
 
 type SystemMessageType =
   | 'start'
@@ -61,7 +65,13 @@ function compareVersionArrays(a: number[], b: number[]): number {
 }
 
 function resolveJarPath(profile: Profile): { jarPath: string; error?: string } {
-  const res = profile.jarResolution ?? DEFAULT_JAR_RESOLUTION;
+  const res = profile.jarResolution ?? {
+    enabled: false,
+    baseDir: '',
+    pattern: 'app-{version}.jar',
+    strategy: 'highest-version' as const,
+    regexOverride: '',
+  };
 
   if (!res.enabled) {
     return { jarPath: profile.jarPath };

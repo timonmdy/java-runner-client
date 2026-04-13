@@ -136,7 +136,7 @@ export function ConsoleTab() {
   }, [profileId, forceStopProcess]);
 
   const handleOpenWorkDir = useCallback(async () => {
-    if (profileId) await window.api.openWorkingDir(profileId);
+    if (profileId) await jrc.api.openWorkingDir(profileId);
   }, [profileId]);
 
   const handleSendInput = useCallback(

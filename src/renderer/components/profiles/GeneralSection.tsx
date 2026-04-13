@@ -1,7 +1,7 @@
 import { Profile } from '@shared/types/Profile.types';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Toggle } from '../common/inputs';
-import { Card, Section } from '../layout/containers';
+import { Card, Section } from '../common/layout/containers';
 
 export function GeneralSection({
   draft,

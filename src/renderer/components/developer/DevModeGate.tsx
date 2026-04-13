@@ -54,7 +54,7 @@ export function DevModeGate() {
             variant="primary"
             size="sm"
             onClick={() => {
-              window.env.toggleDevMode(!devEnabled);
+              jrc.env.toggleDevMode(!devEnabled);
               setDialogOpen(false);
             }}
           >

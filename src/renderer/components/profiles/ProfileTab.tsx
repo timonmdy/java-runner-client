@@ -3,9 +3,9 @@ import React, { useEffect, useState } from 'react';
 import { PROFILE_COLORS, useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Button, Input } from '../common/inputs';
+import { Section } from '../common/layout/containers';
+import { Toolbar } from '../common/layout/shell';
 import { Dialog } from '../common/overlays';
-import { Section } from '../layout/containers';
-import { Toolbar } from '../layout/shell';
 
 export function ProfileTab() {
   const { activeProfile, saveProfile, deleteProfile } = useApp();

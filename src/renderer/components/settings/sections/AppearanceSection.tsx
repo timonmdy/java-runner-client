@@ -5,6 +5,22 @@ import { useMemo, useState } from 'react';
 import { VscCheck, VscSearch } from 'react-icons/vsc';
 import { useTheme } from '../../../hooks/ThemeProvider';
 import { useTranslation } from '../../../i18n/I18nProvider';
+import { Section } from '../../common/layout/containers';
+
+function FlagIcon({ countryCode }: { countryCode?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!countryCode || failed) return null;
+  return (
+    <img
+      src={`https://flagcdn.com/w40/${countryCode.toLowerCase()}.png`}
+      alt=""
+      width={20}
+      height={15}
+      className="shrink-0 rounded-[2px] object-cover"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 const PREVIEW_KEYS: (keyof ThemeColors)[] = [
   'accent',
@@ -40,81 +56,82 @@ export function AppearanceSection() {
     <div className="flex flex-col gap-5 h-full">
       {/* ── Themes panel ─────────────────────────────────────────────────── */}
       <div className="flex flex-col min-h-0 max-h-[50%]">
-        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest mb-3">
-          {t('settings.theme')}
-        </h3>
-        <SearchInput
-          value={themeSearch}
-          onChange={setThemeSearch}
-          placeholder={t('appearance.searchThemes')}
-        />
-        <div className="flex-1 min-h-0 overflow-y-auto mt-2 space-y-1 pr-1 scrollbar-thin">
-          {filteredThemes.length === 0 ? (
-            <p className="px-3 py-4 text-xs text-text-muted text-center">
-              {t('appearance.noThemesFound')}
-            </p>
-          ) : (
-            filteredThemes.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => item.id !== theme.id && setTheme(item)}
-                className={[
-                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150',
-                  theme.id === item.id
-                    ? 'bg-surface-raised ring-1 ring-accent/20'
-                    : 'hover:bg-surface-raised/50 cursor-pointer',
-                ].join(' ')}
-              >
-                <div className="flex gap-1 shrink-0">
-                  {PREVIEW_KEYS.map((key) => (
-                    <span
-                      key={key}
-                      className="w-3.5 h-3.5 rounded-full ring-1 ring-surface-border/50"
-                      style={{ backgroundColor: item.colors[key] }}
-                    />
-                  ))}
-                </div>
-                <span className="text-xs text-text-primary flex-1 truncate">{item.name}</span>
-                {theme.id === item.id && <VscCheck size={12} className="text-accent shrink-0" />}
-              </button>
-            ))
-          )}
-        </div>
+        <Section title={t('settings.theme')} collapsible>
+          <SearchInput
+            value={themeSearch}
+            onChange={setThemeSearch}
+            placeholder={t('appearance.searchThemes')}
+          />
+          <div className="flex-1 min-h-0 overflow-y-auto mt-2 space-y-1 pr-1 scrollbar-thin">
+            {filteredThemes.length === 0 ? (
+              <p className="px-3 py-4 text-xs text-text-muted text-center">
+                {t('appearance.noThemesFound')}
+              </p>
+            ) : (
+              filteredThemes.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => item.id !== theme.id && setTheme(item)}
+                  className={[
+                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150',
+                    theme.id === item.id
+                      ? 'bg-surface-raised ring-1 ring-accent/20'
+                      : 'hover:bg-surface-raised/50 cursor-pointer',
+                  ].join(' ')}
+                >
+                  <div className="flex gap-1 shrink-0">
+                    {PREVIEW_KEYS.map((key) => (
+                      <span
+                        key={key}
+                        className="w-3.5 h-3.5 rounded-full ring-1 ring-surface-border/50"
+                        style={{ backgroundColor: item.colors[key] }}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-xs text-text-primary flex-1 truncate">{item.name}</span>
+                  {theme.id === item.id && <VscCheck size={12} className="text-accent shrink-0" />}
+                </button>
+              ))
+            )}
+          </div>
+        </Section>
       </div>
 
       {/* ── Languages panel ──────────────────────────────────────────────── */}
       <div className="flex flex-col min-h-0 max-h-[50%]">
-        <h3 className="text-xs font-mono text-text-muted uppercase tracking-widest mb-3">
-          {t('settings.language')}
-        </h3>
-        <SearchInput
-          value={langSearch}
-          onChange={setLangSearch}
-          placeholder={t('appearance.searchLanguages')}
-        />
-        <div className="flex-1 min-h-0 overflow-y-auto mt-2 space-y-1 pr-1 scrollbar-thin">
-          {filteredLangs.length === 0 ? (
-            <p className="px-3 py-4 text-xs text-text-muted text-center">
-              {t('appearance.noLanguagesFound')}
-            </p>
-          ) : (
-            filteredLangs.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => item.id !== language.id && setLanguage(item)}
-                className={[
-                  'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150',
-                  language.id === item.id
-                    ? 'bg-surface-raised ring-1 ring-accent/20'
-                    : 'hover:bg-surface-raised/50 cursor-pointer',
-                ].join(' ')}
-              >
-                <span className="text-xs text-text-primary flex-1 truncate">{item.name}</span>
-                {language.id === item.id && <VscCheck size={12} className="text-accent shrink-0" />}
-              </button>
-            ))
-          )}
-        </div>
+        <Section title={t('settings.language')} collapsible>
+          <SearchInput
+            value={langSearch}
+            onChange={setLangSearch}
+            placeholder={t('appearance.searchLanguages')}
+          />
+          <div className="flex-1 min-h-0 overflow-y-auto mt-2 space-y-1 pr-1 scrollbar-thin">
+            {filteredLangs.length === 0 ? (
+              <p className="px-3 py-4 text-xs text-text-muted text-center">
+                {t('appearance.noLanguagesFound')}
+              </p>
+            ) : (
+              filteredLangs.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => item.id !== language.id && setLanguage(item)}
+                  className={[
+                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-150',
+                    language.id === item.id
+                      ? 'bg-surface-raised ring-1 ring-accent/20'
+                      : 'hover:bg-surface-raised/50 cursor-pointer',
+                  ].join(' ')}
+                >
+                  <FlagIcon countryCode={item.countryCode} />
+                  <span className="text-xs text-text-primary flex-1 truncate">{item.name}</span>
+                  {language.id === item.id && (
+                    <VscCheck size={12} className="text-accent shrink-0" />
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        </Section>
       </div>
     </div>
   );

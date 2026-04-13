@@ -20,15 +20,15 @@ export function FilesSection({
   const { onContextMenu, contextMenu } = useInputContextMenu();
 
   const handlePickJar = async () => {
-    const p = await window.api.pickJar();
+    const p = await jrc.api.pickJar();
     if (p) update({ jarPath: p });
   };
   const handlePickDir = async () => {
-    const p = await window.api.pickDir();
+    const p = await jrc.api.pickDir();
     if (p) update({ workingDir: p });
   };
   const handlePickResolutionDir = async () => {
-    const p = await window.api.pickDir();
+    const p = await jrc.api.pickDir();
     if (p)
       update({
         jarResolution: {
@@ -43,7 +43,7 @@ export function FilesSection({
       });
   };
   const handlePickJava = async () => {
-    const p = await window.api.pickJava();
+    const p = await jrc.api.pickJava();
     if (p) update({ javaPath: p });
   };
 

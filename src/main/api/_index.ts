@@ -1,5 +1,5 @@
 import { RouteKey } from '../shared/config/API.config';
-import { BuiltRoute, RouteMap } from '../shared/types/RestAPI.types';
+import { BuiltRoute, RouteMap } from '../shared/types/API.types';
 
 import { BaseRoutes } from './Base.routes';
 import { LogRoutes } from './Log.routes';

@@ -3,8 +3,8 @@ import { VscCopy, VscFolderOpened, VscRefresh, VscTrash } from 'react-icons/vsc'
 import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Button } from '../common/inputs';
+import { Toolbar } from '../common/layout/shell';
 import { ContextMenu, Dialog } from '../common/overlays';
-import { Toolbar } from '../layout/shell';
 
 interface LogFileInfo {
   filename: string;
@@ -35,7 +35,7 @@ export function LogsTab() {
 
   const refresh = useCallback(async () => {
     if (!profileId) return;
-    const files = await window.api.getLogFiles(profileId);
+    const files = await jrc.api.getLogFiles(profileId);
     setLogFiles(files);
   }, [profileId]);
 
@@ -48,14 +48,14 @@ export function LogsTab() {
   const handleSelectFile = useCallback(async (file: LogFileInfo) => {
     setSelectedFile(file);
     setLoading(true);
-    const content = await window.api.readLogFile(file.filePath);
+    const content = await jrc.api.readLogFile(file.filePath);
     setLogContent(content);
     setLoading(false);
   }, []);
 
   const handleDelete = useCallback(async () => {
     if (!deleteTarget) return;
-    await window.api.deleteLogFile(deleteTarget.filePath);
+    await jrc.api.deleteLogFile(deleteTarget.filePath);
     if (selectedFile?.filePath === deleteTarget.filePath) {
       setSelectedFile(null);
       setLogContent(null);
@@ -66,7 +66,7 @@ export function LogsTab() {
 
   const handleOpenDir = useCallback(async () => {
     if (!profileId) return;
-    await window.api.openLogsDirectory(profileId);
+    await jrc.api.openLogsDirectory(profileId);
   }, [profileId]);
 
   if (!activeProfile) {
@@ -174,7 +174,7 @@ export function LogsTab() {
                 <button
                   onClick={(e) => {
                     if (e.shiftKey) {
-                      window.api.deleteLogFile(selectedFile.filePath);
+                      jrc.api.deleteLogFile(selectedFile.filePath);
                       setSelectedFile(null);
                       setLogContent(null);
                       refresh();

@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,11 +11,7 @@
 }
 
 body {
-  font-family:
-    'Inter',
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
   background: #08090d;
   color: #e8eaf2;
   overflow: hidden;
@@ -37,6 +35,15 @@ body {
 
 .select-text {
   user-select: text;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }
 
 @keyframes fade-in {

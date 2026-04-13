@@ -5,9 +5,9 @@ import { VscCheck } from 'react-icons/vsc';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { Badge, EmptyState } from '../common/display';
 import { Button } from '../common/inputs';
+import { DataRow } from '../common/layout/containers';
+import { Toolbar } from '../common/layout/shell';
 import { Dialog } from '../common/overlays';
-import { DataRow } from '../layout/containers';
-import { Toolbar } from '../layout/shell';
 
 type Filter = 'java' | 'all';
 interface KillIntent {
@@ -33,7 +33,7 @@ export function ScannerPanel() {
     setKilledPids(new Set());
     setSearch('');
     setExpandedPid(null);
-    const found = await window.api.scanAllProcesses();
+    const found = await jrc.api.scanAllProcesses();
     setResults(found);
     setScanning(false);
     const javaCount = found.filter((p) => p.isJava).length;
@@ -48,7 +48,7 @@ export function ScannerPanel() {
 
   const handleKill = async () => {
     if (!killIntent) return;
-    const res = await window.api.killPid(killIntent.proc.pid);
+    const res = await jrc.api.killPid(killIntent.proc.pid);
     if (res.ok) {
       setKilledPids((prev) => new Set([...prev, killIntent.proc.pid]));
       setStatusMsg({
@@ -65,7 +65,7 @@ export function ScannerPanel() {
   };
 
   const handleKillAll = async () => {
-    const res = await window.api.killAllJava();
+    const res = await jrc.api.killAllJava();
     setStatusMsg({
       text:
         res.killed === 1

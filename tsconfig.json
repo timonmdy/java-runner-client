@@ -14,10 +14,9 @@
     "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/renderer/*"],
-      "@shared/*": ["src/main/shared/*"]
+      "@/*": ["./src/renderer/*"],
+      "@shared/*": ["./src/main/shared/*"]
     }
   },
   "include": ["src/renderer", "src/main/shared"]

@@ -120,7 +120,7 @@ export function ReleaseModal({ release, open, onClose }: Props) {
   }, []);
 
   useEffect(() => {
-    const unsub = window.api.onDownloadProgress((progress: DownloadProgress) =>
+    const unsub = jrc.api.onDownloadProgress((progress: DownloadProgress) =>
       updateDownload(progress)
     );
     return () => unsub();
@@ -134,18 +134,18 @@ export function ReleaseModal({ release, open, onClose }: Props) {
   };
 
   const handleDownload = async (asset: GitHubAsset) => {
-    await window.api.downloadAsset(asset.browser_download_url, asset.name);
+    await jrc.api.downloadAsset(asset.browser_download_url, asset.name);
   };
 
   const handlePause = async (filename: string) => {
     const dl = downloads.get(filename);
     if (!dl) return;
-    if (dl.status === 'paused') await window.api.resumeDownload(filename);
-    else await window.api.pauseDownload(filename);
+    if (dl.status === 'paused') await jrc.api.resumeDownload(filename);
+    else await jrc.api.pauseDownload(filename);
   };
 
   const handleCancel = async (filename: string) => {
-    await window.api.cancelDownload(filename);
+    await jrc.api.cancelDownload(filename);
   };
 
   const renderControls = (asset: GitHubAsset, variant: 'primary' | 'ghost') => {
@@ -357,7 +357,7 @@ export function ReleaseModal({ release, open, onClose }: Props) {
         <div className="flex items-center justify-between pt-1 border-t border-surface-border">
           {release.html_url ? (
             <button
-              onClick={() => window.api.openExternal(release.html_url)}
+              onClick={() => jrc.api.openExternal(release.html_url)}
               className="flex items-center gap-1.5 text-xs text-text-muted hover:text-accent transition-colors font-mono"
             >
               <LuExternalLink size={11} />

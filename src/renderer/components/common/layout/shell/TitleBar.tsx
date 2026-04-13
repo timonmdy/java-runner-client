@@ -1,7 +1,7 @@
 import React from 'react';
 import { VscChromeClose, VscChromeMinimize } from 'react-icons/vsc';
-import { useApp } from '../../../AppProvider';
-import { StatusDot } from '../../common/display/StatusDot';
+import { useApp } from '../../../../AppProvider';
+import { StatusDot } from '../../display/StatusDot';
 
 export function TitleBar() {
   const { state } = useApp();
@@ -41,7 +41,7 @@ export function TitleBar() {
             opacity="0.5"
           />
         </svg>
-        <span className="text-xs font-mono text-text-secondary tracking-widest uppercase">
+        <span className="text-xs font-mono text-text-secondary tracking-widest uppercase truncate min-w-0">
           Java Runner Client
         </span>
         {runningCount > 0 && (
@@ -59,14 +59,14 @@ export function TitleBar() {
         style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
       >
         <button
-          onClick={() => window.api.minimizeWindow()}
+          onClick={() => jrc.api.minimizeWindow()}
           className="w-7 h-7 flex items-center justify-center rounded text-text-muted hover:text-text-primary hover:bg-surface-raised transition-colors"
           title="Minimize"
         >
           <VscChromeMinimize size={12} />
         </button>
         <button
-          onClick={() => window.api.closeWindow()}
+          onClick={() => jrc.api.closeWindow()}
           className="w-7 h-7 flex items-center justify-center rounded text-text-muted hover:text-red-400 hover:bg-red-400/10 transition-colors"
           title="Close"
         >

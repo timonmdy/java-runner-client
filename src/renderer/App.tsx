@@ -1,7 +1,7 @@
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppProvider } from './AppProvider';
+import { TitleBar } from './components/common/layout/shell';
 import { DevModeGate } from './components/developer/DevModeGate';
-import { TitleBar } from './components/layout/shell';
 import { MainLayout } from './components/MainLayout';
 import { ThemeProvider } from './hooks/ThemeProvider';
 import { I18nProvider } from './i18n/I18nProvider';
@@ -19,14 +19,14 @@ function Fallback() {
         Make sure you launch the app in the official Java Runner Client environment.
       </p>
       <div className="mt-8 p-4 bg-gray-800 rounded-lg text-sm text-red-400 font-mono">
-        window.api is undefined
+        jrc.api is undefined
       </div>
     </div>
   );
 }
 
 export default function App() {
-  if (!window.api) return <Fallback />;
+  if (!jrc.api) return <Fallback />;
 
   return (
     <ThemeProvider>

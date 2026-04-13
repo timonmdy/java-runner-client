@@ -1,11 +1,11 @@
 import type { AppSettings } from '@shared/config/Settings.config';
 import { SETTINGS_SCHEMA } from '@shared/config/Settings.config';
-import type { AnyFieldDef, NoteDef, NumberDef, RangeDef, ToggleDef } from '@shared/types/Settings.types';
+import type { AnyFieldDef, NoteDef, NumberDef, RangeDef } from '@shared/types/Settings.types';
 import React, { useMemo } from 'react';
 import { useTranslation } from '../../i18n/I18nProvider';
 import type { TranslationKey } from '../../i18n/TranslationKeys';
 import { Toggle } from '../common/inputs';
-import { Section } from '../layout/containers';
+import { Section } from '../common/layout/containers';
 import { NumInput, Row } from './SettingsRow';
 
 type SetFn = (patch: Partial<AppSettings>) => void;
@@ -70,42 +70,44 @@ function SettingsField({
         />
       )}
 
-      {field.type === 'number' && (() => {
-        const f = field as NumberDef;
-        return (
-          <NumInput
-            value={s[fieldKey] as number}
-            min={f.min}
-            max={f.max}
-            step={f.step}
-            onChange={(v) => set({ [fieldKey]: v } as Partial<AppSettings>)}
-          />
-        );
-      })()}
-
-      {field.type === 'range' && (() => {
-        const f = field as RangeDef;
-        const val = s[fieldKey] as number;
-        return (
-          <div className="flex items-center gap-2.5">
-            <input
-              type="range"
+      {field.type === 'number' &&
+        (() => {
+          const f = field as NumberDef;
+          return (
+            <NumInput
+              value={s[fieldKey] as number}
               min={f.min}
               max={f.max}
               step={f.step}
-              value={val}
-              onChange={(e) =>
-                set({ [fieldKey]: Number(e.target.value) } as Partial<AppSettings>)
-              }
-              className="w-24 accent-accent cursor-pointer"
+              onChange={(v) => set({ [fieldKey]: v } as Partial<AppSettings>)}
             />
-            <span className="text-sm font-mono text-text-secondary w-10 text-right tabular-nums">
-              {val}
-              {f.unit ?? ''}
-            </span>
-          </div>
-        );
-      })()}
+          );
+        })()}
+
+      {field.type === 'range' &&
+        (() => {
+          const f = field as RangeDef;
+          const val = s[fieldKey] as number;
+          return (
+            <div className="flex items-center gap-2.5">
+              <input
+                type="range"
+                min={f.min}
+                max={f.max}
+                step={f.step}
+                value={val}
+                onChange={(e) =>
+                  set({ [fieldKey]: Number(e.target.value) } as Partial<AppSettings>)
+                }
+                className="w-24 accent-accent cursor-pointer"
+              />
+              <span className="text-sm font-mono text-text-secondary w-10 text-right tabular-nums">
+                {val}
+                {f.unit ?? ''}
+              </span>
+            </div>
+          );
+        })()}
     </Row>
   );
 }

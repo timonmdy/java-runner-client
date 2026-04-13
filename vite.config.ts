@@ -1,10 +1,25 @@
 import react from '@vitejs/plugin-react';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { defineConfig } from 'vite';
+import { defineConfig, Plugin } from 'vite';
+import { buildCSP } from './src/main/shared/config/App.config';
+
 const { version } = JSON.parse(readFileSync(path.resolve(__dirname, 'package.json'), 'utf-8'));
+
+function cspPlugin(): Plugin {
+  return {
+    name: 'inject-csp',
+    transformIndexHtml(html) {
+      return html.replace(
+        '<!--CSP-->',
+        `<meta http-equiv="Content-Security-Policy" content="${buildCSP()}" />`
+      );
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), cspPlugin()],
   base: './',
   root: 'src/renderer',
   define: { __APP_VERSION__: JSON.stringify(version) },

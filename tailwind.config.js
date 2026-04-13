@@ -3,6 +3,10 @@ module.exports = {
   content: ['./src/renderer/**/*.{ts,tsx,html}', './src/main/shared/**/*.ts'],
   theme: {
     extend: {
+      fontFamily: {
+        mono: ['"JetBrains Mono"', '"Fira Code"', 'monospace'],
+        sans: ['"DM Sans"', 'system-ui', 'sans-serif'],
+      },
       colors: {
         accent: '#4ade80',
         'base-950': '#08090d',
