@@ -2,7 +2,7 @@ import type { FaqItem } from '@shared/config/faq/_index';
 import { getFAQ } from '@shared/config/faq/_index';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { SidebarLayout } from '../layout/navigation';
+import { SidebarLayout } from '../common/layout/navigation';
 
 export function FaqPanel() {
   const { language, t } = useTranslation();

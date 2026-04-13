@@ -1,7 +1,7 @@
 import { REST_API_CONFIG, routeConfig } from '@shared/config/API.config';
 import { JSON_TOKEN_COLORS } from '@shared/config/Dev.config';
+import { BodyParamDef, BodyParams, RouteDefinition } from '@shared/types/API.types';
 import { JsonToken } from '@shared/types/Dev.types';
-import { BodyParamDef, BodyParams, RouteDefinition } from '@shared/types/RestAPI.types';
 import React, { useCallback, useMemo, useState } from 'react';
 import { VscCheck, VscCode, VscCopy, VscEdit, VscPlay } from 'react-icons/vsc';
 import { useApp } from '../../AppProvider';
@@ -74,6 +74,14 @@ function buildBodyFromForm(bodyParams: BodyParams, values: FormValues): string {
         const n = Number(val);
         if (!isNaN(n)) obj[k] = n;
       }
+    } else if (def.type === 'json') {
+      if (val !== '') {
+        try {
+          obj[k] = JSON.parse(val as string);
+        } catch {
+          /* skip invalid json */
+        }
+      }
     } else {
       if (val !== '') obj[k] = String(val);
     }
@@ -91,6 +99,8 @@ function parseFormFromJson(bodyParams: BodyParams, json: string): FormValues {
         vals[k] = def.type === 'boolean' ? false : '';
       } else if (def.type === 'boolean') {
         vals[k] = Boolean(v);
+      } else if (def.type === 'json') {
+        vals[k] = typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v);
       } else {
         vals[k] = String(v);
       }
@@ -214,6 +224,16 @@ function BodyFormField({
       <div className="flex-1 flex items-center min-w-0">
         {def.type === 'boolean' ? (
           <Toggle checked={value as boolean} onChange={onChange} />
+        ) : def.type === 'json' ? (
+          <textarea
+            value={value as string}
+            onChange={(e) => onChange(e.target.value)}
+            onContextMenu={onContextMenu as any}
+            placeholder={def.placeholder ?? '[]'}
+            spellCheck={false}
+            rows={3}
+            className="w-full bg-base-950 border border-surface-border rounded px-2 py-1 text-xs font-mono text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:border-accent/40 transition-colors resize-y min-h-[2rem]"
+          />
         ) : (
           <input
             type={def.type === 'number' ? 'number' : 'text'}

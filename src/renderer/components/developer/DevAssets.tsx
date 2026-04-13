@@ -7,7 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { VscCheck, VscCopy, VscGlobe, VscRefresh, VscSymbolColor } from 'react-icons/vsc';
 import { useTheme } from '../../hooks/ThemeProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
-import { Card, ScrollContent, Section } from '../layout/containers';
+import { Card, ScrollContent, Section } from '../common/layout/containers';
 
 export function DevAssets() {
   const { theme, setTheme } = useTheme();

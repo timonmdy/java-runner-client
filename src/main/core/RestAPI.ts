@@ -1,7 +1,7 @@
 import http from 'http';
 import { routes } from '../api/_index';
 import { REST_API_CONFIG } from '../shared/config/API.config';
-import { CompiledRoute, Params } from '../shared/types/RestAPI.types';
+import { CompiledRoute, Params } from '../shared/types/API.types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

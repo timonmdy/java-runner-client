@@ -15,7 +15,7 @@ export function createWindow(onClose: (e: Electron.Event) => void): BrowserWindo
     backgroundColor: (ALL_THEMES.find((t) => t.id === getSettings().themeId) ?? BUILTIN_THEME)
       .colors['base-950'],
     icon: getIconImage(),
-    show: getEnvironment().startUpSource !== 'withSystem',
+    show: getEnvironment().launchContext !== 'withSystem',
     webPreferences: {
       preload: path.join(__dirname, '../preload.js'),
       contextIsolation: true,

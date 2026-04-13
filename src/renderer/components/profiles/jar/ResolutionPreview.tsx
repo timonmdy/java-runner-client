@@ -1,4 +1,4 @@
-import type { JarResolutionResult } from '@shared/types/JarResolution.types';
+import type { JarResolutionResult } from '@shared/types/Profile.types';
 import { VscCheck, VscSync, VscWarning } from 'react-icons/vsc';
 import { useTranslation } from '../../../i18n/I18nProvider';
 

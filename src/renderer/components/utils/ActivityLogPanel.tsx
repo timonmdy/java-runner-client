@@ -4,9 +4,9 @@ import { VscListUnordered } from 'react-icons/vsc';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { EmptyState, StatusDot } from '../common/display';
 import { Button } from '../common/inputs';
+import { Card } from '../common/layout/containers';
+import { Toolbar } from '../common/layout/shell';
 import { Dialog } from '../common/overlays';
-import { Card } from '../layout/containers';
-import { Toolbar } from '../layout/shell';
 
 export function ActivityLogPanel() {
   const { t } = useTranslation();
@@ -16,7 +16,7 @@ export function ActivityLogPanel() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    setEntries(await window.api.getProcessLog());
+    setEntries(await jrc.api.getProcessLog());
     setLoading(false);
   }, []);
 
@@ -68,7 +68,7 @@ export function ActivityLogPanel() {
         confirmLabel={t('general.clear')}
         danger
         onConfirm={async () => {
-          await window.api.clearProcessLog();
+          await jrc.api.clearProcessLog();
           setEntries([]);
           setConfirmClear(false);
         }}

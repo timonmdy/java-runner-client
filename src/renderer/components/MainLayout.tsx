@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { LuList, LuScrollText } from 'react-icons/lu';
 import { VscAccount, VscTerminal } from 'react-icons/vsc';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
@@ -7,10 +7,10 @@ import { useDevMode } from '../hooks/useDevMode';
 import { useTranslation } from '../i18n/I18nProvider';
 import type { TranslationKey } from '../i18n/TranslationKeys';
 import { StatusDot } from './common/display';
+import { PanelHeader, TabBar } from './common/layout/navigation';
 import { ConsoleTab } from './console/ConsoleTab';
 import { DeveloperTab } from './developer/DeveloperTab';
 import { FaqPanel } from './faq/FaqPanel';
-import { PanelHeader } from './layout/navigation';
 import { ConfigTab } from './profiles/ConfigTab';
 import { LogsTab } from './profiles/LogsTab';
 import { ProfileSidebar } from './profiles/ProfileSidebar';
@@ -54,6 +54,17 @@ export function MainLayout() {
   const color = activeProfile?.color ?? '#4ade80';
   const running = activeProfile ? isRunning(activeProfile.id) : false;
 
+  const profileTabs = useMemo(
+    () =>
+      PROFILE_TABS.map((tab) => ({
+        id: tab.path,
+        label: t(tab.labelKey),
+        Icon: tab.Icon,
+        badge: tab.path === 'console' && running ? <StatusDot color={color} pulse /> : undefined,
+      })),
+    [t, running, color]
+  );
+
   useEffect(() => {
     if (!devMode && activePanel === 'developer') {
       navigate('/console', { replace: true });
@@ -88,34 +99,19 @@ export function MainLayout() {
           </>
         ) : (
           <>
-            <div className="flex items-center px-4 border-b border-surface-border bg-base-900 shrink-0">
-              {PROFILE_TABS.map((tab) => {
-                const isActive = activeTab === tab.path;
-                return (
-                  <button
-                    key={tab.path}
-                    onClick={() => navigate(`/${tab.path}`)}
-                    className={[
-                      'flex items-center gap-1.5 px-3 py-2 text-xs border-b-2 -mb-px transition-all duration-150',
-                      isActive
-                        ? 'font-medium'
-                        : 'text-text-muted border-transparent hover:text-text-primary',
-                    ].join(' ')}
-                    style={isActive ? { borderBottomColor: color, color } : {}}
-                  >
-                    <tab.Icon size={13} />
-                    {t(tab.labelKey)}
-                    {tab.path === 'console' && running && <StatusDot color={color} pulse />}
-                  </button>
-                );
-              })}
-              <div className="flex-1" />
-              {activeProfile && (
-                <span className="text-xs text-text-muted font-mono truncate max-w-[160px] mr-1">
-                  {activeProfile.name}
-                </span>
-              )}
-            </div>
+            <TabBar
+              tabs={profileTabs}
+              active={activeTab}
+              onChange={(id) => navigate(`/${id}`)}
+              accentColor={color}
+              trailing={
+                activeProfile && (
+                  <span className="text-xs text-text-muted font-mono truncate max-w-[160px]">
+                    {activeProfile.name}
+                  </span>
+                )
+              }
+            />
 
             <div className="flex-1 min-h-0 overflow-hidden animate-fade-in">
               <Routes>

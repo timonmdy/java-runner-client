@@ -1,11 +1,10 @@
-import { SETTINGS_TOPICS } from '@shared/config/Settings.config';
-import { AppSettings } from '@shared/config/Settings.config';
+import { AppSettings, SETTINGS_TOPICS } from '@shared/config/Settings.config';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useApp } from '../../AppProvider';
 import { useTranslation } from '../../i18n/I18nProvider';
 import type { TranslationKey } from '../../i18n/TranslationKeys';
 import { Button } from '../common/inputs';
-import { SidebarLayout } from '../layout/navigation';
+import { SidebarLayout } from '../common/layout/navigation';
 import { AdvancedSection } from './sections/AdvancedSection';
 import { AppearanceSection } from './sections/AppearanceSection';
 import { ConsoleSection } from './sections/ConsoleSection';
@@ -42,7 +41,7 @@ export function SettingsTab() {
   }, [state.settings]);
 
   useEffect(() => {
-    const unsub = window.env.onChange((env) => {
+    const unsub = jrc.env.onChange((env) => {
       setDraft((prev) => {
         if (!prev || prev.devModeEnabled === env.devMode) return prev;
         return { ...prev, devModeEnabled: env.devMode };
@@ -69,7 +68,7 @@ export function SettingsTab() {
 
   const handleSave = async () => {
     await saveSettings(draft);
-    window.env.reload();
+    jrc.env.reload();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -90,7 +89,7 @@ export function SettingsTab() {
       <SidebarLayout
         topics={translatedTopics}
         activeTopicId={activeTopic}
-        onTopicChange={setActiveTopic}
+        onTopicChange={(id) => setActiveTopic(id as typeof activeTopic)}
       >
         <div className="px-5 py-5 max-w-2xl space-y-6">
           {activeTopic === 'general' && <GeneralSection draft={draft} set={set} />}

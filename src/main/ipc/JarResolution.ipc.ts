@@ -1,8 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 import type { RouteMap } from '../core/IPCController';
-import { patternToRegex } from '../shared/config/JarResolution.config';
-import type { JarResolutionConfig, JarResolutionResult } from '../shared/types/JarResolution.types';
+import type { JarResolutionConfig, JarResolutionResult } from '../shared/types/Profile.types';
+
+function patternToRegex(pattern: string): RegExp {
+  const escaped = pattern.replace(/[.+^${}()|[\]\\]/g, (c) =>
+    c === '{' || c === '}' ? c : `\\${c}`
+  );
+  return new RegExp(`^${escaped.replace(/\{version\}/g, '(.+)')}$`, 'i');
+}
 
 function parseVersion(str: string): number[] {
   return str

@@ -114,8 +114,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeDefinition>(BUILTIN_THEME);
 
   useEffect(() => {
-    if (!window.api) return;
-    window.api.getSettings().then((s) => {
+    if (!jrc.api) return;
+    jrc.api.getSettings().then((s) => {
       const t = resolveTheme(s.themeId);
       setThemeState(t);
       applyThemeToDOM(t);
@@ -123,11 +123,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setTheme = useCallback((theme: ThemeDefinition) => {
-    if (!window.api) return;
+    if (!jrc.api) return;
     setThemeState(theme);
     applyThemeToDOM(theme);
-    window.api.getSettings().then((s) => {
-      window.api.saveSettings({ ...s, themeId: theme.id });
+    jrc.api.getSettings().then((s) => {
+      jrc.api.saveSettings({ ...s, themeId: theme.id });
     });
   }, []);
 

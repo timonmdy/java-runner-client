@@ -24,8 +24,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   }, [language]);
 
   useEffect(() => {
-    if (!window.api) return;
-    window.api.getSettings().then((s) => {
+    if (!jrc.api) return;
+    jrc.api.getSettings().then((s) => {
       const l = resolveLanguage(s.languageId);
       setLang(l);
       langRef.current = l;
@@ -47,11 +47,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   );
 
   const setLanguage = useCallback((lang: LanguageDefinition) => {
-    if (!window.api) return;
+    if (!jrc.api) return;
     langRef.current = lang;
     setLang(lang);
-    window.api.getSettings().then((s) => {
-      window.api.saveSettings({ ...s, languageId: lang.id });
+    jrc.api.getSettings().then((s) => {
+      jrc.api.saveSettings({ ...s, languageId: lang.id });
     });
   }, []);
 

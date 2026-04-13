@@ -3,6 +3,7 @@ import type { LanguageDefinition } from '../../types/Language.types';
 export const GERMAN: LanguageDefinition = {
   id: 'de',
   name: 'Deutsch',
+  countryCode: 'de',
   strings: {
     'general.save': 'Speichern',
     'general.saved': 'Gespeichert',

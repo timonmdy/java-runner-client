@@ -1,5 +1,4 @@
-import { JAR_RESOLUTION_STRATEGIES } from '@shared/config/JarResolution.config';
-import type { JarResolutionConfig } from '@shared/types/JarResolution.types';
+import type { JarResolutionConfig } from '@shared/types/Profile.types';
 import { useInputContextMenu } from '../../../hooks/useInputContextMenu';
 import { useJarResolutionPreview } from '../../../hooks/useJarResolutionPreview';
 import { useTranslation } from '../../../i18n/I18nProvider';
@@ -48,15 +47,15 @@ export function DynamicJarConfig({ config, onChange, onPickDir }: Props) {
           {t('config.strategy')}
         </label>
         <div className="flex flex-col gap-1">
-          {JAR_RESOLUTION_STRATEGIES.map((s) => {
-            const keys = STRATEGY_KEYS[s.id];
+          {(Object.keys(STRATEGY_KEYS) as Array<JarResolutionConfig['strategy']>).map((id) => {
+            const keys = STRATEGY_KEYS[id];
             return (
               <button
-                key={s.id}
-                onClick={() => onChange({ strategy: s.id })}
+                key={id}
+                onClick={() => onChange({ strategy: id })}
                 className={[
                   'flex items-start gap-3 px-3 py-2 rounded-lg border text-left transition-colors',
-                  config.strategy === s.id
+                  config.strategy === id
                     ? 'border-accent/30 bg-accent/5'
                     : 'border-surface-border bg-base-900/50 hover:border-surface-border/80',
                 ].join(' ')}
@@ -64,7 +63,7 @@ export function DynamicJarConfig({ config, onChange, onPickDir }: Props) {
                 <span
                   className={[
                     'mt-0.5 w-3 h-3 rounded-full border-2 shrink-0 transition-colors',
-                    config.strategy === s.id
+                    config.strategy === id
                       ? 'border-accent bg-accent'
                       : 'border-surface-border bg-transparent',
                   ].join(' ')}
@@ -73,13 +72,13 @@ export function DynamicJarConfig({ config, onChange, onPickDir }: Props) {
                   <span
                     className={[
                       'block text-xs font-mono',
-                      config.strategy === s.id ? 'text-accent' : 'text-text-primary',
+                      config.strategy === id ? 'text-accent' : 'text-text-primary',
                     ].join(' ')}
                   >
-                    {keys ? t(keys.label) : s.label}
+                    {t(keys.label)}
                   </span>
                   <span className="block text-xs text-text-muted mt-0.5 leading-relaxed">
-                    {keys ? t(keys.hint) : s.hint}
+                    {t(keys.hint)}
                   </span>
                 </span>
               </button>

@@ -1,5 +1,4 @@
-import { DEFAULT_JAR_RESOLUTION } from '@shared/config/JarResolution.config';
-import type { JarResolutionConfig } from '@shared/types/JarResolution.types';
+import type { JarResolutionConfig } from '@shared/types/Profile.types';
 import { useTranslation } from '../../../i18n/I18nProvider';
 import { DynamicJarConfig } from './DynamicJarConfig';
 import { StaticJarPicker } from './StaticJarPicker';
@@ -22,7 +21,13 @@ export function JarSelector({
   onPickDir,
 }: Props) {
   const { t } = useTranslation();
-  const config = resolution ?? DEFAULT_JAR_RESOLUTION;
+  const config: JarResolutionConfig = resolution ?? {
+    enabled: false,
+    baseDir: '',
+    pattern: 'app-{version}.jar',
+    strategy: 'highest-version',
+    regexOverride: '',
+  };
   const isDynamic = config.enabled;
 
   const setDynamic = (enabled: boolean) => {

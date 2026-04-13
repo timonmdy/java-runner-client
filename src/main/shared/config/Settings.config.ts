@@ -1,4 +1,3 @@
-import { REST_API_CONFIG } from './API.config';
 import {
   AnyFieldDef,
   extractDefaults,
@@ -10,9 +9,7 @@ import {
   TextDef,
   ToggleDef,
 } from '../types/Settings.types';
-
-// ─── Section registry ──────────────────────────────────────────────────────
-// Add a new entry here when adding a new settings section.
+import { REST_API_CONFIG } from './API.config';
 
 export type SettingSection = 'general' | 'console' | 'appearance' | 'advanced' | 'about';
 
@@ -24,10 +21,7 @@ export const SETTINGS_TOPICS: SettingSidebarTopic<SettingSection>[] = [
   { id: 'about', label: 'About' },
 ];
 
-// ─── Schema ────────────────────────────────────────────────────────────────
-
 export const SETTINGS_SCHEMA = {
-  // ── General › Startup ────────────────────────────────────────────────────
   launchOnStartup: {
     type: 'toggle',
     default: false,
@@ -57,7 +51,6 @@ export const SETTINGS_SCHEMA = {
     hint: 'settings.minimizeToTrayHint',
   } as ToggleDef,
 
-  // ── Console ───────────────────────────────────────────────────────────────
   consoleFontSize: {
     type: 'range',
     default: 13,
@@ -122,7 +115,6 @@ export const SETTINGS_SCHEMA = {
     step: 10,
   } as NumberDef,
 
-  // ── Appearance (managed by ThemeProvider / I18nProvider) ──────────────────
   themeId: {
     type: 'text',
     default: 'dark-default',
@@ -139,7 +131,6 @@ export const SETTINGS_SCHEMA = {
     label: 'settings.language',
   } as TextDef,
 
-  // ── Advanced › Dev Mode ───────────────────────────────────────────────────
   devModeEnabled: {
     type: 'toggle',
     default: false,
@@ -149,7 +140,6 @@ export const SETTINGS_SCHEMA = {
     hint: 'settings.devModeHint',
   } as ToggleDef,
 
-  // ── Advanced › REST API ───────────────────────────────────────────────────
   restApiEnabled: {
     type: 'toggle',
     default: false,

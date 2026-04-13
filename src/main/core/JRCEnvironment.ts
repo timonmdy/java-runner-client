@@ -7,7 +7,7 @@ let env: JRCEnvironment = {
   isReady: false,
   devMode: null as unknown as JRCEnvironment['devMode'],
   type: null as unknown as JRCEnvironment['type'],
-  startUpSource: null as unknown as JRCEnvironment['startUpSource'],
+  launchContext: null as unknown as JRCEnvironment['launchContext'],
 };
 
 export function loadEnvironment() {
@@ -15,7 +15,7 @@ export function loadEnvironment() {
     isReady: true,
     devMode: getSettings().devModeEnabled,
     type: app.isPackaged ? 'prod' : 'dev',
-    startUpSource: detectStartupSource(),
+    launchContext: detectLaunchContext(),
   };
 
   broadcast();
@@ -33,7 +33,7 @@ function broadcast(channel: string = EnvironmentIPC.change.channel) {
   BrowserWindow.getAllWindows().forEach((w) => w.webContents.send(channel, env));
 }
 
-function detectStartupSource(): JRCEnvironment['startUpSource'] {
+function detectLaunchContext(): JRCEnvironment['launchContext'] {
   if (!app.isPackaged) return 'development';
 
   const login = app.getLoginItemSettings();

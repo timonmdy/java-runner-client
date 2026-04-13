@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { VscBeaker, VscDashboard, VscDatabase, VscPlug, VscSymbolColor } from 'react-icons/vsc';
 import { useTranslation } from '../../i18n/I18nProvider';
 import { StatusDot } from '../common/display';
-import { TabBar } from '../layout/navigation';
+import { TabBar } from '../common/layout/navigation';
 import { DevApiExplorer } from './DevApiExplorer';
 import { DevAssets } from './DevAssets';
 import { DevDashboard } from './DevDashboard';

@@ -1,4 +1,4 @@
-import type { JarResolutionConfig, JarResolutionResult } from '@shared/types/JarResolution.types';
+import type { JarResolutionConfig, JarResolutionResult } from '@shared/types/Profile.types';
 import { useCallback, useEffect, useState } from 'react';
 
 export function useJarResolutionPreview(config: JarResolutionConfig, enabled: boolean) {
@@ -11,7 +11,7 @@ export function useJarResolutionPreview(config: JarResolutionConfig, enabled: bo
       return;
     }
     setLoading(true);
-    const res = await window.api.previewCandidates(config);
+    const res = await jrc.api.previewCandidates(config);
     setResult(res);
     setLoading(false);
   }, [config, enabled]);

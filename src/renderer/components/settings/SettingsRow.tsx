@@ -1,5 +1,5 @@
 import React from 'react';
-import { Section } from '../layout/containers';
+import { Section } from '../common/layout/containers';
 
 export { Section };
 

@@ -18,7 +18,7 @@ export function AboutSection() {
           <span className="font-mono text-xs text-text-muted">%APPDATA%\java-runner-client</span>
           <Tooltip content={t('settings.openConfigFolder')} side="left" delay={300}>
             <button
-              onClick={() => window.api.openConfigFolder()}
+              onClick={() => jrc.api.openConfigFolder()}
               className="p-1 rounded text-text-muted hover:text-text-primary hover:bg-surface-raised transition-colors"
             >
               <VscFolderOpened size={14} />

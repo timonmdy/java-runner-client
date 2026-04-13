@@ -35,7 +35,7 @@ export function TemplateModal({ open, onClose }: Props) {
   const load = async () => {
     setLoading(true);
     setError(null);
-    const res = await window.api.fetchTemplates();
+    const res = await jrc.api.fetchTemplates();
     setLoading(false);
     if (!res.ok || !res.data) {
       setError(res.error ?? 'Failed to load templates');

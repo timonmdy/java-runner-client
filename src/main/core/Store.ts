@@ -1,7 +1,6 @@
 import { app } from 'electron';
 import Store from 'electron-store';
-import { DEFAULT_SETTINGS } from '../shared/config/Settings.config';
-import { AppSettings } from '../shared/config/Settings.config';
+import { AppSettings, DEFAULT_SETTINGS } from '../shared/config/Settings.config';
 import { Profile } from '../shared/types/Profile.types';
 
 interface StoreSchema {

@@ -3,6 +3,7 @@ import { buildPreloadAPI } from './core/IPCController';
 import { allRoutes } from './ipc/_index';
 import { EnvironmentIPC } from './ipc/Environment.ipc';
 
-contextBridge.exposeInMainWorld('api', buildPreloadAPI([...allRoutes]));
+const api = buildPreloadAPI([...allRoutes]);
+const env = buildPreloadAPI([EnvironmentIPC]);
 
-contextBridge.exposeInMainWorld('env', buildPreloadAPI([EnvironmentIPC]));
+contextBridge.exposeInMainWorld('jrc', { api, env });

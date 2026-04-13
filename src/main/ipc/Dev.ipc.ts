@@ -1,4 +1,6 @@
-import { BrowserWindow } from 'electron';
+import { app, BrowserWindow, shell } from 'electron';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import type { RouteMap } from '../core/IPCController';
 import { getAllProfiles } from '../core/Store';
 import { DEFAULT_SETTINGS } from '../shared/config/Settings.config';
@@ -35,6 +37,28 @@ export const DevIPC = {
       const store = new Store({ name: 'java-runner-config' });
       store.set('profiles', []);
       store.set('settings', DEFAULT_SETTINGS);
+    },
+  },
+
+  getStoreJson: {
+    type: 'invoke',
+    channel: 'dev:getStoreJson',
+    handler: () => {
+      const storePath = join(app.getPath('userData'), 'java-runner-config.json');
+      try {
+        return readFileSync(storePath, 'utf-8');
+      } catch {
+        return '{}';
+      }
+    },
+  },
+
+  openStoreFile: {
+    type: 'invoke',
+    channel: 'dev:openStoreFile',
+    handler: () => {
+      const storePath = join(app.getPath('userData'), 'java-runner-config.json');
+      shell.showItemInFolder(storePath);
     },
   },
 } satisfies RouteMap;

@@ -145,12 +145,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
 
   useEffect(() => {
-    if (!window.api) return;
+    if (!jrc.api) return;
     async function init() {
       const [profiles, settings, states] = await Promise.all([
-        window.api.getProfiles(),
-        window.api.getSettings(),
-        window.api.getStates(),
+        jrc.api.getProfiles(),
+        jrc.api.getSettings(),
+        jrc.api.getStates(),
       ]);
       dispatch({ type: 'INIT', profiles, settings, states });
       const max = settings?.consoleMaxLines ?? 5000;
@@ -163,35 +163,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!window.api) return;
+    if (!jrc.api) return;
     const max = state.settings?.consoleMaxLines ?? 5000;
-    return window.api.onConsoleLine((profileId: string, line: unknown) => {
+    return jrc.api.onConsoleLine((profileId: string, line: unknown) => {
       dispatch({ type: 'APPEND_LOG', profileId, line: line as ConsoleLine, maxLines: max });
     });
   }, [state.settings?.consoleMaxLines]);
 
   useEffect(() => {
-    if (!window.api) return;
-    return window.api.onConsoleClear((profileId) => dispatch({ type: 'CLEAR_LOG', profileId }));
+    if (!jrc.api) return;
+    return jrc.api.onConsoleClear((profileId) => dispatch({ type: 'CLEAR_LOG', profileId }));
   }, []);
 
   useEffect(() => {
-    if (!window.api) return;
-    return window.api.onStatesUpdate((states) => dispatch({ type: 'SET_STATES', states }));
+    if (!jrc.api) return;
+    return jrc.api.onStatesUpdate((states) => dispatch({ type: 'SET_STATES', states }));
   }, []);
 
   const setActiveProfile = useCallback((id: string) => dispatch({ type: 'SET_ACTIVE', id }), []);
 
   const saveProfile = useCallback(async (p: Profile) => {
-    await window.api.saveProfile(p);
-    dispatch({ type: 'SET_PROFILES', profiles: await window.api.getProfiles() });
+    await jrc.api.saveProfile(p);
+    dispatch({ type: 'SET_PROFILES', profiles: await jrc.api.getProfiles() });
   }, []);
 
   const deleteProfile = useCallback(
     async (id: string) => {
       clearLogs(id);
-      await window.api.deleteProfile(id);
-      const profiles = await window.api.getProfiles();
+      await jrc.api.deleteProfile(id);
+      const profiles = await jrc.api.getProfiles();
       dispatch({ type: 'SET_PROFILES', profiles });
       if (state.activeProfileId === id) dispatch({ type: 'SET_ACTIVE', id: profiles[0]?.id ?? '' });
     },
@@ -220,22 +220,22 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
       dispatch({ type: 'SET_PROFILES', profiles: [...state.profiles, p] });
       dispatch({ type: 'SET_ACTIVE', id: p.id });
-      window.api.saveProfile(p);
+      jrc.api.saveProfile(p);
     },
     [state.profiles]
   );
 
   const reorderProfiles = useCallback(async (profiles: Profile[]) => {
     dispatch({ type: 'SET_PROFILES', profiles });
-    await window.api.reorderProfiles(profiles.map((p) => p.id));
+    await jrc.api.reorderProfiles(profiles.map((p) => p.id));
   }, []);
 
-  const startProcess = useCallback((p: Profile) => window.api.startProcess(p), []);
-  const stopProcess = useCallback((id: string) => window.api.stopProcess(id), []);
-  const forceStopProcess = useCallback((id: string) => window.api.forceStopProcess(id), []);
+  const startProcess = useCallback((p: Profile) => jrc.api.startProcess(p), []);
+  const stopProcess = useCallback((id: string) => jrc.api.stopProcess(id), []);
+  const forceStopProcess = useCallback((id: string) => jrc.api.forceStopProcess(id), []);
 
   const sendInput = useCallback(async (profileId: string, input: string) => {
-    await window.api.sendInput(profileId, input);
+    await jrc.api.sendInput(profileId, input);
   }, []);
 
   const clearConsole = useCallback(
@@ -244,7 +244,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const saveSettings = useCallback(async (s: AppSettings) => {
-    await window.api.saveSettings(s);
+    await jrc.api.saveSettings(s);
     dispatch({ type: 'SET_SETTINGS', settings: s });
   }, []);
 

@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { VscRefresh, VscTrash } from 'react-icons/vsc';
-import { useApp } from '../../AppProvider';
+import { VscFolderOpened, VscRefresh, VscTrash } from 'react-icons/vsc';
 import { Button } from '../common/inputs';
+import { Card, ScrollContent, Section } from '../common/layout/containers';
 import { Dialog } from '../common/overlays';
-import { Card, DataRow, ScrollContent, Section } from '../layout/containers';
+
+// ─── Session Storage helpers ──────────────────────────────────────────────────
 
 interface SessionEntry {
   key: string;
@@ -27,60 +28,77 @@ function getSessionEntries(): SessionEntry[] {
 
 function formatBytes(n: number): string {
   if (n < 1024) return `${n} B`;
-  return `${(n / 1024).toFixed(1)} KB`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / 1024 / 1024).toFixed(1)} MB`;
 }
 
+// ─── Component ────────────────────────────────────────────────────────────────
+
 export function DevStorage() {
-  const { state } = useApp();
+  const [storeJson, setStoreJson] = useState<string | null>(null);
+  const [storeSize, setStoreSize] = useState(0);
   const [sessionEntries, setSessionEntries] = useState<SessionEntry[]>([]);
   const [confirmReset, setConfirmReset] = useState<'electron-store' | 'session' | null>(null);
 
-  const refresh = () => setSessionEntries(getSessionEntries());
+  const refreshStore = () =>
+    jrc.api.getStoreJson().then((json: string) => {
+      setStoreJson(json);
+      setStoreSize(new Blob([json]).size);
+    });
+
+  const refreshSession = () => setSessionEntries(getSessionEntries());
+
   useEffect(() => {
-    refresh();
+    refreshStore();
+    refreshSession();
   }, []);
 
   const totalSessionBytes = sessionEntries.reduce((a, b) => a + b.sizeBytes, 0);
-  const profilesWithLogging = state.profiles.filter((p) => p.fileLogging).length;
+
+  let formattedJson = '';
+  try {
+    formattedJson = JSON.stringify(JSON.parse(storeJson ?? '{}'), null, 2);
+  } catch {
+    formattedJson = storeJson ?? '';
+  }
 
   return (
     <ScrollContent>
-      <Section title="Electron Store (Persistent)">
-        <Card divided>
-          <DataRow label="Profiles" value={String(state.profiles.length)} />
-          <DataRow label="Active profile ID" value={state.activeProfileId || '---'} mono />
-          <DataRow
-            label="REST API"
-            value={
-              state.settings?.restApiEnabled
-                ? `Enabled (${state.settings.restApiPort})`
-                : 'Disabled'
-            }
-          />
-          <DataRow
-            label="Console max lines"
-            value={String(state.settings?.consoleMaxLines ?? '---')}
-          />
-          <DataRow
-            label="Console timestamps"
-            value={state.settings?.consoleTimestamps ? 'Enabled' : 'Disabled'}
-          />
-          <DataRow
-            label="File logging profiles"
-            value={`${profilesWithLogging} / ${state.profiles.length}`}
-          />
+      {/* ── Electron Store (JSON Viewer) ─────────────────── */}
+      <Section title={`Electron Store (${formatBytes(storeSize)})`}>
+        <Card className="flex flex-col">
+          <div className="max-h-80 overflow-auto scrollbar-thin">
+            {storeJson === null ? (
+              <p className="text-xs font-mono text-text-muted p-3 animate-pulse">Loading...</p>
+            ) : (
+              <pre className="text-[11px] font-mono text-text-secondary p-3 leading-5 select-text whitespace-pre">
+                {formattedJson}
+              </pre>
+            )}
+          </div>
         </Card>
-        <Button variant="danger" size="sm" onClick={() => setConfirmReset('electron-store')}>
-          <VscTrash size={11} />
-          Reset Electron Store
-        </Button>
+        <div className="flex items-center gap-2 mt-1">
+          <Button variant="ghost" size="sm" onClick={refreshStore}>
+            <VscRefresh size={11} />
+            Refresh
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => jrc.api.openStoreFile()}>
+            <VscFolderOpened size={11} />
+            Open in Explorer
+          </Button>
+          <Button variant="danger" size="sm" onClick={() => setConfirmReset('electron-store')}>
+            <VscTrash size={11} />
+            Reset Store
+          </Button>
+        </div>
       </Section>
 
+      {/* ── Session Storage ──────────────────────────────── */}
       <Section title={`Session Storage (${formatBytes(totalSessionBytes)})`}>
         <div className="flex items-center justify-between mb-2">
           <p className="text-xs text-text-muted font-mono">{sessionEntries.length} keys</p>
           <button
-            onClick={refresh}
+            onClick={refreshSession}
             className="text-text-muted hover:text-accent transition-colors p-1"
           >
             <VscRefresh size={12} />
@@ -103,7 +121,7 @@ export function DevStorage() {
                   <button
                     onClick={() => {
                       sessionStorage.removeItem(e.key);
-                      refresh();
+                      refreshSession();
                     }}
                     className="text-text-muted hover:text-red-400 transition-colors"
                   >
@@ -125,6 +143,7 @@ export function DevStorage() {
         </Button>
       </Section>
 
+      {/* ── Dialogs ──────────────────────────────────────── */}
       <Dialog
         open={confirmReset === 'electron-store'}
         title="Reset Electron Store?"
@@ -132,8 +151,9 @@ export function DevStorage() {
         confirmLabel="Reset"
         danger
         onConfirm={async () => {
-          await window.api.resetStore();
+          await jrc.api.resetStore();
           setConfirmReset(null);
+          refreshStore();
         }}
         onCancel={() => setConfirmReset(null)}
       />
@@ -145,7 +165,7 @@ export function DevStorage() {
         danger
         onConfirm={() => {
           sessionStorage.clear();
-          refresh();
+          refreshSession();
           setConfirmReset(null);
         }}
         onCancel={() => setConfirmReset(null)}
